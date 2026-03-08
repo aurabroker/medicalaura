@@ -347,7 +347,7 @@
   <div class="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
     <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-brand-navy text-white relative">
       <div>
-        <h3 id="pdmTitle" class="font-bold text-xl md:text-2xl tracking-tight">Ładowanie...</h3>
+        <h3 id="pdmTitle" class="font-bold text-xl md:text-2xl tracking-tight flex items-center">Ładowanie...</h3>
         <p id="pdmSub" class="text-brand-pink font-bold text-xs uppercase tracking-widest mt-0.5"></p>
       </div>
       <button onclick="document.getElementById('pkgDetailsModal').classList.add('hidden')" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-xl transition-colors">&times;</button>
@@ -526,7 +526,8 @@ async function showPackageDetails(pkgId) {
     const specs = specRes || [];
     const labs = labRes || [];
 
-    mTitle.textContent = p.pakiet_nazwa;
+    // Tytul wraz z dodanym na zywioł ID dla latwiejszej komunikacji z AI
+    mTitle.innerHTML = `${p.pakiet_nazwa} <span class="text-sm font-normal text-slate-400 bg-slate-800 px-2 py-0.5 rounded-lg ml-3 border border-slate-700 tracking-wider">ID: ${p.id}</span>`;
     mSub.textContent = p.dostawca_nazwa;
 
     const boolIco = v => v ? '✅ <span class="text-emerald-700 font-bold">Dostępne</span>' : '❌ <span class="text-red-700 font-bold">Brak</span>';
@@ -1108,7 +1109,7 @@ async function loadLibrary(){
     const t=tc[Math.min((p.tier||1)-1,tc.length-1)];
     html+=`<tr class="hover:bg-slate-50 transition-colors">
       <td class="p-3 font-bold text-brand-navy">${p.dostawca_nazwa||'–'}</td>
-      <td class="p-3 font-bold text-brand-pink hover:underline cursor-pointer" onclick="showPackageDetails(${p.id})">${p.pakiet_nazwa||'–'}</td>
+      <td class="p-3 font-bold text-brand-pink hover:underline cursor-pointer" onclick="showPackageDetails(${p.id})">${p.pakiet_nazwa||'–'} <span class="text-[10px] text-slate-400 font-normal ml-1">#${p.id}</span></td>
       <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-xs font-bold ${t}">T${p.tier||'?'}</span></td>
       <td class="p-3 text-center font-bold">${isValid(p.liczba_specjalizacji)?p.liczba_specjalizacji:'<span class="text-slate-300">–</span>'}</td>
       <td class="p-3 text-center font-bold">${isValid(p.liczba_badan_lab)?p.liczba_badan_lab:'<span class="text-slate-300">–</span>'}</td>
