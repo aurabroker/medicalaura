@@ -1,30 +1,36 @@
 <!DOCTYPE html>
 <html lang="pl" class="bg-slate-50 antialiased">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MEDICALAURA — Porównywarka i Biblioteka</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <title>MEDICALAURA — Porównywarka</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config={theme:{extend:{colors:{'brand-navy':'#1e294a','brand-pink':'#e11d48','brand-emerald':'#10b981'},fontFamily:{sans:['Inter','sans-serif']}}}}</script>
   <style>
-    .tab-panel{display:none;animation:fadeIn .3s ease}.tab-panel.active{display:block}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    .loader{border:3px solid #f3f3f3;border-top:3px solid #e11d48;border-radius:50%;width:22px;height:22px;animation:spin 1s linear infinite}
+    .tab-panel{display:none}.tab-panel.active{display:block}
+    .loader{border:3px solid #f3f3f3;border-top:3px solid #e11d48;border-radius:50%;width:20px;height:20px;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .tbl::-webkit-scrollbar{height:7px}.tbl::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}.tbl::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
-    .diff-worse{background:#fef2f2;color:#b91c1c;font-weight:700}
-    .diff-best{background:#ecfdf5;color:#065f46;font-weight:800}
-    .pkg-card{border:2px solid #e2e8f0;border-radius:12px;padding:10px 14px;cursor:pointer;transition:all .15s;user-select:none}
-    .pkg-card:hover{border-color:#1e294a}
-    .pkg-card.selected{border-color:#1e294a;background:#1e294a;color:#fff}
-    .pkg-card.selected .pkg-sub{color:#94a3b8}
+    .tbl::-webkit-scrollbar{height:7px;width:7px}.tbl::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}.tbl::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+    .diff-best{background:#ecfdf5!important;color:#065f46;font-weight:800}
+    .diff-worst{background:#fef2f2!important;color:#b91c1c;font-weight:700}
+    .prov-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:background .1s;user-select:none}
+    .prov-row:hover{background:#f1f5f9}
+    .prov-row.active{background:#eff6ff}
+    .pkg-chip{border:2px solid #e2e8f0;border-radius:10px;padding:9px 13px;cursor:pointer;transition:all .15s;background:#fff;font-size:13px;user-select:none}
+    .pkg-chip:hover{border-color:#1e294a}
+    .pkg-chip.sel{border-color:#1e294a;background:#1e294a;color:#fff}
+    .price-inp{border:1px solid #cbd5e1;border-radius:8px;padding:5px 8px;font-size:13px;width:100%;outline:none;background:#f8fafc}
+    .price-inp:focus{border-color:#e11d48;background:#fff}
+    .lbl{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+    .inp{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:13px;outline:none}
+    .inp:focus{border-color:#e11d48}
+    .chk{width:18px;height:18px;border-radius:5px;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;transition:all .15s}
+    .chk.on{background:#1e294a;border-color:#1e294a;color:#fff}
   </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
 
-<!-- HEADER -->
 <header class="bg-brand-navy text-white shadow-md sticky top-0 z-50">
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div>
@@ -32,170 +38,230 @@
       <div class="text-xs text-slate-400 tracking-wide uppercase mt-0.5">Zarządzanie Ofertami Medycznymi</div>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl">
-      <button onclick="switchTab('compare',this)" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm transition-all">🔍 Porównaj</button>
-      <button onclick="switchTab('library',this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white transition-all">📚 Biblioteka</button>
-      <button onclick="switchTab('calc',this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white transition-all">🧮 Kalkulator</button>
-      <button onclick="switchTab('learn',this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white transition-all">🧠 SQL</button>
-      <button onclick="switchTab('admin',this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white transition-all">⚙️ Admin</button>
+      <button onclick="switchTab('compare',this)" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
+      <button onclick="switchTab('search',this)"  class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🔎 Wyszukaj</button>
+      <button onclick="switchTab('library',this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">📚 Biblioteka</button>
+      <button onclick="switchTab('calc',this)"    class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧮 Kalkulator</button>
+      <button onclick="switchTab('learn',this)"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧠 SQL</button>
+      <button onclick="switchTab('admin',this)"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">⚙️ Admin</button>
     </nav>
   </div>
 </header>
 
 <main class="flex-grow max-w-[1500px] mx-auto w-full px-6 py-8">
 
-<!-- ═══════════════════════════════════════════════════ PORÓWNAJ -->
+<!-- ══════════════════════════════ PORÓWNAJ -->
 <div id="tab-compare" class="tab-panel active">
-  <div id="notif-compare" class="hidden mb-5 p-4 rounded-xl text-sm font-semibold border"></div>
+  <div id="notif-compare" class="hidden mb-4 p-4 rounded-xl text-sm font-semibold border"></div>
 
-  <!-- Status bar -->
+  <!-- Status -->
   <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-6 flex flex-wrap gap-6 items-center shadow-sm text-sm">
     <span class="flex items-center gap-2 text-slate-500"><div id="dotDb" class="w-2.5 h-2.5 rounded-full bg-slate-300"></div>Baza: <strong id="statusDb">łączenie...</strong></span>
     <span class="text-slate-500">Dostawcy: <strong id="statusProviders">–</strong></span>
     <span class="text-slate-500">Pakiety: <strong id="statusPackages">–</strong></span>
   </div>
 
-  <!-- KROK 1 — wybierz dostawców -->
-  <div class="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm mb-5">
-    <div class="flex items-center justify-between mb-4">
+  <!-- GŁÓWNY PANEL WYBORU: lewa = dostawcy, prawa = pakiety -->
+  <div class="bg-white border border-slate-200 rounded-3xl shadow-sm mb-5 overflow-hidden">
+    <div class="bg-slate-50 border-b border-slate-200 p-5 flex items-center justify-between">
       <div>
-        <h2 class="text-base font-bold text-brand-navy">1. Wybierz dostawców</h2>
-        <p class="text-xs text-slate-400 mt-0.5">Kliknij aby rozwinąć i zaznaczyć pakiety (maks. 5 łącznie)</p>
+        <h2 class="text-base font-bold text-brand-navy">1. Wybierz dostawców i pakiety</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Zaznacz dostawcę → po prawej pojawią się jego pakiety → zaznacz warianty do porównania</p>
       </div>
-      <span id="selCount" class="text-xs bg-slate-100 text-slate-600 font-bold px-3 py-1 rounded-full">0 zaznaczonych</span>
+      <div class="flex items-center gap-3">
+        <span id="selCount" class="text-xs bg-brand-navy text-white font-bold px-3 py-1.5 rounded-full">0 pakietów</span>
+        <button onclick="clearAll()" class="text-xs text-brand-pink font-semibold hover:underline">✕ Wyczyść</button>
+      </div>
     </div>
-    <div id="providerAccordion" class="space-y-3">
-      <div class="flex items-center gap-3 text-slate-400 text-sm"><div class="loader"></div>Ładowanie dostawców...</div>
+
+    <div class="flex" style="min-height:320px">
+      <!-- LEWA: lista dostawców -->
+      <div class="w-56 flex-shrink-0 border-r border-slate-100 p-3 overflow-y-auto" style="max-height:420px">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Dostawcy</p>
+        <div id="provList" class="space-y-1">
+          <div class="flex items-center gap-2 text-slate-400 text-xs p-2"><div class="loader"></div>Ładowanie...</div>
+        </div>
+      </div>
+
+      <!-- PRAWA: pakiety wybranego dostawcy -->
+      <div class="flex-grow p-5 overflow-y-auto" style="max-height:420px">
+        <div id="pkgPanelHint" class="flex items-center justify-center h-full text-slate-300 text-sm flex-col gap-2">
+          <span class="text-4xl">←</span>
+          <span>Wybierz dostawcę z lewej</span>
+        </div>
+        <div id="pkgPanel" class="hidden">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <span id="pkgPanelTitle" class="font-bold text-brand-navy text-base"></span>
+              <span id="pkgPanelSub" class="text-xs text-slate-400 ml-2"></span>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="filterPkgs('ind')"     id="pf-ind"     class="px-3 py-1 text-xs font-bold rounded-lg bg-brand-navy text-white">Indyw.</button>
+              <button onclick="filterPkgs('partner')" id="pf-partner" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600">Partnerski</button>
+              <button onclick="filterPkgs('rodzinny')"id="pf-rodzinny"class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600">Rodzinny</button>
+              <button onclick="filterPkgs('all')"     id="pf-all"     class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600">Wszystkie</button>
+            </div>
+          </div>
+          <div id="pkgGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZAZNACZONE — chips pod panelem -->
+    <div id="selectedBar" class="hidden border-t border-slate-100 bg-slate-50 px-5 py-3">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Wybrane do porównania:</p>
+      <div id="selectedChips" class="flex flex-wrap gap-2"></div>
     </div>
   </div>
 
-  <!-- KROK 2 — generuj -->
+  <!-- GENERUJ -->
   <div class="flex items-center gap-4 mb-6">
-    <button onclick="runComparison()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition-colors">▶ Generuj Porównanie dla Klienta</button>
-    <button onclick="clearSelection()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 px-5 rounded-xl border border-slate-200 transition-colors">✕ Wyczyść</button>
+    <button onclick="runComparison()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-8 rounded-xl shadow-md">▶ Generuj Zestawienie</button>
   </div>
 
   <!-- WYNIKI -->
-  <div id="comparisonResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl mb-8">
+  <div id="comparisonResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl mb-5">
     <div class="bg-brand-navy p-5 flex justify-between items-center">
-      <h2 class="text-base font-bold text-white">Zestawienie porównawcze</h2>
-      <div class="flex gap-3 items-center text-xs text-slate-400">
-        <span>🟢 = najlepsza wartość &nbsp;🔴 = najgorsza</span>
-        <button onclick="document.getElementById('comparisonResult').classList.add('hidden')" class="hover:text-white ml-4">✕</button>
+      <h2 class="text-base font-bold text-white">Zestawienie dla Klienta</h2>
+      <div class="flex items-center gap-4">
+        <span class="text-xs text-slate-400">🟢 najlepsza &nbsp; 🔴 najgorsza &nbsp; 🟡 różnica</span>
+        <button onclick="document.getElementById('comparisonResult').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
       </div>
     </div>
     <div class="tbl overflow-x-auto" id="compTableWrap"></div>
   </div>
+
+  <!-- SKŁADKI + EKSPORT -->
+  <div id="priceSection" class="hidden bg-white border-2 border-brand-navy rounded-3xl p-8 shadow-xl mb-8">
+    <h2 class="text-lg font-bold text-brand-navy mb-1">💰 Wprowadź składki</h2>
+    <p class="text-xs text-slate-400 mb-6">Uzupełnij po analizie oferty. Składka indyw. odblokowuje eksport.</p>
+    <div id="priceInputGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-6"></div>
+    <div class="flex gap-4 items-center flex-wrap border-t border-slate-200 pt-5">
+      <button onclick="savePrices()" class="bg-brand-navy hover:bg-slate-800 text-white font-bold py-3 px-7 rounded-xl shadow-md">💾 Zapisz w bazie</button>
+      <button id="btnCSV" onclick="exportCSV()" disabled class="bg-slate-200 text-slate-400 font-bold py-3 px-7 rounded-xl cursor-not-allowed">⬇ CSV</button>
+      <button id="btnPDF" onclick="exportPDF()" disabled class="bg-slate-200 text-slate-400 font-bold py-3 px-7 rounded-xl cursor-not-allowed">🖨 PDF</button>
+      <span id="exportHint" class="text-xs text-slate-400 italic">Uzupełnij składkę indyw. aby odblokować eksport</span>
+    </div>
+    <div id="priceStatus" class="hidden mt-4 p-3 rounded-xl text-sm font-semibold border"></div>
+  </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ BIBLIOTEKA -->
+<!-- ══════════════════════════════ WYSZUKAJ -->
+<div id="tab-search" class="tab-panel">
+  <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
+    <h2 class="text-xl font-bold text-brand-navy mb-2">🔎 Wyszukiwarka zakresów</h2>
+    <p class="text-sm text-slate-500 mb-6">Sprawdź w których pakietach i u których dostawców dostępna jest dana specjalizacja lub badanie.</p>
+    <div class="flex gap-3 mb-6">
+      <button onclick="setSearchType('spec')" id="stype-spec" class="px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm">Specjalizacja</button>
+      <button onclick="setSearchType('bad')"  id="stype-bad"  class="px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200">Badanie laboratoryjne</button>
+    </div>
+    <div class="flex gap-3 items-center">
+      <input type="text" id="searchQuery" placeholder="np. kardiolog, USG brzucha, morfologia..." class="inp flex-grow text-base" onkeydown="if(event.key==='Enter') runSearch()"/>
+      <button onclick="runSearch()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-7 rounded-xl shadow-md">Szukaj</button>
+    </div>
+    <div id="searchHint" class="mt-3 text-xs text-slate-400"></div>
+  </div>
+  <div id="searchResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
+    <div class="bg-brand-navy p-5">
+      <h3 id="searchResultTitle" class="text-base font-bold text-white"></h3>
+      <p class="text-xs text-slate-400 mt-0.5">Wyniki z bazy danych pakietów</p>
+    </div>
+    <div id="searchResultBody" class="tbl overflow-x-auto"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ BIBLIOTEKA -->
 <div id="tab-library" class="tab-panel">
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
     <h2 class="text-xl font-bold text-brand-navy mb-6">Baza wgranych pakietów</h2>
     <div class="flex flex-wrap gap-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 items-end">
-      <div class="flex-grow min-w-[140px]">
-        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Dostawca</label>
-        <select id="libProvider" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-brand-pink"><option value="">— Wszyscy —</option></select>
-      </div>
-      <div class="flex-grow min-w-[110px]">
-        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Tier</label>
-        <select id="libTier" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-brand-pink">
-          <option value="">— Wszystkie —</option>
-          <option value="1">Tier 1</option><option value="2">Tier 2</option><option value="3">Tier 3</option>
-          <option value="4">Tier 4</option><option value="5">Tier 5</option><option value="6">Tier 6</option>
+      <div class="flex-grow min-w-[140px]"><label class="lbl">Dostawca</label><select id="libProvider" class="inp"><option value="">— Wszyscy —</option></select></div>
+      <div class="flex-grow min-w-[100px]"><label class="lbl">Tier</label>
+        <select id="libTier" class="inp"><option value="">— Wszystkie —</option>
+          <option value="1">T1</option><option value="2">T2</option><option value="3">T3</option>
+          <option value="4">T4</option><option value="5">T5</option><option value="6">T6</option>
         </select>
       </div>
-      <button onclick="loadLibrary()" class="bg-brand-navy hover:bg-slate-800 text-white font-bold py-2.5 px-7 rounded-xl shadow-md">Szukaj</button>
+      <button onclick="loadLibrary()" class="bg-brand-navy text-white font-bold py-2.5 px-7 rounded-xl shadow-md">Szukaj</button>
     </div>
     <div id="libraryTable" class="tbl overflow-x-auto">
       <div class="flex items-center gap-3 text-slate-400 justify-center py-10"><div class="loader"></div>Ładowanie...</div>
     </div>
   </div>
-
-  <!-- EDYCJA PAKIETU (pojawia się po kliknięciu Edytuj) -->
+  <!-- EDYCJA -->
   <div id="editPanel" class="hidden bg-white border-2 border-brand-navy rounded-3xl p-8 shadow-xl mt-6">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-lg font-bold text-brand-navy">✏️ Edycja pakietu: <span id="editPkgName" class="text-brand-pink"></span></h2>
-      <button onclick="document.getElementById('editPanel').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 text-lg">✕</button>
+    <div class="flex justify-between items-center mb-5">
+      <h2 class="text-lg font-bold text-brand-navy">✏️ Edycja: <span id="editPkgName" class="text-brand-pink"></span></h2>
+      <button onclick="document.getElementById('editPanel').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 text-xl">✕</button>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-      <div><label class="lbl">Liczba specjalizacji</label><input type="number" id="eSpecjalizacje" class="inp" /></div>
-      <div><label class="lbl">Liczba badań lab.</label><input type="number" id="eBadania" class="inp" /></div>
-      <div><label class="lbl">Czas oczek. POZ (dni)</label><input type="number" id="ePoz" class="inp" /></div>
-      <div><label class="lbl">Czas oczek. spec. (dni)</label><input type="number" id="eSpec" class="inp" /></div>
-      <div><label class="lbl">Min. pracownicy</label><input type="number" id="eMinPrac" class="inp" /></div>
-      <div><label class="lbl">Dzieci do (lat)</label><input type="number" id="eDzieci" class="inp" /></div>
-      <div><label class="lbl">Karencja (dni)</label><input type="number" id="eKarencja" class="inp" /></div>
-      <div><label class="lbl">Zasięg placówek</label><input type="text" id="eZasieg" class="inp" /></div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+      <div><label class="lbl">Specjalizacje</label><input type="number" id="eSpecjalizacje" class="inp"/></div>
+      <div><label class="lbl">Badania lab.</label><input type="number" id="eBadania" class="inp"/></div>
+      <div><label class="lbl">Oczek. POZ (dni)</label><input type="number" id="ePoz" class="inp"/></div>
+      <div><label class="lbl">Oczek. spec. (dni)</label><input type="number" id="eSpec" class="inp"/></div>
+      <div><label class="lbl">Min. pracownicy</label><input type="number" id="eMinPrac" class="inp"/></div>
+      <div><label class="lbl">Dzieci do (lat)</label><input type="number" id="eDzieci" class="inp"/></div>
+      <div><label class="lbl">Karencja (dni)</label><input type="number" id="eKarencja" class="inp"/></div>
+      <div><label class="lbl">Zasięg</label><input type="text" id="eZasieg" class="inp"/></div>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="eTele" class="w-4 h-4 accent-brand-navy"><span class="text-sm font-semibold">Telemedycyna</span></label>
-      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="eCiaza" class="w-4 h-4 accent-brand-navy"><span class="text-sm font-semibold">Ciąża</span></label>
-      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="eRehab" class="w-4 h-4 accent-brand-navy"><span class="text-sm font-semibold">Rehabilitacja</span></label>
-      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="eStom" class="w-4 h-4 accent-brand-navy"><span class="text-sm font-semibold">Stomatologia</span></label>
-      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="ePsych" class="w-4 h-4 accent-brand-navy"><span class="text-sm font-semibold">Psychiatria</span></label>
-      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="eWizyty" class="w-4 h-4 accent-brand-navy"><span class="text-sm font-semibold">Wizyty domowe</span></label>
-      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="eSzpital" class="w-4 h-4 accent-brand-navy"><span class="text-sm font-semibold">Leczenie szpitalne</span></label>
-      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="eHotline" class="w-4 h-4 accent-brand-navy"><span class="text-sm font-semibold">Hotline 24h</span></label>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eTele" class="w-4 h-4 accent-brand-navy">Telemedycyna</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eCiaza" class="w-4 h-4 accent-brand-navy">Ciąża</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRehab" class="w-4 h-4 accent-brand-navy">Rehabilitacja</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eStom" class="w-4 h-4 accent-brand-navy">Stomatologia</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="ePsych" class="w-4 h-4 accent-brand-navy">Psychiatria</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eWizyty" class="w-4 h-4 accent-brand-navy">Wizyty domowe</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eSzpital" class="w-4 h-4 accent-brand-navy">Leczenie szpitalne</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eHotline" class="w-4 h-4 accent-brand-navy">Hotline 24h</label>
     </div>
     <div class="border-t border-slate-200 pt-5 mb-5">
-      <h3 class="text-sm font-bold text-slate-500 uppercase mb-3">💰 Składki (wpisz po analizie)</h3>
+      <h3 class="text-xs font-bold text-slate-500 uppercase mb-3">💰 Składki (po analizie)</h3>
       <div class="grid grid-cols-3 gap-4">
-        <div><label class="lbl">Indyw. (zł/mies)</label><input type="number" step="0.01" id="ePriceInd" placeholder="–" class="inp" /></div>
-        <div><label class="lbl">Grupowa (zł/mies)</label><input type="number" step="0.01" id="ePriceGrup" placeholder="–" class="inp" /></div>
-        <div><label class="lbl">Rodzina (zł/mies)</label><input type="number" step="0.01" id="ePriceRodzina" placeholder="–" class="inp" /></div>
+        <div><label class="lbl">Indyw. (zł/mies)</label><input type="number" step="0.01" id="ePriceInd" placeholder="–" class="inp"/></div>
+        <div><label class="lbl">Partnerska (zł/mies)</label><input type="number" step="0.01" id="ePriceGrup" placeholder="–" class="inp"/></div>
+        <div><label class="lbl">Rodzinna (zł/mies)</label><input type="number" step="0.01" id="ePriceRodzina" placeholder="–" class="inp"/></div>
       </div>
     </div>
     <div class="flex gap-3 items-center">
-      <button onclick="saveEdit()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-8 rounded-xl shadow-md">💾 Zapisz zmiany</button>
+      <button onclick="saveEdit()" class="bg-brand-pink text-white font-bold py-3 px-8 rounded-xl shadow-md">💾 Zapisz</button>
       <span id="editStatus" class="text-sm font-semibold"></span>
     </div>
-    <input type="hidden" id="editPkgId" />
+    <input type="hidden" id="editPkgId"/>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ KALKULATOR -->
+<!-- ══════════════════════════════ KALKULATOR -->
 <div id="tab-calc" class="tab-panel">
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
     <h2 class="text-xl font-bold text-brand-navy mb-2">🧮 Kalkulator składki grupowej</h2>
-    <p class="text-sm text-slate-500 mb-6">Podaj liczbę pracowników i wybierz pakiety — kalkulator wyliczy szacunkowy koszt miesięczny i roczny.</p>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <div>
-        <label class="lbl">Liczba pracowników</label>
-        <input type="number" id="calcWorkers" min="1" value="50" class="inp text-lg font-bold" oninput="calcUpdate()" />
-      </div>
-      <div>
-        <label class="lbl">Typ składki</label>
+    <p class="text-sm text-slate-500 mb-5">Podaj liczbę pracowników, wybierz typ składki i zaznacz pakiety.</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+      <div><label class="lbl">Liczba pracowników</label><input type="number" id="calcWorkers" min="1" value="50" class="inp text-lg font-bold" oninput="calcUpdate()"/></div>
+      <div><label class="lbl">Typ składki</label>
         <select id="calcType" class="inp" onchange="calcUpdate()">
           <option value="cena_ind_mies">Indywidualna</option>
-          <option value="cena_grup_mies" selected>Grupowa</option>
+          <option value="cena_grup_mies" selected>Partnerska</option>
           <option value="cena_rodzina_mies">Rodzinna</option>
         </select>
       </div>
-      <div>
-        <label class="lbl">Filtr: dostawca</label>
-        <select id="calcProvider" class="inp" onchange="calcLoadPackages()"><option value="">— Wszyscy —</option></select>
-      </div>
+      <div><label class="lbl">Filtr dostawca</label><select id="calcProvider" class="inp" onchange="calcLoadPackages()"><option value="">— Wszyscy —</option></select></div>
     </div>
-    <p class="text-xs text-slate-400 mb-3">Zaznacz pakiety do porównania:</p>
-    <div id="calcPackageList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-      <div class="text-slate-400 text-sm flex gap-2 items-center"><div class="loader"></div>Ładowanie...</div>
+    <div id="calcPackageList" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 mb-5">
+      <div class="flex gap-2 items-center text-slate-400 text-sm col-span-5"><div class="loader"></div>Ładowanie...</div>
     </div>
   </div>
   <div id="calcResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
-    <div class="bg-brand-navy p-5">
-      <h2 class="text-base font-bold text-white">Wynik kalkulacji</h2>
-      <p id="calcSubtitle" class="text-xs text-slate-400 mt-1"></p>
-    </div>
+    <div class="bg-brand-navy p-5"><h2 class="text-base font-bold text-white">Wynik kalkulacji</h2><p id="calcSubtitle" class="text-xs text-slate-400 mt-1"></p></div>
     <div id="calcTable" class="tbl overflow-x-auto"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ SQL -->
+<!-- ══════════════════════════════ SQL -->
 <div id="tab-learn" class="tab-panel">
   <div id="notif-learn" class="hidden mb-5 p-4 rounded-xl text-sm font-semibold border"></div>
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
     <h2 class="text-xl font-bold text-brand-navy mb-2">Dodaj pakiety via SQL (God Prompt)</h2>
-    <p class="text-sm text-slate-500 mb-5">Wklej SQL wygenerowany przez AI. Ceny są zablokowane — wpisz je przez Edytuj w Bibliotece.</p>
+    <p class="text-sm text-slate-500 mb-5">Wklej SQL z AI. Ceny są zablokowane — wpisz je przez Biblioteka → Edytuj.</p>
     <textarea id="sqlInput" rows="10" class="w-full bg-slate-800 text-green-400 font-mono text-sm p-4 rounded-2xl border border-slate-700 outline-none focus:ring-2 focus:ring-brand-pink" placeholder="-- INSERT INTO pakiety ..."></textarea>
     <div class="flex gap-3 mt-4">
       <button onclick="validateSQL()" class="bg-brand-emerald hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl">✔ Waliduj SQL</button>
@@ -208,22 +274,22 @@
     <div class="flex flex-wrap gap-4 items-end">
       <div class="flex-grow"><label class="lbl">Dostawca</label><select id="vProvider" onchange="loadProviderPackages('vPackage',this.value)" class="inp"><option value="">— wybierz —</option></select></div>
       <div class="flex-grow"><label class="lbl">Pakiet bazowy</label><select id="vPackage" class="inp"><option value="">— wybierz dostawcę —</option></select></div>
-      <div><label class="lbl">Nowa wersja (MMYYYY)</label><input type="text" id="vNewVersion" placeholder="062026" maxlength="6" class="inp w-32" /></div>
+      <div><label class="lbl">Nowa wersja (MMYYYY)</label><input type="text" id="vNewVersion" placeholder="062026" maxlength="6" class="inp w-32"/></div>
       <button onclick="createNewVersion()" class="bg-brand-navy text-white font-bold py-3 px-6 rounded-xl">Utwórz Klona</button>
     </div>
     <div id="versionNotif" class="hidden mt-4 p-4 rounded-xl text-sm font-semibold border"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ ADMIN -->
+<!-- ══════════════════════════════ ADMIN -->
 <div id="tab-admin" class="tab-panel">
   <div id="notif-admin" class="hidden mb-5 p-4 rounded-xl text-sm font-semibold border"></div>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-      <h2 class="text-base font-bold text-brand-navy mb-5 flex items-center gap-2">🔌 Baza Danych (Supabase)</h2>
+      <h2 class="text-base font-bold text-brand-navy mb-5">🔌 Baza Danych (Supabase)</h2>
       <div class="space-y-4 mb-5">
-        <div><label class="lbl">Project URL</label><input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" class="inp" /></div>
-        <div><label class="lbl">Anon / API Key</label><input type="password" id="cfgKey" placeholder="eyJ..." class="inp" /></div>
+        <div><label class="lbl">Project URL</label><input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" class="inp"/></div>
+        <div><label class="lbl">Anon / API Key</label><input type="password" id="cfgKey" placeholder="eyJ..." class="inp"/></div>
       </div>
       <div class="flex gap-3">
         <button onclick="saveConfig()" class="bg-brand-navy text-white font-bold py-2.5 px-6 rounded-xl">Zapisz</button>
@@ -232,16 +298,16 @@
       <p id="connStatus" class="mt-4 text-sm font-semibold"></p>
     </div>
     <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-      <h2 class="text-base font-bold text-brand-navy mb-2 flex items-center gap-2">💰 Szybkie wprowadzanie składek</h2>
-      <p class="text-xs text-slate-400 mb-5">Możesz też edytować składki bezpośrednio w <strong>Bibliotece → Edytuj</strong>.</p>
+      <h2 class="text-base font-bold text-brand-navy mb-2">💰 Szybkie składki</h2>
+      <p class="text-xs text-slate-400 mb-5">Możesz też edytować przez <strong>Biblioteka → Edytuj</strong>.</p>
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div><label class="lbl">Dostawca</label><select id="aProvider" onchange="loadProviderPackages('aPackage',this.value)" class="inp"><option value="">— wybierz —</option></select></div>
         <div><label class="lbl">Pakiet</label><select id="aPackage" class="inp"><option value="">Wybierz dostawcę</option></select></div>
       </div>
       <div class="grid grid-cols-3 gap-4 mb-4">
-        <div><label class="lbl">Indyw. (zł/mies)</label><input type="number" step="0.01" id="aPriceInd" placeholder="0.00" class="inp" /></div>
-        <div><label class="lbl">Grupowa (zł/mies)</label><input type="number" step="0.01" id="aPriceGrup" placeholder="0.00" class="inp" /></div>
-        <div><label class="lbl">Rodzina (zł/mies)</label><input type="number" step="0.01" id="aPriceRodzina" placeholder="0.00" class="inp" /></div>
+        <div><label class="lbl">Indyw.</label><input type="number" step="0.01" id="aPriceInd" placeholder="0.00" class="inp"/></div>
+        <div><label class="lbl">Partnerska</label><input type="number" step="0.01" id="aPriceGrup" placeholder="0.00" class="inp"/></div>
+        <div><label class="lbl">Rodzinna</label><input type="number" step="0.01" id="aPriceRodzina" placeholder="0.00" class="inp"/></div>
       </div>
       <button onclick="savePrice()" class="w-full bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 rounded-xl shadow-md">Zapisz składki</button>
     </div>
@@ -250,197 +316,311 @@
 
 </main>
 
-<style>
-  .lbl{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-  .inp{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none}
-  .inp:focus{border-color:#e11d48;box-shadow:0 0 0 2px rgba(225,29,72,.1)}
-</style>
-
 <script>
-// ─── STATE ───────────────────────────────────────────────────
-let SUPABASE_URL = localStorage.getItem('ma_url')||'';
-let SUPABASE_KEY = localStorage.getItem('ma_key')||'';
-let allProviders  = [];
-let selectedPkgs  = {};   // { pkgId: {id, nazwa, dostawca_nazwa} }
-let allCalcPkgs   = [];
-let selectedCalc  = new Set();
+// ─── STATE ──────────────────────────────────────────────
+let SB_URL = localStorage.getItem('ma_url')||'';
+let SB_KEY = localStorage.getItem('ma_key')||'';
+let allProviders   = [];
+let providerPkgs   = {};    // {provId:[pkg,...]}
+let selectedPkgs   = {};    // {pkgId: pkgObj}
+let activeProv     = null;  // currently shown in right panel
+let pkgFilter      = 'ind';
+let lastCompData   = [];
+let allCalcPkgs    = [];
+let selectedCalc   = new Set();
+let searchType     = 'spec';
 
-// ─── TABS ─────────────────────────────────────────────────────
+// ─── TABS ───────────────────────────────────────────────
 function switchTab(id,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active','bg-white','text-brand-navy','shadow-sm');b.classList.add('text-slate-300')});
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.classList.remove('bg-white','text-brand-navy','shadow-sm');
+    b.classList.add('text-slate-300');
+  });
   document.getElementById('tab-'+id).classList.add('active');
-  btn.classList.add('active','bg-white','text-brand-navy','shadow-sm');btn.classList.remove('text-slate-300');
+  btn.classList.add('bg-white','text-brand-navy','shadow-sm');
+  btn.classList.remove('text-slate-300');
   if(id==='library') loadLibrary();
   if(id==='calc') calcLoadPackages();
 }
 
-// ─── API ──────────────────────────────────────────────────────
+// ─── API ────────────────────────────────────────────────
 async function apiGet(table,params=''){
-  if(!SUPABASE_URL||!SUPABASE_KEY) return null;
+  if(!SB_URL||!SB_KEY) return null;
   try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'}});
+    const r=await fetch(`${SB_URL}/rest/v1/${table}?${params}`,
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Accept':'application/json'}});
     return r.ok?r.json():null;
-  }catch{return null}
+  }catch(e){return null}
 }
 async function apiPatch(table,params,body){
-  if(!SUPABASE_URL||!SUPABASE_KEY) return false;
+  if(!SB_URL||!SB_KEY) return false;
   try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(body)});
+    const r=await fetch(`${SB_URL}/rest/v1/${table}?${params}`,
+      {method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+       body:JSON.stringify(body)});
     return r.ok;
-  }catch{return false}
+  }catch(e){return false}
 }
 
-// ─── INIT ─────────────────────────────────────────────────────
+// ─── INIT ───────────────────────────────────────────────
 async function init(){
-  document.getElementById('cfgUrl').value=SUPABASE_URL;
-  document.getElementById('cfgKey').value=SUPABASE_KEY;
+  document.getElementById('cfgUrl').value=SB_URL;
+  document.getElementById('cfgKey').value=SB_KEY;
   await checkDbStatus();
   await loadProvidersFromDB();
 }
 
 async function checkDbStatus(){
   const dot=document.getElementById('dotDb'),txt=document.getElementById('statusDb');
-  if(!SUPABASE_URL||!SUPABASE_KEY){txt.textContent='Wymagana konfiguracja';dot.className='w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse';return}
+  if(!SB_URL||!SB_KEY){
+    txt.textContent='Wymagana konfiguracja';
+    dot.className='w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse';return;
+  }
   const d=await apiGet('dostawcy','select=id&aktywny=eq.true');
   if(d){
-    txt.textContent='Połączono';dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,.8)]';
+    txt.textContent='Połączono';
+    dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500';
     document.getElementById('statusProviders').textContent=d.length;
     const p=await apiGet('pakiety','select=id&aktywna=eq.true');
     document.getElementById('statusPackages').textContent=p?p.length:'–';
-  }else{txt.textContent='Błąd połączenia';dot.className='w-2.5 h-2.5 rounded-full bg-red-500'}
+  }else{
+    txt.textContent='Błąd połączenia';
+    dot.className='w-2.5 h-2.5 rounded-full bg-red-500';
+  }
 }
 
 async function loadProvidersFromDB(){
   const d=await apiGet('dostawcy','select=id,nazwa,skrot&aktywny=eq.true&order=nazwa');
   allProviders=d||[];
-  buildAccordion();
+  buildProvList();
   populateAllSelects();
 }
 
-// ─── AKORDEON Z CHECKBOXAMI ────────────────────────────────────
-async function buildAccordion(){
-  const wrap=document.getElementById('providerAccordion');
-  wrap.innerHTML='';
-  if(!allProviders.length){wrap.innerHTML='<p class="text-slate-400 text-sm">Brak dostawców w bazie.</p>';return}
+// ─── LISTA DOSTAWCÓW (LEWA) ─────────────────────────────
+function buildProvList(){
+  const el=document.getElementById('provList');
+  el.innerHTML='';
+  if(!allProviders.length){el.innerHTML='<p class="text-xs text-slate-400 px-2">Brak dostawców</p>';return;}
+  allProviders.forEach(p=>{
+    const row=document.createElement('div');
+    row.className='prov-row';
+    row.id='provrow_'+p.id;
+    row.innerHTML=`
+      <div class="chk" id="provchk_${p.id}"></div>
+      <span class="text-sm font-semibold flex-grow">${p.nazwa}</span>
+      <span id="provcnt_${p.id}" class="text-[10px] font-bold text-brand-pink hidden"></span>`;
+    row.onclick=()=>selectProvider(p.id, p.nazwa);
+    el.appendChild(row);
+  });
+}
 
-  for(const prov of allProviders){
-    // pobierz pakiety tego dostawcy
-    const pkts=await apiGet('pakiety',`select=id,nazwa,tier&dostawca_id=eq.${prov.id}&aktywna=eq.true&order=tier,nazwa`);
+async function selectProvider(provId, provNazwa){
+  // zaznacz wiersz
+  document.querySelectorAll('.prov-row').forEach(r=>{r.classList.remove('active')});
+  document.getElementById('provrow_'+provId).classList.add('active');
+  activeProv=provId;
 
-    const section=document.createElement('div');
-    section.className='border border-slate-200 rounded-2xl overflow-hidden';
-    section.innerHTML=`
-      <button onclick="toggleAccordion(${prov.id})" class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors">
-        <span class="font-bold text-brand-navy text-sm">${prov.nazwa}</span>
-        <div class="flex items-center gap-3">
-          <span id="provSelCount_${prov.id}" class="text-xs text-slate-400 font-semibold"></span>
-          <span id="provArrow_${prov.id}" class="text-slate-400 text-xs transition-transform">▼</span>
-        </div>
-      </button>
-      <div id="provPanel_${prov.id}" class="hidden p-4 bg-white">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2" id="pkgGrid_${prov.id}">
-          ${(pkts||[]).map(pk=>`
-            <div class="pkg-card" id="pkgcard_${pk.id}" onclick="togglePkg(${pk.id},'${prov.nazwa.replace(/'/g,"\\'")}','${pk.nazwa.replace(/'/g,"\\'")}',${pk.tier})">
-              <div class="flex items-start justify-between gap-2">
-                <div>
-                  <div class="text-xs font-bold">${pk.nazwa}</div>
-                  <div class="pkg-sub text-xs text-slate-400 mt-0.5">Tier ${pk.tier}</div>
-                </div>
-                <div id="pkgcheck_${pk.id}" class="w-4 h-4 rounded border-2 border-slate-300 flex-shrink-0 mt-0.5"></div>
-              </div>
-            </div>`).join('')}
-          ${!pkts||!pkts.length?'<p class="text-slate-400 text-xs col-span-4">Brak pakietów w bazie dla tego dostawcy.</p>':''}
-        </div>
-      </div>`;
-    wrap.appendChild(section);
+  // pokaż panel prawy
+  document.getElementById('pkgPanelHint').classList.add('hidden');
+  document.getElementById('pkgPanel').classList.remove('hidden');
+  document.getElementById('pkgPanelTitle').textContent=provNazwa;
+  document.getElementById('pkgPanelSub').textContent='';
+  document.getElementById('pkgGrid').innerHTML='<div class="flex gap-2 items-center text-slate-400 text-sm col-span-4"><div class="loader"></div>Ładowanie pakietów...</div>';
+
+  if(!providerPkgs[provId]){
+    const d=await apiGet('pakiety',`select=id,nazwa,tier,dostawca_id&dostawca_id=eq.${provId}&aktywna=eq.true&order=tier,nazwa`);
+    providerPkgs[provId]=d||[];
   }
+  pkgFilter='ind';
+  updateFilterBtns();
+  renderPkgGrid();
 }
 
-function toggleAccordion(provId){
-  const panel=document.getElementById(`provPanel_${provId}`);
-  const arrow=document.getElementById(`provArrow_${provId}`);
-  panel.classList.toggle('hidden');
-  arrow.textContent=panel.classList.contains('hidden')?'▼':'▲';
+function updateFilterBtns(){
+  ['ind','partner','rodzinny','all'].forEach(f=>{
+    const b=document.getElementById('pf-'+f);
+    if(!b) return;
+    b.className=f===pkgFilter
+      ?'px-3 py-1 text-xs font-bold rounded-lg bg-brand-navy text-white'
+      :'px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600';
+  });
 }
 
-function togglePkg(pkgId, provNazwa, pkgNazwa, tier){
+function filterPkgs(f){pkgFilter=f;updateFilterBtns();renderPkgGrid();}
+
+// Mapowanie filtr → słowa kluczowe w nazwie
+const PKG_FILTERS={
+  ind:    ['basic','standard','premium','prestige','vip','senior','indyw','klasyczny','komfort','optimum','rubinowy','perłowy','bursztynowy','lazurowy','szmaragdowy','diamentowy'],
+  partner:['partner','duo','plus','para','partnerski'],
+  rodzinny:['rodzin','family','dom','familijny'],
+};
+
+function renderPkgGrid(){
+  const pkts=providerPkgs[activeProv]||[];
+  const grid=document.getElementById('pkgGrid');
+  const sub=document.getElementById('pkgPanelSub');
+
+  let filtered=pkts;
+  if(pkgFilter!=='all'){
+    const keys=PKG_FILTERS[pkgFilter]||[];
+    const f=pkts.filter(p=>keys.some(k=>p.nazwa.toLowerCase().includes(k)));
+    if(f.length) filtered=f;
+  }
+  sub.textContent=`${filtered.length} wariantów`;
+
+  if(!filtered.length){grid.innerHTML='<p class="text-slate-400 text-sm col-span-4">Brak pakietów dla tego filtru.</p>';return;}
+  grid.innerHTML='';
+  filtered.forEach(pk=>{
+    const sel=!!selectedPkgs[pk.id];
+    const div=document.createElement('div');
+    div.className='pkg-chip'+(sel?' sel':'');
+    div.id='pkgchip_'+pk.id;
+    div.innerHTML=`
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <div class="font-bold text-sm leading-tight">${pk.nazwa}</div>
+          <div class="text-xs mt-0.5 ${sel?'text-slate-300':'text-slate-400'}">Tier ${pk.tier}</div>
+        </div>
+        <div id="pkgck_${pk.id}" class="chk mt-0.5 ${sel?'on':''}">${sel?'✓':''}</div>
+      </div>`;
+    div.onclick=()=>togglePkg(pk.id, pk.nazwa, pk.tier, activeProv);
+    grid.appendChild(div);
+  });
+}
+
+function togglePkg(pkgId, pkgNazwa, tier, provId){
+  const prov=allProviders.find(p=>p.id===provId);
   if(selectedPkgs[pkgId]){
     delete selectedPkgs[pkgId];
-    document.getElementById(`pkgcard_${pkgId}`).classList.remove('selected');
-    document.getElementById(`pkgcheck_${pkgId}`).className='w-4 h-4 rounded border-2 border-slate-300 flex-shrink-0 mt-0.5';
-  } else {
-    if(Object.keys(selectedPkgs).length>=5){showNotif('compare','Maksymalnie 5 pakietów do porównania.','border-red-500 bg-red-50 text-red-700');return}
-    selectedPkgs[pkgId]={id:pkgId,dostawca_nazwa:provNazwa,pakiet_nazwa:pkgNazwa,tier};
-    document.getElementById(`pkgcard_${pkgId}`).classList.add('selected');
-    document.getElementById(`pkgcheck_${pkgId}`).className='w-4 h-4 rounded border-2 border-white bg-brand-pink flex-shrink-0 mt-0.5';
+  }else{
+    if(Object.keys(selectedPkgs).length>=5){
+      showNotif('compare','Maksymalnie 5 pakietów do porównania.','border-red-500 bg-red-50 text-red-700');return;
+    }
+    selectedPkgs[pkgId]={id:pkgId,nazwa:pkgNazwa,tier,dostawca_id:provId,dostawca_nazwa:prov?prov.nazwa:''};
   }
+  // odśwież chip i chk
+  const chip=document.getElementById('pkgchip_'+pkgId);
+  const ck=document.getElementById('pkgck_'+pkgId);
+  const sel=!!selectedPkgs[pkgId];
+  if(chip){chip.className='pkg-chip'+(sel?' sel':'');}
+  if(ck){ck.className='chk mt-0.5'+(sel?' on':'');ck.textContent=sel?'✓':'';}
   updateSelCount();
+  updateSelectedBar();
+  updateProvCnt(provId);
 }
 
 function updateSelCount(){
   const n=Object.keys(selectedPkgs).length;
-  document.getElementById('selCount').textContent=`${n} zaznaczonych`;
-  // aktualizuj liczniki per dostawca
-  allProviders.forEach(p=>{
-    const el=document.getElementById(`provSelCount_${p.id}`);
-    if(!el) return;
-    const cnt=Object.values(selectedPkgs).filter(s=>s.dostawca_nazwa===p.nazwa).length;
-    el.textContent=cnt?`${cnt} wybrane`:'';
+  document.getElementById('selCount').textContent=n+' pakietów';
+}
+
+function updateProvCnt(provId){
+  const el=document.getElementById('provcnt_'+provId);
+  if(!el) return;
+  const cnt=Object.values(selectedPkgs).filter(p=>p.dostawca_id===provId).length;
+  el.textContent=cnt?cnt+'×':'';
+  el.classList.toggle('hidden',!cnt);
+  const chk=document.getElementById('provchk_'+provId);
+  if(chk){chk.className='chk'+(cnt?' on':'');chk.textContent=cnt?'✓':'';}
+}
+
+function updateSelectedBar(){
+  const items=Object.values(selectedPkgs);
+  const bar=document.getElementById('selectedBar');
+  const chips=document.getElementById('selectedChips');
+  if(!items.length){bar.classList.add('hidden');return;}
+  bar.classList.remove('hidden');
+  chips.innerHTML='';
+  items.forEach(p=>{
+    const sp=document.createElement('span');
+    sp.className='inline-flex items-center gap-1.5 bg-brand-navy text-white text-xs font-bold px-3 py-1.5 rounded-full';
+    sp.innerHTML=`${p.dostawca_nazwa} — ${p.nazwa} <button onclick="removePkg(${p.id})" class="hover:text-red-300 ml-0.5 font-bold">✕</button>`;
+    chips.appendChild(sp);
   });
 }
 
-function clearSelection(){
-  Object.keys(selectedPkgs).forEach(id=>{
-    document.getElementById(`pkgcard_${id}`)?.classList.remove('selected');
-    if(document.getElementById(`pkgcheck_${id}`)) document.getElementById(`pkgcheck_${id}`).className='w-4 h-4 rounded border-2 border-slate-300 flex-shrink-0 mt-0.5';
-  });
-  selectedPkgs={};
+function removePkg(pkgId){
+  const p=selectedPkgs[pkgId];
+  if(p){const pid=p.dostawca_id;delete selectedPkgs[pkgId];updateProvCnt(pid);}
+  // odśwież chip jeśli widoczny
+  const chip=document.getElementById('pkgchip_'+pkgId);
+  const ck=document.getElementById('pkgck_'+pkgId);
+  if(chip) chip.className='pkg-chip';
+  if(ck){ck.className='chk mt-0.5';ck.textContent='';}
   updateSelCount();
-  document.getElementById('comparisonResult').classList.add('hidden');
+  updateSelectedBar();
 }
 
-// ─── PORÓWNANIE ───────────────────────────────────────────────
+function clearAll(){
+  const pids=new Set(Object.values(selectedPkgs).map(p=>p.dostawca_id));
+  selectedPkgs={};
+  pids.forEach(pid=>updateProvCnt(pid));
+  // reset wszystkich chipów widocznych
+  document.querySelectorAll('.pkg-chip.sel').forEach(c=>{
+    c.className='pkg-chip';
+    const id=c.id.replace('pkgchip_','');
+    const ck=document.getElementById('pkgck_'+id);
+    if(ck){ck.className='chk mt-0.5';ck.textContent='';}
+  });
+  updateSelCount();
+  updateSelectedBar();
+  document.getElementById('comparisonResult').classList.add('hidden');
+  document.getElementById('priceSection').classList.add('hidden');
+}
+
+// ─── PORÓWNANIE ─────────────────────────────────────────
+const ROWS=[
+  {label:'Dostawca',           key:'dostawca_nazwa',        fmt:v=>`<span class="font-black text-brand-navy">${v||'–'}</span>`},
+  {label:'Wariant',            key:'pakiet_nazwa',           fmt:v=>`<strong>${v||'–'}</strong>`},
+  {label:'Tier',               key:'tier',                   fmt:v=>v?`<span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded">T${v}</span>`:'–'},
+  {sep:'Zakres opieki'},
+  {label:'Specjalizacje',      key:'liczba_specjalizacji',   fmt:v=>v!=null?`<strong class="text-xl">${v}</strong>`:'<span class="text-slate-300">–</span>',num:true},
+  {label:'Badania lab.',       key:'liczba_badan_lab',       fmt:v=>v!=null?`<strong class="text-xl">${v}</strong>`:'<span class="text-slate-300">–</span>',num:true},
+  {label:'Telemedycyna',       key:'telemedycyna',           fmt:v=>v?'✅':'❌'},
+  {label:'Opieka w ciąży',     key:'ciaza',                  fmt:v=>v?'✅':'❌'},
+  {label:'Rehabilitacja',      key:'rehabilitacja',          fmt:v=>v?'✅':'❌'},
+  {label:'Stomatologia',       key:'stomatologia',           fmt:v=>v?'✅':'❌'},
+  {label:'Psychiatria',        key:'opieka_psychiatryczna',  fmt:v=>v?'✅':'❌'},
+  {label:'Wizyty domowe',      key:'wizyty_domowe',          fmt:v=>v?'✅':'❌'},
+  {label:'Szpital',            key:'leczenie_szpitalne',     fmt:v=>v?'✅':'❌'},
+  {label:'Hotline 24h',        key:'hotline_24h',            fmt:v=>v?'✅':'❌'},
+  {sep:'Warunki dostępu'},
+  {label:'Oczek. POZ',         key:'czas_oczekiwania_poz',   fmt:v=>v!=null?`≤${v} dni`:'<span class="text-slate-300">–</span>',num:true,low:true},
+  {label:'Oczek. spec.',       key:'czas_oczekiwania_spec',  fmt:v=>v!=null?`≤${v} dni`:'<span class="text-slate-300">–</span>',num:true,low:true},
+  {label:'Karencja',           key:'karencja_dni',           fmt:v=>v===0?'<span class="text-emerald-600 font-bold">Brak</span>':(v?`${v} dni`:'–'),num:true,low:true},
+  {label:'Min. pracownicy',    key:'min_pracownicy',         fmt:v=>v!=null?v:'–'},
+  {label:'Dzieci do (lat)',    key:'wiek_dzieci_do',         fmt:v=>v!=null?v:'–'},
+  {label:'Zasięg',             key:'zasieg_placowek',        fmt:v=>v||'–'},
+  {sep:'Składki miesięczne'},
+  {label:'Indywidualna',       key:'cena_ind_mies',          fmt:v=>v?`<strong class="text-brand-pink text-base">${parseFloat(v).toFixed(2)} zł</strong>`:'<em class="text-slate-300 text-xs">brak — wpisz poniżej</em>',num:true,low:true},
+  {label:'Partnerska',         key:'cena_grup_mies',         fmt:v=>v?`<strong class="text-brand-pink text-base">${parseFloat(v).toFixed(2)} zł</strong>`:'<em class="text-slate-300 text-xs">brak — wpisz poniżej</em>',num:true,low:true},
+  {label:'Rodzinna',           key:'cena_rodzina_mies',      fmt:v=>v?`<strong class="text-brand-pink text-base">${parseFloat(v).toFixed(2)} zł</strong>`:'<em class="text-slate-300 text-xs">brak — wpisz poniżej</em>',num:true,low:true},
+];
+
 async function runComparison(){
   const ids=Object.keys(selectedPkgs);
-  if(ids.length<2){showNotif('compare','Zaznacz minimum 2 pakiety (z różnych lub tych samych dostawców).','border-red-500 bg-red-50 text-red-700');return}
-  showNotif('compare','Pobieranie danych z bazy...','border-blue-500 bg-blue-50 text-blue-700');
+  if(ids.length<2){showNotif('compare','Zaznacz minimum 2 pakiety.','border-red-500 bg-red-50 text-red-700');return;}
+  showNotif('compare','Pobieranie danych...','border-blue-500 bg-blue-50 text-blue-700');
   const data=await apiGet('pakiety_pelne',`select=*&id=in.(${ids.join(',')})`);
-  if(!data||!data.length){showNotif('compare','Brak danych w bazie dla wybranych pakietów.','border-red-500 bg-red-50 text-red-700');return}
-  const sorted=ids.map(id=>data.find(d=>d.id===parseInt(id))).filter(Boolean);
+  if(!data||!data.length){showNotif('compare','Brak danych w bazie.','border-red-500 bg-red-50 text-red-700');return;}
+  lastCompData=ids.map(id=>data.find(d=>d.id===parseInt(id))).filter(Boolean);
+  renderCompTable(lastCompData);
+  renderPriceSection(lastCompData);
+  showNotif('compare','Zestawienie gotowe — '+lastCompData.length+' pakietów.','border-emerald-500 bg-emerald-50 text-emerald-700');
+}
 
-  const ROWS=[
-    {label:'Dostawca',            key:'dostawca_nazwa',         fmt:v=>`<span class="font-black text-brand-navy">${v||'–'}</span>`},
-    {label:'Nazwa wariantu',      key:'pakiet_nazwa',           fmt:v=>`<strong>${v||'–'}</strong>`},
-    {label:'Tier',                key:'tier',                   fmt:v=>v?`<span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded">T${v}</span>`:'–'},
-    {label:'Specjalizacje',       key:'liczba_specjalizacji',   fmt:v=>v!=null?`<strong class="text-xl">${v}</strong>`:'<span class="text-slate-300">–</span>',num:true},
-    {label:'Badania lab.',        key:'liczba_badan_lab',       fmt:v=>v!=null?`<strong class="text-xl">${v}</strong>`:'<span class="text-slate-300">–</span>',num:true},
-    {label:'Telemedycyna',        key:'telemedycyna',           fmt:v=>v?'✅':'❌'},
-    {label:'Opieka w ciąży',      key:'ciaza',                  fmt:v=>v?'✅':'❌'},
-    {label:'Rehabilitacja',       key:'rehabilitacja',          fmt:v=>v?'✅':'❌'},
-    {label:'Stomatologia',        key:'stomatologia',           fmt:v=>v?'✅':'❌'},
-    {label:'Psychiatria',         key:'opieka_psychiatryczna',  fmt:v=>v?'✅':'❌'},
-    {label:'Wizyty domowe',       key:'wizyty_domowe',          fmt:v=>v?'✅':'❌'},
-    {label:'Leczenie szpitalne',  key:'leczenie_szpitalne',     fmt:v=>v?'✅':'❌'},
-    {label:'Hotline 24h',         key:'hotline_24h',            fmt:v=>v?'✅':'❌'},
-    {label:'Czas oczek. POZ',     key:'czas_oczekiwania_poz',   fmt:v=>v!=null?`≤${v} dni rob.`:'<span class="text-slate-300">–</span>',num:true,low:true},
-    {label:'Czas oczek. spec.',   key:'czas_oczekiwania_spec',  fmt:v=>v!=null?`≤${v} dni rob.`:'<span class="text-slate-300">–</span>',num:true,low:true},
-    {label:'Karencja',            key:'karencja_dni',           fmt:v=>v===0?'<span class="text-emerald-600 font-bold">Brak</span>':(v?`${v} dni`:'–'),num:true,low:true},
-    {label:'Min. pracownicy',     key:'min_pracownicy',         fmt:v=>v!=null?v:'–'},
-    {label:'Dzieci do (lat)',     key:'wiek_dzieci_do',         fmt:v=>v!=null?v:'–'},
-    {label:'Zasięg placówek',     key:'zasieg_placowek',        fmt:v=>v||'–'},
-    {label:'Składka indyw.',      key:'cena_ind_mies',          fmt:v=>v?`<strong class="text-brand-pink">${parseFloat(v).toFixed(2)} zł</strong>`:'<em class="text-slate-300">brak</em>',num:true,low:true},
-    {label:'Składka grupowa',     key:'cena_grup_mies',         fmt:v=>v?`<strong class="text-brand-pink">${parseFloat(v).toFixed(2)} zł</strong>`:'<em class="text-slate-300">brak</em>',num:true,low:true},
-    {label:'Składka rodzinna',    key:'cena_rodzina_mies',      fmt:v=>v?`<strong class="text-brand-pink">${parseFloat(v).toFixed(2)} zł</strong>`:'<em class="text-slate-300">brak</em>',num:true,low:true},
-  ];
-
-  let html=`<table class="w-full text-sm border-collapse min-w-[700px]">
+function renderCompTable(sorted){
+  let html=`<table class="w-full text-sm border-collapse min-w-[600px]">
     <thead><tr class="bg-slate-100 text-slate-500 text-xs uppercase">
-      <th class="p-4 text-left w-44 border-r border-slate-200">Parametr</th>`;
-  sorted.forEach((_,i)=>html+=`<th class="p-4 text-center border-r border-slate-200">Opcja ${i+1}</th>`);
+      <th class="p-4 text-left w-44 border-r border-slate-200 sticky left-0 bg-slate-100 z-10">Parametr</th>`;
+  sorted.forEach((_,i)=>html+=`<th class="p-4 text-center border-r border-slate-200 min-w-[160px]">Opcja ${i+1}</th>`);
   html+=`</tr></thead><tbody>`;
-
   ROWS.forEach((row,ri)=>{
+    if(row.sep){
+      html+=`<tr><td colspan="${sorted.length+1}" class="p-3 bg-brand-navy/5 text-xs font-black text-brand-navy uppercase tracking-widest border-y border-slate-200">${row.sep}</td></tr>`;
+      return;
+    }
     const vals=sorted.map(p=>p[row.key]);
     let bestIdx=-1,worstIdx=-1;
     if(row.num){
@@ -448,62 +628,276 @@ async function runComparison(){
       if(nums.length>1){
         const best=row.low?Math.min(...nums):Math.max(...nums);
         const worst=row.low?Math.max(...nums):Math.min(...nums);
-        bestIdx=vals.findIndex(v=>parseFloat(v)===best);
-        worstIdx=vals.findIndex(v=>parseFloat(v)===worst&&vals.findIndex(x=>parseFloat(x)===best)!==vals.findIndex(x=>parseFloat(x)===worst));
+        const bi=vals.findIndex(v=>parseFloat(v)===best);
+        const wi=vals.findIndex(v=>parseFloat(v)===worst);
+        if(bi!==wi){bestIdx=bi;worstIdx=wi;}
       }
     }
-    const bg=ri%2===0?'bg-white':'bg-slate-50/60';
-    html+=`<tr class="${bg} border-b border-slate-100 hover:bg-blue-50/40 transition-colors">
-      <td class="p-3 text-xs font-bold text-slate-500 uppercase tracking-wide border-r border-slate-100">${row.label}</td>`;
+    const bg=ri%2===0?'bg-white':'bg-slate-50/70';
+    html+=`<tr class="${bg} border-b border-slate-100 hover:bg-blue-50/40">
+      <td class="p-3 text-xs font-bold text-slate-500 uppercase tracking-wide border-r border-slate-100 sticky left-0 ${bg}">${row.label}</td>`;
     sorted.forEach((p,ci)=>{
-      const isBest=bestIdx===ci,isWorst=worstIdx===ci;
-      let cls='p-3 text-center border-r border-slate-100';
-      if(isBest) cls+=' diff-best';
-      else if(isWorst) cls+=' diff-worse';
-      html+=`<td class="${cls}">${row.fmt(p[row.key])}${isBest?' <span class="text-[9px]">🟢</span>':''}${isWorst?' <span class="text-[9px]">🔴</span>':''}</td>`;
+      const iB=bestIdx===ci,iW=worstIdx===ci;
+      html+=`<td class="p-3 text-center border-r border-slate-100${iB?' diff-best':iW?' diff-worst':''}">${row.fmt(p[row.key])}${iB?' 🟢':''}${iW?' 🔴':''}</td>`;
     });
     html+=`</tr>`;
   });
-
-  html+=`</tbody></table><div class="p-4 text-xs text-slate-400 text-right">🟢 najlepsza wartość &nbsp;|&nbsp; 🔴 najgorsza &nbsp;|&nbsp; MEDICALAURA ${new Date().toLocaleDateString('pl-PL')}</div>`;
+  html+=`</tbody></table><div class="p-4 text-xs text-slate-400 text-right">MEDICALAURA ${new Date().toLocaleDateString('pl-PL')}</div>`;
   document.getElementById('compTableWrap').innerHTML=html;
   document.getElementById('comparisonResult').classList.remove('hidden');
   document.getElementById('comparisonResult').scrollIntoView({behavior:'smooth'});
-  showNotif('compare',`Zestawienie gotowe — ${sorted.length} pakietów.`,'border-emerald-500 bg-emerald-50 text-emerald-700');
 }
 
-// ─── BIBLIOTEKA ───────────────────────────────────────────────
+// ─── SEKCJA SKŁADEK ─────────────────────────────────────
+function renderPriceSection(sorted){
+  const grid=document.getElementById('priceInputGrid');
+  grid.innerHTML='';
+  sorted.forEach(p=>{
+    const div=document.createElement('div');
+    div.className='bg-slate-50 border border-slate-200 rounded-2xl p-5';
+    div.innerHTML=`
+      <div class="font-bold text-brand-navy text-sm">${p.dostawca_nazwa}</div>
+      <div class="text-xs text-slate-500 mb-4">${p.pakiet_nazwa} · T${p.tier}</div>
+      <div class="space-y-3">
+        <div><label class="lbl">Indyw. (zł/mies)</label>
+          <input type="number" step="0.01" class="price-inp" id="pi_ind_${p.id}" value="${p.cena_ind_mies||''}" placeholder="–" oninput="checkPricesComplete()"/></div>
+        <div><label class="lbl">Partnerska (zł/mies)</label>
+          <input type="number" step="0.01" class="price-inp" id="pi_par_${p.id}" value="${p.cena_grup_mies||''}" placeholder="–" oninput="checkPricesComplete()"/></div>
+        <div><label class="lbl">Rodzinna (zł/mies)</label>
+          <input type="number" step="0.01" class="price-inp" id="pi_rod_${p.id}" value="${p.cena_rodzina_mies||''}" placeholder="–" oninput="checkPricesComplete()"/></div>
+      </div>`;
+    grid.appendChild(div);
+  });
+  document.getElementById('priceSection').classList.remove('hidden');
+  checkPricesComplete();
+}
+
+function checkPricesComplete(){
+  const ok=lastCompData.length>0&&lastCompData.every(p=>{
+    const v=document.getElementById('pi_ind_'+p.id)?.value;
+    return v&&parseFloat(v)>0;
+  });
+  const bCSV=document.getElementById('btnCSV'),bPDF=document.getElementById('btnPDF');
+  const hint=document.getElementById('exportHint');
+  if(ok){
+    bCSV.disabled=false;bCSV.className='bg-brand-emerald hover:bg-emerald-600 text-white font-bold py-3 px-7 rounded-xl shadow-md';
+    bPDF.disabled=false;bPDF.className='bg-brand-navy hover:bg-slate-800 text-white font-bold py-3 px-7 rounded-xl shadow-md';
+    hint.textContent='';
+  }else{
+    bCSV.disabled=true;bCSV.className='bg-slate-200 text-slate-400 font-bold py-3 px-7 rounded-xl cursor-not-allowed';
+    bPDF.disabled=true;bPDF.className='bg-slate-200 text-slate-400 font-bold py-3 px-7 rounded-xl cursor-not-allowed';
+    hint.textContent='Uzupełnij składkę indyw. aby odblokować eksport';
+  }
+}
+
+async function savePrices(){
+  let ok=true;
+  for(const p of lastCompData){
+    const body={};
+    const ind=document.getElementById('pi_ind_'+p.id)?.value;
+    const par=document.getElementById('pi_par_'+p.id)?.value;
+    const rod=document.getElementById('pi_rod_'+p.id)?.value;
+    if(ind) body.cena_ind_mies=parseFloat(ind);
+    if(par) body.cena_grup_mies=parseFloat(par);
+    if(rod) body.cena_rodzina_mies=parseFloat(rod);
+    if(Object.keys(body).length){const r=await apiPatch('pakiety',`id=eq.${p.id}`,body);if(!r)ok=false;}
+  }
+  const st=document.getElementById('priceStatus');
+  st.classList.remove('hidden');
+  st.className=ok?'mt-4 p-3 rounded-xl text-sm font-semibold border border-emerald-500 bg-emerald-50 text-emerald-700'
+                 :'mt-4 p-3 rounded-xl text-sm font-semibold border border-red-500 bg-red-50 text-red-700';
+  st.textContent=ok?'✓ Składki zapisane w bazie.':'✗ Błąd zapisu. Sprawdź politykę RLS (UPDATE).';
+  if(ok){checkPricesComplete();runComparison();}
+}
+
+function exportCSV(){
+  const sorted=lastCompData;
+  const fmap=(id,p)=>({cena_ind_mies:'pi_ind_'+p.id,cena_grup_mies:'pi_par_'+p.id,cena_rodzina_mies:'pi_rod_'+p.id}[id]);
+  let csv='\uFEFF';
+  csv+='Parametr;'+sorted.map(p=>`${p.dostawca_nazwa} — ${p.pakiet_nazwa}`).join(';')+'\n';
+  ROWS.forEach(row=>{
+    if(row.sep){csv+=`\n${row.sep}\n`;return;}
+    const vals=sorted.map(p=>{
+      const priceKeys=['cena_ind_mies','cena_grup_mies','cena_rodzina_mies'];
+      if(priceKeys.includes(row.key)){const v=document.getElementById(fmap(row.key,p))?.value;return v?parseFloat(v).toFixed(2)+' zł':'–';}
+      const v=p[row.key];
+      if(v===true)return 'TAK';if(v===false)return 'NIE';
+      return v!=null?String(v):'–';
+    });
+    csv+=`${row.label};${vals.join(';')}\n`;
+  });
+  csv+=`\nWygenerowano: ${new Date().toLocaleString('pl-PL')} | MEDICALAURA\n`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`medicalaura_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function exportPDF(){
+  const sorted=lastCompData;
+  const fmap=(id,p)=>({cena_ind_mies:'pi_ind_'+p.id,cena_grup_mies:'pi_par_'+p.id,cena_rodzina_mies:'pi_rod_'+p.id}[id]);
+  let body=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    body{font-family:Arial,sans-serif;font-size:10px;color:#1e293b;padding:20px}
+    h1{font-size:16px;color:#1e294a;margin-bottom:2px}
+    .sub{font-size:9px;color:#64748b;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse}
+    th{background:#1e294a;color:#fff;padding:7px 9px;font-size:9px;text-transform:uppercase;text-align:center}
+    th.first{text-align:left}
+    td{padding:6px 9px;border-bottom:1px solid #e2e8f0;font-size:9px}
+    td.lbl{font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.04em}
+    .sep td{background:#f1f5f9;font-weight:800;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#1e294a;padding:7px 9px}
+    tr:nth-child(even):not(.sep) td{background:#f8fafc}
+    .best{background:#ecfdf5;color:#065f46;font-weight:800}
+    .worst{background:#fef2f2;color:#b91c1c;font-weight:700}
+    .foot{font-size:8px;color:#94a3b8;text-align:right;margin-top:16px}
+  </style></head><body>
+  <h1>MEDICALAURA — Zestawienie Porównawcze</h1>
+  <div class="sub">Data: ${new Date().toLocaleString('pl-PL')}</div>
+  <table><thead><tr><th class="first">Parametr</th>`;
+  sorted.forEach(p=>body+=`<th>${p.dostawca_nazwa}<br/><span style="font-weight:400;opacity:.8">${p.pakiet_nazwa}</span></th>`);
+  body+=`</tr></thead><tbody>`;
+  ROWS.forEach(row=>{
+    if(row.sep){body+=`<tr class="sep"><td colspan="${sorted.length+1}">${row.sep}</td></tr>`;return;}
+    const vals=sorted.map(p=>{
+      const priceKeys=['cena_ind_mies','cena_grup_mies','cena_rodzina_mies'];
+      if(priceKeys.includes(row.key)){const v=document.getElementById(fmap(row.key,p))?.value;return v?parseFloat(v):null;}
+      return p[row.key];
+    });
+    let bestIdx=-1,worstIdx=-1;
+    if(row.num){
+      const nums=vals.map(v=>parseFloat(v)).filter(v=>!isNaN(v));
+      if(nums.length>1){
+        const best=row.low?Math.min(...nums):Math.max(...nums);
+        const worst=row.low?Math.max(...nums):Math.min(...nums);
+        const bi=vals.findIndex(v=>parseFloat(v)===best);
+        const wi=vals.findIndex(v=>parseFloat(v)===worst);
+        if(bi!==wi){bestIdx=bi;worstIdx=wi;}
+      }
+    }
+    body+=`<tr><td class="lbl">${row.label}</td>`;
+    vals.forEach((v,ci)=>{
+      let disp=v;
+      if(v===true)disp='✓';else if(v===false)disp='✗';
+      else if(v!=null&&['cena_ind_mies','cena_grup_mies','cena_rodzina_mies'].includes(row.key))disp=parseFloat(v).toFixed(2)+' zł';
+      else if(v==null)disp='–';
+      body+=`<td class="${bestIdx===ci?'best':worstIdx===ci?'worst':''}" style="text-align:center">${disp}</td>`;
+    });
+    body+=`</tr>`;
+  });
+  body+=`</tbody></table><div class="foot">MEDICALAURA ${new Date().getFullYear()}</div></body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(body);w.document.close();
+  setTimeout(()=>{w.focus();w.print();},600);
+}
+
+// ─── WYSZUKIWARKA SPECJALIZACJI / BADAŃ ─────────────────
+function setSearchType(t){
+  searchType=t;
+  document.getElementById('stype-spec').className=t==='spec'?'px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm':'px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200';
+  document.getElementById('stype-bad').className=t==='bad'?'px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm':'px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200';
+  document.getElementById('searchHint').textContent='';
+}
+
+async function runSearch(){
+  const q=document.getElementById('searchQuery').value.trim();
+  if(!q){document.getElementById('searchHint').textContent='Wpisz nazwę specjalizacji lub badania.';return;}
+  document.getElementById('searchHint').textContent='Szukam...';
+  document.getElementById('searchResult').classList.add('hidden');
+
+  // Szukamy w tabeli specjalizacji lub badań — jeśli tabele istnieją
+  // Fallback: szukamy w notatki pakietów (pakiety_pelne)
+  const params=`select=id,pakiet_nazwa,tier,dostawca_nazwa,liczba_specjalizacji,liczba_badan_lab,notatki,cena_ind_mies&aktywna=eq.true&notatki=ilike.*${encodeURIComponent(q)}*&order=dostawca_nazwa,tier`;
+  const data=await apiGet('pakiety_pelne',params);
+
+  // Równolegle szukaj w tabeli specjalizacji jeśli istnieje
+  const specData=searchType==='spec'
+    ? await apiGet('pakiety_specjalizacje',`select=pakiet_id,specjalizacja_nazwa&specjalizacja_nazwa=ilike.*${encodeURIComponent(q)}*`)
+    : await apiGet('pakiety_badania',`select=pakiet_id,badanie_nazwa&badanie_nazwa=ilike.*${encodeURIComponent(q)}*`);
+
+  document.getElementById('searchHint').textContent='';
+  document.getElementById('searchResultTitle').textContent=
+    `Wyniki dla "${q}" (${searchType==='spec'?'specjalizacja':'badanie'})`;
+
+  let results=[];
+
+  if(specData&&specData.length){
+    // mamy dedykowane dane — pobierz pakiety
+    const pkgIds=[...new Set(specData.map(s=>s.pakiet_id))];
+    const pkts=await apiGet('pakiety_pelne',`select=id,pakiet_nazwa,tier,dostawca_nazwa,cena_ind_mies&id=in.(${pkgIds.join(',')})&aktywna=eq.true&order=dostawca_nazwa,tier`);
+    results=pkts||[];
+  } else if(data&&data.length){
+    results=data;
+  }
+
+  if(!results.length){
+    document.getElementById('searchResultBody').innerHTML=`
+      <div class="p-8 text-center text-slate-400">
+        <div class="text-3xl mb-3">🔍</div>
+        <p class="font-semibold">Brak wyników dla "${q}"</p>
+        <p class="text-xs mt-2">Upewnij się że dane zostały wgrane do bazy lub sprawdź pisownię.</p>
+      </div>`;
+    document.getElementById('searchResult').classList.remove('hidden');
+    return;
+  }
+
+  const tc=['bg-slate-200 text-slate-700','bg-blue-100 text-blue-700','bg-violet-100 text-violet-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-rose-100 text-rose-700'];
+  let html=`<table class="w-full text-sm border-collapse min-w-[600px]">
+    <thead class="bg-slate-100 text-slate-500 text-xs uppercase sticky top-0">
+      <tr>
+        <th class="p-3 text-left">Dostawca</th>
+        <th class="p-3 text-left">Pakiet</th>
+        <th class="p-3">Tier</th>
+        <th class="p-3 text-center">Spec.</th>
+        <th class="p-3 text-center">Bad.lab</th>
+        <th class="p-3">Składka ind.</th>
+      </tr>
+    </thead><tbody class="divide-y divide-slate-100">`;
+  results.forEach(p=>{
+    const t=tc[Math.min((p.tier||1)-1,tc.length-1)];
+    html+=`<tr class="hover:bg-emerald-50 transition-colors">
+      <td class="p-3 font-bold text-brand-navy">${p.dostawca_nazwa||'–'}</td>
+      <td class="p-3 font-semibold">${p.pakiet_nazwa||'–'}</td>
+      <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-xs font-bold ${t}">T${p.tier||'?'}</span></td>
+      <td class="p-3 text-center font-bold">${p.liczba_specjalizacji??'–'}</td>
+      <td class="p-3 text-center font-bold">${p.liczba_badan_lab??'–'}</td>
+      <td class="p-3 font-bold ${p.cena_ind_mies?'text-brand-pink':'text-slate-300'}">${p.cena_ind_mies?parseFloat(p.cena_ind_mies).toFixed(2)+' zł':'–'}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table><div class="text-xs text-slate-400 p-4 text-right">Wyników: ${results.length}</div>`;
+  document.getElementById('searchResultBody').innerHTML=html;
+  document.getElementById('searchResult').classList.remove('hidden');
+  document.getElementById('searchResult').scrollIntoView({behavior:'smooth'});
+}
+
+// ─── BIBLIOTEKA ─────────────────────────────────────────
 async function loadLibrary(){
   const el=document.getElementById('libraryTable');
   el.innerHTML='<div class="flex items-center gap-3 text-slate-400 justify-center py-10"><div class="loader"></div>Ładowanie...</div>';
   document.getElementById('editPanel').classList.add('hidden');
   const provId=document.getElementById('libProvider').value;
   const tier=document.getElementById('libTier').value;
-  let params='select=id,pakiet_nazwa,tier,wersja,dostawca_nazwa,dostawca_id,telemedycyna,ciaza,rehabilitacja,stomatologia,liczba_specjalizacji,liczba_badan_lab,cena_ind_mies,cena_grup_mies,cena_rodzina_mies&aktywna=eq.true&order=dostawca_nazwa,tier';
+  let params='select=id,pakiet_nazwa,tier,dostawca_nazwa,telemedycyna,ciaza,rehabilitacja,stomatologia,liczba_specjalizacji,liczba_badan_lab,cena_ind_mies,cena_grup_mies,cena_rodzina_mies&aktywna=eq.true&order=dostawca_nazwa,tier';
   if(provId) params+=`&dostawca_id=eq.${provId}`;
   if(tier)   params+=`&tier=eq.${tier}`;
   const data=await apiGet('pakiety_pelne',params);
-  if(!data||!data.length){el.innerHTML='<div class="text-center py-10 text-slate-400">Brak wyników.</div>';return}
+  if(!data||!data.length){el.innerHTML='<div class="text-center py-10 text-slate-400">Brak wyników.</div>';return;}
   const tc=['bg-slate-200 text-slate-700','bg-blue-100 text-blue-700','bg-violet-100 text-violet-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-rose-100 text-rose-700'];
   let html=`<table class="w-full text-sm border-collapse min-w-[1000px]">
-    <thead class="bg-slate-100 text-slate-500 text-xs uppercase tracking-wider">
-      <tr>
-        <th class="p-3 text-left">Dostawca</th><th class="p-3 text-left">Wariant</th><th class="p-3">Tier</th>
-        <th class="p-3 text-center">Spec.</th><th class="p-3 text-center">Bad.lab.</th>
-        <th class="p-3 text-center">Tele</th><th class="p-3 text-center">Ciąża</th>
-        <th class="p-3 text-center">Rehab.</th><th class="p-3 text-center">Stom.</th>
-        <th class="p-3">Składka ind.</th><th class="p-3">Składka grup.</th><th class="p-3">Składka rod.</th>
-        <th class="p-3"></th>
-      </tr>
+    <thead class="bg-slate-100 text-slate-500 text-xs uppercase sticky top-0">
+      <tr><th class="p-3 text-left">Dostawca</th><th class="p-3 text-left">Wariant</th><th class="p-3">Tier</th>
+      <th class="p-3 text-center">Spec.</th><th class="p-3 text-center">Bad.lab</th>
+      <th class="p-3 text-center">Tele</th><th class="p-3 text-center">Ciąża</th><th class="p-3 text-center">Rehab</th><th class="p-3 text-center">Stom</th>
+      <th class="p-3">Ind.</th><th class="p-3">Partner.</th><th class="p-3">Rodzin.</th><th class="p-3"></th></tr>
     </thead><tbody class="divide-y divide-slate-100">`;
   data.forEach(p=>{
     const t=tc[Math.min((p.tier||1)-1,tc.length-1)];
-    html+=`<tr class="hover:bg-slate-50 transition-colors">
+    html+=`<tr class="hover:bg-slate-50">
       <td class="p-3 font-bold text-brand-navy">${p.dostawca_nazwa||'–'}</td>
       <td class="p-3 font-semibold">${p.pakiet_nazwa||'–'}</td>
       <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-xs font-bold ${t}">T${p.tier||'?'}</span></td>
-      <td class="p-3 text-center font-bold text-brand-navy">${p.liczba_specjalizacji??'<span class="text-slate-300">–</span>'}</td>
-      <td class="p-3 text-center font-bold text-brand-navy">${p.liczba_badan_lab??'<span class="text-slate-300">–</span>'}</td>
+      <td class="p-3 text-center font-bold">${p.liczba_specjalizacji??'<span class="text-slate-300">–</span>'}</td>
+      <td class="p-3 text-center font-bold">${p.liczba_badan_lab??'<span class="text-slate-300">–</span>'}</td>
       <td class="p-3 text-center">${p.telemedycyna?'✅':'❌'}</td>
       <td class="p-3 text-center">${p.ciaza?'✅':'❌'}</td>
       <td class="p-3 text-center">${p.rehabilitacja?'✅':'❌'}</td>
@@ -511,39 +905,27 @@ async function loadLibrary(){
       <td class="p-3 font-bold ${p.cena_ind_mies?'text-brand-pink':'text-slate-300'}">${p.cena_ind_mies?parseFloat(p.cena_ind_mies).toFixed(2)+' zł':'–'}</td>
       <td class="p-3 font-bold ${p.cena_grup_mies?'text-brand-pink':'text-slate-300'}">${p.cena_grup_mies?parseFloat(p.cena_grup_mies).toFixed(2)+' zł':'–'}</td>
       <td class="p-3 font-bold ${p.cena_rodzina_mies?'text-brand-pink':'text-slate-300'}">${p.cena_rodzina_mies?parseFloat(p.cena_rodzina_mies).toFixed(2)+' zł':'–'}</td>
-      <td class="p-3"><button onclick="openEdit(${p.id})" class="bg-brand-navy hover:bg-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">✏️ Edytuj</button></td>
+      <td class="p-3"><button onclick="openEdit(${p.id})" class="bg-brand-navy hover:bg-slate-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">✏️ Edytuj</button></td>
     </tr>`;
   });
   html+=`</tbody></table><div class="text-xs text-slate-400 p-4 text-right">Wyników: ${data.length}</div>`;
   el.innerHTML=html;
 }
 
-// ─── EDYCJA PAKIETU ───────────────────────────────────────────
 async function openEdit(pkgId){
   const data=await apiGet('pakiety_pelne',`select=*&id=eq.${pkgId}`);
-  if(!data||!data[0]){alert('Nie można pobrać danych pakietu.');return}
+  if(!data||!data[0]) return;
   const p=data[0];
   document.getElementById('editPkgId').value=pkgId;
   document.getElementById('editPkgName').textContent=`${p.dostawca_nazwa} — ${p.pakiet_nazwa}`;
-  document.getElementById('eSpecjalizacje').value=p.liczba_specjalizacji??'';
-  document.getElementById('eBadania').value=p.liczba_badan_lab??'';
-  document.getElementById('ePoz').value=p.czas_oczekiwania_poz??'';
-  document.getElementById('eSpec').value=p.czas_oczekiwania_spec??'';
-  document.getElementById('eMinPrac').value=p.min_pracownicy??'';
-  document.getElementById('eDzieci').value=p.wiek_dzieci_do??'';
-  document.getElementById('eKarencja').value=p.karencja_dni??'';
-  document.getElementById('eZasieg').value=p.zasieg_placowek??'';
-  document.getElementById('eTele').checked=!!p.telemedycyna;
-  document.getElementById('eCiaza').checked=!!p.ciaza;
-  document.getElementById('eRehab').checked=!!p.rehabilitacja;
-  document.getElementById('eStom').checked=!!p.stomatologia;
-  document.getElementById('ePsych').checked=!!p.opieka_psychiatryczna;
-  document.getElementById('eWizyty').checked=!!p.wizyty_domowe;
-  document.getElementById('eSzpital').checked=!!p.leczenie_szpitalne;
-  document.getElementById('eHotline').checked=!!p.hotline_24h;
-  document.getElementById('ePriceInd').value=p.cena_ind_mies??'';
-  document.getElementById('ePriceGrup').value=p.cena_grup_mies??'';
-  document.getElementById('ePriceRodzina').value=p.cena_rodzina_mies??'';
+  const map={eSpecjalizacje:'liczba_specjalizacji',eBadania:'liczba_badan_lab',ePoz:'czas_oczekiwania_poz',eSpec:'czas_oczekiwania_spec',eMinPrac:'min_pracownicy',eDzieci:'wiek_dzieci_do',eKarencja:'karencja_dni'};
+  Object.entries(map).forEach(([id,key])=>document.getElementById(id).value=p[key]??'');
+  document.getElementById('eZasieg').value=p.zasieg_placowek||'';
+  const bools={eTele:'telemedycyna',eCiaza:'ciaza',eRehab:'rehabilitacja',eStom:'stomatologia',ePsych:'opieka_psychiatryczna',eWizyty:'wizyty_domowe',eSzpital:'leczenie_szpitalne',eHotline:'hotline_24h'};
+  Object.entries(bools).forEach(([id,key])=>document.getElementById(id).checked=!!p[key]);
+  document.getElementById('ePriceInd').value=p.cena_ind_mies||'';
+  document.getElementById('ePriceGrup').value=p.cena_grup_mies||'';
+  document.getElementById('ePriceRodzina').value=p.cena_rodzina_mies||'';
   document.getElementById('editStatus').textContent='';
   document.getElementById('editPanel').classList.remove('hidden');
   document.getElementById('editPanel').scrollIntoView({behavior:'smooth'});
@@ -551,191 +933,176 @@ async function openEdit(pkgId){
 
 async function saveEdit(){
   const pkgId=document.getElementById('editPkgId').value;
-  const num=id=>{const v=document.getElementById(id).value;return v===''?null:parseFloat(v)};
+  const n=id=>{const v=document.getElementById(id).value;return v===''?null:parseFloat(v)};
   const body={
-    liczba_specjalizacji: num('eSpecjalizacje'),
-    liczba_badan_lab:     num('eBadania'),
-    czas_oczekiwania_poz: num('ePoz'),
-    czas_oczekiwania_spec:num('eSpec'),
-    min_pracownicy:       num('eMinPrac'),
-    wiek_dzieci_do:       num('eDzieci'),
-    karencja_dni:         num('eKarencja'),
-    zasieg_placowek:      document.getElementById('eZasieg').value||null,
-    telemedycyna:         document.getElementById('eTele').checked,
-    ciaza:                document.getElementById('eCiaza').checked,
-    rehabilitacja:        document.getElementById('eRehab').checked,
-    stomatologia:         document.getElementById('eStom').checked,
-    opieka_psychiatryczna:document.getElementById('ePsych').checked,
-    wizyty_domowe:        document.getElementById('eWizyty').checked,
-    leczenie_szpitalne:   document.getElementById('eSzpital').checked,
-    hotline_24h:          document.getElementById('eHotline').checked,
-    cena_ind_mies:        num('ePriceInd'),
-    cena_grup_mies:       num('ePriceGrup'),
-    cena_rodzina_mies:    num('ePriceRodzina'),
+    liczba_specjalizacji:n('eSpecjalizacje'),liczba_badan_lab:n('eBadania'),
+    czas_oczekiwania_poz:n('ePoz'),czas_oczekiwania_spec:n('eSpec'),
+    min_pracownicy:n('eMinPrac'),wiek_dzieci_do:n('eDzieci'),karencja_dni:n('eKarencja'),
+    zasieg_placowek:document.getElementById('eZasieg').value||null,
+    telemedycyna:document.getElementById('eTele').checked,ciaza:document.getElementById('eCiaza').checked,
+    rehabilitacja:document.getElementById('eRehab').checked,stomatologia:document.getElementById('eStom').checked,
+    opieka_psychiatryczna:document.getElementById('ePsych').checked,wizyty_domowe:document.getElementById('eWizyty').checked,
+    leczenie_szpitalne:document.getElementById('eSzpital').checked,hotline_24h:document.getElementById('eHotline').checked,
+    cena_ind_mies:n('ePriceInd'),cena_grup_mies:n('ePriceGrup'),cena_rodzina_mies:n('ePriceRodzina'),
   };
   const ok=await apiPatch('pakiety',`id=eq.${pkgId}`,body);
   const st=document.getElementById('editStatus');
-  if(ok){st.textContent='✓ Zapisano.';st.className='text-sm font-bold text-emerald-600';loadLibrary();}
-  else{st.textContent='✗ Błąd zapisu. Sprawdź RLS.';st.className='text-sm font-bold text-red-600';}
+  st.textContent=ok?'✓ Zapisano.':'✗ Błąd zapisu.';
+  st.className=`text-sm font-bold ${ok?'text-emerald-600':'text-red-600'}`;
+  if(ok) loadLibrary();
 }
 
-// ─── KALKULATOR ───────────────────────────────────────────────
+// ─── KALKULATOR ─────────────────────────────────────────
 async function calcLoadPackages(){
   const provId=document.getElementById('calcProvider').value;
-  let params='select=id,nazwa,tier,dostawca_nazwa,cena_ind_mies,cena_grup_mies,cena_rodzina_mies&aktywna=eq.true&order=dostawca_nazwa,tier';
+  let params='select=id,nazwa,tier,dostawca_nazwa,dostawca_id,cena_ind_mies,cena_grup_mies,cena_rodzina_mies&aktywna=eq.true&order=dostawca_nazwa,tier';
   if(provId) params+=`&dostawca_id=eq.${provId}`;
   const data=await apiGet('pakiety_pelne',params);
-  allCalcPkgs=data||[];
-  selectedCalc=new Set();
+  allCalcPkgs=data||[];selectedCalc=new Set();
   renderCalcList();
 }
 
 function renderCalcList(){
   const grid=document.getElementById('calcPackageList');
-  if(!allCalcPkgs.length){grid.innerHTML='<p class="text-slate-400 text-sm">Brak pakietów.</p>';return}
+  if(!allCalcPkgs.length){grid.innerHTML='<p class="text-slate-400 text-sm">Brak pakietów.</p>';return;}
   grid.innerHTML='';
   allCalcPkgs.forEach(p=>{
+    const sel=selectedCalc.has(p.id);
     const div=document.createElement('div');
-    const checked=selectedCalc.has(p.id);
-    div.className=`pkg-card${checked?' selected':''}`;
-    div.id=`calcpkg_${p.id}`;
-    div.innerHTML=`<div class="flex items-start justify-between gap-2">
-      <div>
-        <div class="text-xs font-bold">${p.dostawca_nazwa}</div>
-        <div class="text-xs ${checked?'text-slate-300':'text-slate-500'} mt-0.5">${p.nazwa} · T${p.tier}</div>
-      </div>
-      <div id="calccheck_${p.id}" class="w-4 h-4 rounded border-2 ${checked?'border-white bg-brand-pink':'border-slate-300'} flex-shrink-0 mt-0.5"></div>
-    </div>`;
+    div.className='pkg-chip'+(sel?' sel':'');
+    div.innerHTML=`<div class="flex items-center justify-between gap-2">
+      <div><div class="font-bold text-xs">${p.dostawca_nazwa}</div>
+      <div class="text-xs ${sel?'text-slate-300':'text-slate-400'}">${p.nazwa} · T${p.tier}</div></div>
+      <div class="chk${sel?' on':''}">${sel?'✓':''}</div></div>`;
     div.onclick=()=>{
-      if(selectedCalc.has(p.id)){selectedCalc.delete(p.id);div.classList.remove('selected');document.getElementById(`calccheck_${p.id}`).className='w-4 h-4 rounded border-2 border-slate-300 flex-shrink-0 mt-0.5';}
-      else{selectedCalc.add(p.id);div.classList.add('selected');document.getElementById(`calccheck_${p.id}`).className='w-4 h-4 rounded border-2 border-white bg-brand-pink flex-shrink-0 mt-0.5';}
-      calcUpdate();
+      sel?selectedCalc.delete(p.id):selectedCalc.add(p.id);
+      renderCalcList();calcUpdate();
     };
     grid.appendChild(div);
   });
 }
 
 function calcUpdate(){
-  if(!selectedCalc.size){document.getElementById('calcResult').classList.add('hidden');return}
+  if(!selectedCalc.size){document.getElementById('calcResult').classList.add('hidden');return;}
   const workers=parseInt(document.getElementById('calcWorkers').value)||1;
   const type=document.getElementById('calcType').value;
-  const typeLabel={'cena_ind_mies':'Indywidualna','cena_grup_mies':'Grupowa','cena_rodzina_mies':'Rodzinna'}[type];
+  const lbl={'cena_ind_mies':'Indywidualna','cena_grup_mies':'Partnerska','cena_rodzina_mies':'Rodzinna'}[type];
   const pkts=allCalcPkgs.filter(p=>selectedCalc.has(p.id));
-  document.getElementById('calcSubtitle').textContent=`${workers} pracowników · Składka: ${typeLabel}`;
-
-  const sorted=[...pkts].filter(p=>p[type]).sort((a,b)=>parseFloat(a[type])-parseFloat(b[type]));
-  const cheapest=sorted[0]?parseFloat(sorted[0][type]):null;
-
+  document.getElementById('calcSubtitle').textContent=`${workers} pracowników · Składka: ${lbl}`;
+  const withP=pkts.filter(p=>p[type]);
+  const cheapest=withP.length?Math.min(...withP.map(p=>parseFloat(p[type]))):null;
   let html=`<table class="w-full text-sm border-collapse min-w-[600px]">
     <thead class="bg-slate-100 text-slate-500 text-xs uppercase"><tr>
-      <th class="p-4 text-left">Dostawca</th><th class="p-4 text-left">Pakiet</th><th class="p-4 text-left">Tier</th>
-      <th class="p-4 text-right">Składka/os.</th><th class="p-4 text-right">Miesięcznie (${workers} os.)</th>
-      <th class="p-4 text-right">Rocznie (${workers} os.)</th><th class="p-4 text-right">vs najtańszy</th>
+      <th class="p-4 text-left">Dostawca</th><th class="p-4 text-left">Pakiet</th><th class="p-4">Tier</th>
+      <th class="p-4 text-right">Składka/os.</th>
+      <th class="p-4 text-right">Miesięcznie (${workers} os.)</th>
+      <th class="p-4 text-right">Rocznie</th>
+      <th class="p-4 text-right">vs najtańszy</th>
     </tr></thead><tbody class="divide-y divide-slate-100">`;
-
   pkts.forEach(p=>{
     const price=p[type]?parseFloat(p[type]):null;
     const monthly=price?price*workers:null;
     const yearly=monthly?monthly*12:null;
-    const diff=price&&cheapest?((price-cheapest)*workers):null;
-    const isCheapest=price&&price===cheapest;
-    html+=`<tr class="${isCheapest?'bg-emerald-50':''} hover:bg-slate-50 transition-colors">
+    const isChp=price&&price===cheapest;
+    const diff=price&&cheapest&&!isChp?(price-cheapest)*workers:null;
+    html+=`<tr class="${isChp?'bg-emerald-50':''} hover:bg-slate-50">
       <td class="p-4 font-bold text-brand-navy">${p.dostawca_nazwa}</td>
       <td class="p-4">${p.nazwa}</td>
-      <td class="p-4"><span class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded">T${p.tier}</span></td>
+      <td class="p-4 text-center"><span class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded">T${p.tier}</span></td>
       <td class="p-4 text-right font-bold">${price?price.toFixed(2)+' zł':'<span class="text-slate-300">brak</span>'}</td>
-      <td class="p-4 text-right font-bold text-brand-navy text-base">${monthly?monthly.toFixed(2)+' zł':'–'}${isCheapest?' <span class="text-emerald-500 text-xs">★ najtańszy</span>':''}</td>
-      <td class="p-4 text-right font-bold">${yearly?yearly.toFixed(2)+' zł':'–'}</td>
-      <td class="p-4 text-right">${isCheapest?'<span class="text-emerald-600 font-bold">baza</span>':diff!=null?`<span class="text-red-500 font-bold">+${diff.toFixed(2)} zł/mies</span>`:'–'}</td>
+      <td class="p-4 text-right font-black text-brand-navy text-base">${monthly?monthly.toFixed(2)+' zł':'–'}${isChp?' <span class="text-emerald-500 text-xs">★</span>':''}</td>
+      <td class="p-4 text-right">${yearly?yearly.toFixed(2)+' zł':'–'}</td>
+      <td class="p-4 text-right">${isChp?'<span class="text-emerald-600 font-bold text-xs">baza</span>':diff?`<span class="text-red-500 font-bold">+${diff.toFixed(2)} zł/mies</span>`:'–'}</td>
     </tr>`;
-  });
-  // wiersz bez składek
-  pkts.filter(p=>!p[type]).forEach(p=>{
-    html+=`<tr class="hover:bg-slate-50"><td class="p-4 font-bold text-brand-navy">${p.dostawca_nazwa}</td><td class="p-4">${p.nazwa}</td><td class="p-4"><span class="bg-slate-200 text-xs font-bold px-2 py-0.5 rounded">T${p.tier}</span></td><td colspan="4" class="p-4 text-center text-slate-400 italic text-xs">Brak danych o składce — wprowadź przez Biblioteka → Edytuj</td></tr>`;
   });
   html+=`</tbody></table>`;
   document.getElementById('calcTable').innerHTML=html;
   document.getElementById('calcResult').classList.remove('hidden');
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────
+// ─── HELPERS ────────────────────────────────────────────
 function populateAllSelects(){
-  ['libProvider','calcProvider','vProvider','aProvider'].forEach(selId=>{
-    const el=document.getElementById(selId);
-    if(!el) return;
+  ['libProvider','calcProvider','vProvider','aProvider'].forEach(id=>{
+    const el=document.getElementById(id);if(!el) return;
     while(el.options.length>1) el.remove(1);
-    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nazwa;el.appendChild(o)});
+    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nazwa;el.appendChild(o);});
   });
 }
 
 async function loadProviderPackages(targetId,provId){
   const el=document.getElementById(targetId);
   el.innerHTML='<option>Ładowanie...</option>';
-  if(!provId){el.innerHTML='<option value="">— wybierz dostawcę —</option>';return}
+  if(!provId){el.innerHTML='<option value="">— wybierz dostawcę —</option>';return;}
   const d=await apiGet('pakiety',`select=id,nazwa,tier&dostawca_id=eq.${provId}&aktywna=eq.true&order=tier,nazwa`);
   el.innerHTML='<option value="">— wybierz pakiet —</option>';
-  (d||[]).forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`T${p.tier} — ${p.nazwa}`;el.appendChild(o)});
+  (d||[]).forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`T${p.tier} — ${p.nazwa}`;el.appendChild(o);});
 }
 
 async function savePrice(){
   const id=document.getElementById('aPackage').value;
-  if(!id){showNotif('admin','Wybierz pakiet.','border-red-500 bg-red-50 text-red-700');return}
+  if(!id){showNotif('admin','Wybierz pakiet.','border-red-500 bg-red-50 text-red-700');return;}
   const body={};
-  const ind=document.getElementById('aPriceInd').value,grup=document.getElementById('aPriceGrup').value,rod=document.getElementById('aPriceRodzina').value;
-  if(ind)  body.cena_ind_mies=parseFloat(ind);
+  const ind=document.getElementById('aPriceInd').value;
+  const grup=document.getElementById('aPriceGrup').value;
+  const rod=document.getElementById('aPriceRodzina').value;
+  if(ind) body.cena_ind_mies=parseFloat(ind);
   if(grup) body.cena_grup_mies=parseFloat(grup);
-  if(rod)  body.cena_rodzina_mies=parseFloat(rod);
-  if(!Object.keys(body).length){showNotif('admin','Wpisz przynajmniej jedną składkę.','border-amber-500 bg-amber-50 text-amber-700');return}
+  if(rod) body.cena_rodzina_mies=parseFloat(rod);
+  if(!Object.keys(body).length){showNotif('admin','Wpisz przynajmniej jedną składkę.','border-amber-500 bg-amber-50 text-amber-700');return;}
   const ok=await apiPatch('pakiety',`id=eq.${id}`,body);
   if(ok){showNotif('admin','✓ Składki zapisane.','border-emerald-500 bg-emerald-50 text-emerald-700');['aPriceInd','aPriceGrup','aPriceRodzina'].forEach(x=>document.getElementById(x).value='');}
-  else showNotif('admin','Błąd zapisu. Sprawdź RLS (potrzebna polityka UPDATE).','border-red-500 bg-red-50 text-red-700');
+  else showNotif('admin','Błąd zapisu. Sprawdź RLS (UPDATE).','border-red-500 bg-red-50 text-red-700');
 }
 
 function validateSQL(){
   const sql=document.getElementById('sqlInput').value.trim().toUpperCase();
-  const n=document.getElementById('sqlValidation');
-  n.classList.remove('hidden');
-  if(!sql){n.className='mt-5 p-4 rounded-xl text-sm font-bold border border-red-500 bg-red-50 text-red-700';n.textContent='Wklej kod SQL.';return}
-  if(!sql.startsWith('INSERT')){n.className='mt-5 p-4 rounded-xl text-sm font-bold border border-red-500 bg-red-50 text-red-700';n.textContent='BŁĄD: Dozwolone tylko INSERT INTO.';return}
+  const n=document.getElementById('sqlValidation');n.classList.remove('hidden');
+  if(!sql){n.className='mt-5 p-4 rounded-xl text-sm font-bold border border-red-500 bg-red-50 text-red-700';n.textContent='Wklej SQL.';return;}
+  if(!sql.startsWith('INSERT')){n.className='mt-5 p-4 rounded-xl text-sm font-bold border border-red-500 bg-red-50 text-red-700';n.textContent='Dozwolone tylko INSERT INTO.';return;}
   const f=['CENA_IND_MIES','CENA_GRUP_MIES','CENA_RODZINA_MIES'].filter(c=>sql.includes(c));
-  if(f.length){n.className='mt-5 p-4 rounded-xl text-sm font-bold border border-red-500 bg-red-50 text-red-700';n.textContent=`BLOKADA: SQL zawiera kolumny cenowe (${f.join(', ')}). Składki → Biblioteka → Edytuj.`;return}
+  if(f.length){n.className='mt-5 p-4 rounded-xl text-sm font-bold border border-red-500 bg-red-50 text-red-700';n.textContent=`BLOKADA: kolumny cenowe (${f.join(', ')}) → wpisz przez Biblioteka → Edytuj.`;return;}
   n.className='mt-5 p-4 rounded-xl text-sm font-bold border border-emerald-500 bg-emerald-50 text-emerald-700';
-  n.textContent='✓ SQL zwalidowany. Wykonaj w Supabase → SQL Editor.';
+  n.textContent='✓ SQL zwalidowany — wykonaj w Supabase → SQL Editor.';
 }
 
 async function createNewVersion(){
   const pid=document.getElementById('vPackage').value,ver=document.getElementById('vNewVersion').value.trim();
   const n=document.getElementById('versionNotif');n.classList.remove('hidden');
-  if(!pid||ver.length!==6){n.className='mt-4 p-4 rounded-xl text-sm font-semibold border border-red-500 bg-red-50 text-red-700';n.textContent='Wybierz pakiet i podaj wersję 6-znakową.';return}
+  if(!pid||ver.length!==6){n.className='mt-4 p-4 rounded-xl text-sm font-semibold border border-red-500 bg-red-50 text-red-700';n.textContent='Wybierz pakiet i podaj wersję 6-znakową.';return;}
   const src=await apiGet('pakiety',`select=*&id=eq.${pid}`);
-  if(!src||!src[0]){n.className='mt-4 p-4 rounded-xl text-sm font-semibold border border-red-500 bg-red-50 text-red-700';n.textContent='Nie znaleziono pakietu.';return}
+  if(!src||!src[0]) return;
   const clone={...src[0]};delete clone.id;delete clone.data_dodania;
   clone.wersja=ver;clone.cena_ind_mies=null;clone.cena_grup_mies=null;clone.cena_rodzina_mies=null;
   try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/pakiety`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(clone)});
-    n.className=r.ok?'mt-4 p-4 rounded-xl text-sm font-semibold border border-emerald-500 bg-emerald-50 text-emerald-700':'mt-4 p-4 rounded-xl text-sm font-semibold border border-red-500 bg-red-50 text-red-700';
-    n.textContent=r.ok?`✓ Wersja ${ver} utworzona (bez cen).`:'Błąd zapisu.';
+    const r=await fetch(`${SB_URL}/rest/v1/pakiety`,{method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify(clone)});
+    n.className=r.ok?'mt-4 p-4 rounded-xl text-sm font-semibold border border-emerald-500 bg-emerald-50 text-emerald-700'
+                    :'mt-4 p-4 rounded-xl text-sm font-semibold border border-red-500 bg-red-50 text-red-700';
+    n.textContent=r.ok?`✓ Wersja ${ver} utworzona.`:'Błąd zapisu.';
   }catch{n.textContent='Błąd sieci.';}
 }
 
 function saveConfig(){
-  SUPABASE_URL=document.getElementById('cfgUrl').value.trim();
-  SUPABASE_KEY=document.getElementById('cfgKey').value.trim();
-  localStorage.setItem('ma_url',SUPABASE_URL);localStorage.setItem('ma_key',SUPABASE_KEY);
+  SB_URL=document.getElementById('cfgUrl').value.trim();
+  SB_KEY=document.getElementById('cfgKey').value.trim();
+  localStorage.setItem('ma_url',SB_URL);localStorage.setItem('ma_key',SB_KEY);
   checkDbStatus();loadProvidersFromDB();calcLoadPackages();
   showNotif('admin','Zapisano konfigurację.','border-emerald-500 bg-emerald-50 text-emerald-700');
 }
 
 async function testConnection(){
-  const s=document.getElementById('connStatus');s.textContent='Testowanie...';s.className='mt-4 text-sm font-semibold text-slate-500';
+  const s=document.getElementById('connStatus');
+  s.textContent='Testowanie...';s.className='mt-4 text-sm font-semibold text-slate-500';
   const d=await apiGet('dostawcy','select=id&limit=1');
-  s.textContent=d?'✓ Połączono z Supabase (HTTP 200)':'✗ Błąd. Sprawdź URL i klucz API.';
+  s.textContent=d?'✓ Połączono (HTTP 200)':'✗ Błąd — sprawdź URL i klucz.';
   s.className=`mt-4 text-sm font-bold ${d?'text-emerald-600':'text-red-600'}`;
 }
 
 function showNotif(tab,msg,classes){
-  const el=document.getElementById('notif-'+tab);if(!el)return;
-  el.className='mb-5 p-4 rounded-xl text-sm font-semibold border block '+classes;el.textContent=msg;
+  const el=document.getElementById('notif-'+tab);if(!el) return;
+  el.className='mb-4 p-4 rounded-xl text-sm font-semibold border block '+classes;
+  el.textContent=msg;
   setTimeout(()=>el.classList.add('hidden'),5000);
 }
 
