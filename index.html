@@ -1,1111 +1,600 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" class="bg-slate-50 antialiased">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MEDICALAURA — Porównywarka Pakietów Medycznych</title>
+  <title>MEDICALAURA — Porównywarka i Biblioteka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { 'brand-navy':'#1e294a','brand-navy-light':'#2a3b69','brand-pink':'#e11d48','brand-emerald':'#10b981' },
+        fontFamily: { sans: ['Inter','sans-serif'] }
+      }}
+    }
+  <\/script>
   <style>
-    :root {
-      --primary: #1a6b74;
-      --primary-light: #e8f4f5;
-      --accent: #bf912d;
-      --danger: #c52040;
-      --text: #13343b;
-      --border: #d0e4e6;
-      --bg: #f7fafa;
-      --white: #ffffff;
-      --radius: 10px;
-      --shadow: 0 2px 12px rgba(26,107,116,0.10);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-    /* HEADER */
-    header {
-      background: var(--primary);
-      color: var(--white);
-      padding: 18px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    header .logo { font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; }
-    header .logo span { color: #7fd6de; }
-    header .tagline { font-size: 0.82rem; opacity: 0.8; margin-top: 2px; }
-    header nav a {
-      color: var(--white); text-decoration: none; margin-left: 20px;
-      font-size: 0.9rem; opacity: 0.85; transition: opacity 0.2s;
-    }
-    header nav a:hover { opacity: 1; text-decoration: underline; }
-    header nav a.active { opacity: 1; font-weight: 600; border-bottom: 2px solid #7fd6de; }
-
-    /* TABS */
-    .tabs {
-      display: flex; background: var(--white);
-      border-bottom: 2px solid var(--border); padding: 0 32px;
-    }
-    .tab-btn {
-      padding: 14px 22px; cursor: pointer; font-size: 0.92rem;
-      border: none; background: none; color: var(--text);
-      border-bottom: 3px solid transparent; margin-bottom: -2px;
-      transition: all 0.2s; font-weight: 500;
-    }
-    .tab-btn:hover { color: var(--primary); }
-    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
-
-    /* MAIN LAYOUT */
-    .container { max-width: 1400px; margin: 0 auto; padding: 28px 32px; }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-
-    /* CARDS */
-    .card {
-      background: var(--white); border-radius: var(--radius);
-      box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px;
-      border: 1px solid var(--border);
-    }
-    .card h2 { font-size: 1.05rem; color: var(--primary); margin-bottom: 16px; font-weight: 700; }
-    .card h3 { font-size: 0.95rem; color: var(--text); margin-bottom: 10px; font-weight: 600; }
-
-    /* FORM ELEMENTS */
-    .form-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; align-items: flex-end; }
-    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--primary); margin-bottom: 5px; }
-    select, input[type="text"], input[type="number"] {
-      padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 7px;
-      font-size: 0.9rem; color: var(--text); background: var(--white);
-      transition: border-color 0.2s; min-width: 160px;
-    }
-    select:focus, input:focus { outline: none; border-color: var(--primary); }
-    .form-group { display: flex; flex-direction: column; }
-
-    /* BUTTONS */
-    .btn {
-      padding: 10px 22px; border-radius: 7px; border: none; cursor: pointer;
-      font-size: 0.9rem; font-weight: 600; transition: all 0.18s;
-    }
-    .btn-primary { background: var(--primary); color: var(--white); }
-    .btn-primary:hover { background: #135960; }
-    .btn-accent { background: var(--accent); color: var(--white); }
-    .btn-accent:hover { background: #a07820; }
-    .btn-outline {
-      background: var(--white); color: var(--primary);
-      border: 2px solid var(--primary);
-    }
-    .btn-outline:hover { background: var(--primary-light); }
-    .btn-danger { background: var(--danger); color: var(--white); }
-    .btn-sm { padding: 6px 14px; font-size: 0.82rem; }
-
-    /* COMPARISON TABLE */
-    .compare-table-wrap { overflow-x: auto; }
-    .compare-table {
-      width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 700px;
-    }
-    .compare-table th {
-      background: var(--primary); color: var(--white);
-      padding: 11px 14px; text-align: left; font-weight: 600;
-      position: sticky; top: 0;
-    }
-    .compare-table th.tier { background: #135960; text-align: center; }
-    .compare-table td {
-      padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top;
-    }
-    .compare-table tr:hover td { background: var(--primary-light); }
-    .compare-table .section-header td {
-      background: #e0f0f2; font-weight: 700; color: var(--primary);
-      font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px;
-      padding: 7px 14px;
-    }
-    .compare-table .provider-header th {
-      background: #0e4a52; font-size: 0.85rem; text-align: center;
-    }
-
-    /* BADGES */
-    .badge {
-      display: inline-block; padding: 3px 10px; border-radius: 20px;
-      font-size: 0.76rem; font-weight: 700;
-    }
-    .badge-green { background: #d4edda; color: #1a6b3a; }
-    .badge-red { background: #fde8ec; color: var(--danger); }
-    .badge-yellow { background: #fff3cd; color: #856404; }
-    .badge-gray { background: #e9ecef; color: #6c757d; }
-    .badge-blue { background: var(--primary-light); color: var(--primary); }
-
-    /* ICONS */
-    .yes { color: #1a8a3a; font-weight: 700; }
-    .no { color: var(--danger); }
-    .maybe { color: var(--accent); }
-
-    /* STATUS BAR */
-    .status-bar {
-      display: flex; gap: 10px; flex-wrap: wrap;
-      background: var(--primary-light); border-radius: var(--radius);
-      padding: 12px 18px; margin-bottom: 20px; align-items: center;
-    }
-    .status-item { font-size: 0.85rem; color: var(--primary); }
-    .status-item strong { color: var(--text); }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); display: inline-block; margin-right: 6px; }
-    .dot.green { background: #1a8a3a; }
-    .dot.orange { background: var(--accent); }
-
-    /* GRID */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-    @media(max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
-
-    /* PROVIDER PILL SELECTOR */
-    .provider-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-    .provider-pill {
-      padding: 7px 16px; border-radius: 20px; cursor: pointer;
-      font-size: 0.85rem; font-weight: 600; border: 2px solid var(--border);
-      background: var(--white); transition: all 0.18s; user-select: none;
-    }
-    .provider-pill:hover { border-color: var(--primary); color: var(--primary); }
-    .provider-pill.selected { background: var(--primary); color: var(--white); border-color: var(--primary); }
-
-    /* TIER BAR */
-    .tier-bar {
-      display: flex; gap: 6px; margin: 10px 0;
-      background: var(--bg); border-radius: 8px; padding: 8px;
-    }
-    .tier-item {
-      flex: 1; text-align: center; padding: 8px 4px;
-      border-radius: 6px; font-size: 0.78rem; font-weight: 600;
-      border: 2px solid var(--border); cursor: pointer;
-      transition: all 0.18s;
-    }
-    .tier-item:hover, .tier-item.selected { border-color: var(--primary); background: var(--primary-light); }
-    .tier-item .tier-name { display: block; color: var(--primary); }
-    .tier-item .tier-price { display: block; color: var(--accent); font-size: 0.72rem; margin-top: 2px; }
-
-    /* DELTA TABLE */
-    .delta-better-a { background: #d4f5e0; }
-    .delta-better-b { background: #fde8ec; }
-    .delta-tie { background: #f8f9fa; }
-
-    /* LOADING */
-    .loading {
-      text-align: center; padding: 40px; color: var(--primary);
-      font-size: 0.95rem; opacity: 0.7;
-    }
-    .spinner {
-      border: 3px solid var(--border); border-top-color: var(--primary);
-      border-radius: 50%; width: 32px; height: 32px;
-      animation: spin 0.8s linear infinite; margin: 0 auto 12px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* NOTIFICATION */
-    .notif {
-      padding: 12px 18px; border-radius: 8px; margin-bottom: 14px;
-      font-size: 0.88rem; display: none;
-    }
-    .notif.success { background: #d4edda; color: #1a6b3a; border-left: 4px solid #1a8a3a; display: block; }
-    .notif.error { background: #fde8ec; color: var(--danger); border-left: 4px solid var(--danger); display: block; }
-    .notif.info { background: var(--primary-light); color: var(--primary); border-left: 4px solid var(--primary); display: block; }
-
-    /* ADMIN TABLE */
-    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
-    .admin-table th { background: var(--bg); padding: 9px 12px; text-align: left; font-weight: 700; border-bottom: 2px solid var(--border); }
-    .admin-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
-    .admin-table tr:hover td { background: var(--primary-light); }
-
-    /* FOOTER */
-    footer {
-      background: var(--primary); color: rgba(255,255,255,0.7);
-      text-align: center; padding: 14px; font-size: 0.78rem; margin-top: 40px;
-    }
-    footer strong { color: var(--white); }
+    .table-container::-webkit-scrollbar{height:8px;width:8px}
+    .table-container::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}
+    .table-container::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+    .table-container::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+    .loader{border:3px solid #f3f3f3;border-top:3px solid #e11d48;border-radius:50%;width:24px;height:24px;animation:spin 1s linear infinite}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    .tab-panel{display:none;animation:fadeIn 0.3s ease-in-out}
+    .tab-panel.active{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .compare-table th{position:sticky;top:0;z-index:10}
   </style>
 </head>
-<body>
+<body class="text-slate-800 min-h-screen flex flex-col">
 
-<!-- HEADER -->
-<header>
-  <div>
-    <div class="logo">MEDICAL<span>AURA</span></div>
-    <div class="tagline">Biblioteka &amp; Porównywarka Pakietów Medycznych | Aura Consulting</div>
+<header class="bg-brand-navy text-white shadow-md sticky top-0 z-50">
+  <div class="max-w-[1400px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div>
+      <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
+      <div class="text-xs text-slate-400 font-medium tracking-wide uppercase mt-1">Zarządzanie Ofertami Medycznymi</div>
+    </div>
+    <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl">
+      <button onclick="switchTab('compare',this)" class="tab-btn active px-5 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm transition-all">🔍 Porównaj</button>
+      <button onclick="switchTab('library',this)" class="tab-btn px-5 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white transition-all">📚 Biblioteka</button>
+      <button onclick="switchTab('learn',this)" class="tab-btn px-5 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white transition-all">🧠 Baza (SQL)</button>
+      <button onclick="switchTab('admin',this)" class="tab-btn px-5 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white transition-all">⚙️ Konfiguracja</button>
+    </nav>
   </div>
-  <nav>
-    <a href="#" class="active" onclick="switchTab('compare', this)">Porównywarka</a>
-    <a href="#" onclick="switchTab('library', this)">Biblioteka</a>
-    <a href="#" onclick="switchTab('learn', this)">Uczenie bazy</a>
-    <a href="#" onclick="switchTab('admin', this)">Admin</a>
-  </nav>
 </header>
 
-<!-- TABS -->
-<div class="tabs">
-  <button class="tab-btn active" onclick="showTab('compare', this)">🔍 Porównaj pakiety</button>
-  <button class="tab-btn" onclick="showTab('library', this)">📚 Biblioteka</button>
-  <button class="tab-btn" onclick="showTab('learn', this)">🧠 Ucz bazę</button>
-  <button class="tab-btn" onclick="showTab('admin', this)">⚙️ Admin / Składki</button>
-</div>
+<main class="flex-grow max-w-[1400px] mx-auto w-full px-6 py-8">
 
-<!-- ===================== TAB: PORÓWNYWARKA ===================== -->
-<div id="tab-compare" class="tab-panel active">
-<div class="container">
-
-  <div id="notif-compare" class="notif"></div>
-
-  <!-- STATUS BAR -->
-  <div class="status-bar" id="statusBar">
-    <span class="status-item"><span class="dot green"></span>Baza: <strong id="statusDb">łączenie...</strong></span>
-    <span class="status-item"><span class="dot"></span>Dostawcy: <strong id="statusProviders">–</strong></span>
-    <span class="status-item"><span class="dot"></span>Pakietów: <strong id="statusPackages">–</strong></span>
-    <span class="status-item"><span class="dot orange"></span>Wersja ofert: <strong id="statusVersion">032026</strong></span>
-  </div>
-
-  <div class="grid-2">
-    <!-- LEWA: WYBÓR DOSTAWCÓW -->
-    <div class="card">
-      <h2>1. Wybierz dostawców do porównania</h2>
-      <div class="provider-pills" id="providerPills">
-        <div class="loading"><div class="spinner"></div>Ładowanie dostawców...</div>
+  <!-- TAB: PORÓWNAJ -->
+  <div id="tab-compare" class="tab-panel active">
+    <div id="notif-compare" class="hidden mb-6 p-4 rounded-xl text-sm font-semibold shadow-sm border"></div>
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-8 flex flex-wrap gap-6 items-center shadow-sm">
+      <div class="flex items-center gap-2 text-sm text-slate-500 font-medium">
+        <div id="dotDb" class="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
+        Baza: <strong id="statusDb" class="text-slate-800">łączenie...</strong>
       </div>
-      <p style="font-size:0.8rem;color:#888;margin-top:8px;">Zaznacz 2–5 dostawców. Porównanie najtańszy vs najtańszy / najdroższy vs najdroższy.</p>
-    </div>
-
-    <!-- PRAWA: WYBÓR TIERÓW -->
-    <div class="card">
-      <h2>2. Wybierz tier porównania</h2>
-      <div style="margin-bottom:10px;">
-        <label>Tier dolny (najtańszy wariant)</label>
-        <select id="tierLow">
-          <option value="1">Tier 1 — Basic</option>
-          <option value="2">Tier 2 — Standard</option>
-        </select>
+      <div class="flex items-center gap-2 text-sm text-slate-500 font-medium">
+        <div class="w-2.5 h-2.5 rounded-full bg-brand-navy-light"></div>
+        Dostawcy: <strong id="statusProviders" class="text-slate-800">–</strong>
       </div>
-      <div>
-        <label>Tier górny (najdroższy wariant)</label>
-        <select id="tierHigh">
-          <option value="3">Tier 3 — Premium</option>
-          <option value="4">Tier 4 — Prestige</option>
-          <option value="5" selected>Tier 5 — VIP/Platinum</option>
-        </select>
-      </div>
-      <div style="margin-top:16px;display:flex;gap:10px;">
-        <button class="btn btn-primary" onclick="runComparison()">▶ Porównaj</button>
-        <button class="btn btn-outline btn-sm" onclick="exportComparison()">⬇ Eksportuj PDF</button>
+      <div class="flex items-center gap-2 text-sm text-slate-500 font-medium">
+        <div class="w-2.5 h-2.5 rounded-full bg-brand-navy-light"></div>
+        Pakiety: <strong id="statusPackages" class="text-slate-800">–</strong>
       </div>
     </div>
-  </div>
-
-  <!-- WYNIK PORÓWNANIA -->
-  <div class="card" id="comparisonResult" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 id="compTitle">Porównanie pakietów</h2>
-      <div>
-        <span id="comp-badge-low" class="badge badge-blue" style="margin-right:6px;"></span>
-        <span id="comp-badge-high" class="badge badge-green"></span>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <h2 class="text-lg font-bold text-brand-navy mb-2">1. Wybierz dostawców do porównania</h2>
+        <p class="text-xs text-slate-500 mb-6">Zaznacz od 2 do 5 dostawców.</p>
+        <div id="providerPills" class="flex flex-wrap gap-2">
+          <div class="flex items-center gap-3 text-sm text-slate-500"><div class="loader"></div> Ładowanie...</div>
+        </div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-brand-navy mb-6">2. Wybierz poziomy (Tiery)</h2>
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Wariant Dolny</label>
+              <select id="tierLow" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-pink">
+                <option value="1">Tier 1 (Basic)</option>
+                <option value="2">Tier 2 (Standard)</option>
+                <option value="3">Tier 3 (Premium)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Wariant Górny</label>
+              <select id="tierHigh" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-pink">
+                <option value="3">Tier 3 (Premium)</option>
+                <option value="4">Tier 4 (Prestige)</option>
+                <option value="5" selected>Tier 5 (VIP)</option>
+                <option value="6">Tier 6 (Diament)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <button onclick="runComparison()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-md">▶ Generuj Porównanie</button>
       </div>
     </div>
-    <div class="compare-table-wrap" id="compTableWrap">
-      <!-- dynamicznie wypełniany -->
+    <div id="comparisonResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl mb-8">
+      <div class="bg-slate-50 border-b border-slate-200 p-6 flex justify-between items-center">
+        <h2 class="text-lg font-bold text-brand-navy">Wyniki Porównania</h2>
+        <div class="flex gap-2">
+          <span id="comp-badge-low" class="bg-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"></span>
+          <span id="comp-badge-high" class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider"></span>
+        </div>
+      </div>
+      <div class="table-container overflow-x-auto p-0" id="compTableWrap"></div>
     </div>
   </div>
 
-  <!-- MACIERZ DELTA -->
-  <div class="card" id="deltaResult" style="display:none;">
-    <h2>⚡ Macierz różnic (DELTA)</h2>
-    <div class="compare-table-wrap" id="deltaTableWrap"></div>
-  </div>
-
-</div>
-</div>
-
-<!-- ===================== TAB: BIBLIOTEKA ===================== -->
-<div id="tab-library" class="tab-panel">
-<div class="container">
-
-  <div class="card">
-    <h2>Biblioteka pakietów</h2>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Dostawca</label>
-        <select id="libProvider">
-          <option value="">— wszyscy —</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Typ</label>
-        <select id="libType">
-          <option value="">— wszystkie —</option>
-          <option value="abonament">Abonament</option>
-          <option value="ubezpieczenie">Ubezpieczenie</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Wersja</label>
-        <input type="text" id="libVersion" placeholder="np. 032026" style="width:120px;" />
-      </div>
-      <div class="form-group" style="justify-content:flex-end;">
-        <button class="btn btn-primary" onclick="loadLibrary()">🔍 Szukaj</button>
-      </div>
-    </div>
-    <div id="libraryTable">
-      <div class="loading"><div class="spinner"></div>Ładowanie...</div>
-    </div>
-  </div>
-
-  <!-- SZCZEGÓŁY PAKIETU -->
-  <div class="card" id="packageDetail" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h2 id="detailTitle">Szczegóły pakietu</h2>
-      <button class="btn btn-outline btn-sm" onclick="closeDetail()">✕ Zamknij</button>
-    </div>
-    <div id="detailContent"></div>
-  </div>
-
-</div>
-</div>
-
-<!-- ===================== TAB: UCZENIE BAZY ===================== -->
-<div id="tab-learn" class="tab-panel">
-<div class="container">
-
-  <div id="notif-learn" class="notif"></div>
-
-  <div class="card">
-    <h2>🧠 Dodaj lub zaktualizuj pakiet</h2>
-    <p style="font-size:0.85rem;color:#666;margin-bottom:16px;">
-      Wklej SQL wygenerowany przez GOD PROMPT (po sygnale <code>↓ zapisz do bazy</code>) 
-      lub użyj formularza poniżej.
-    </p>
-    <div class="form-row" style="margin-bottom:0;">
-      <button class="btn btn-primary" onclick="showLearnMode('sql')">📋 Wklej SQL</button>
-      <button class="btn btn-outline" onclick="showLearnMode('form')">📝 Formularz ręczny</button>
-      <button class="btn btn-outline" onclick="showLearnMode('version')">🔄 Nowa wersja pakietu</button>
-    </div>
-  </div>
-
-  <!-- MODE: SQL -->
-  <div class="card" id="learnSql" style="display:none;">
-    <h2>Wklej SQL INSERT</h2>
-    <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">
-      SQL musi zawierać INSERT INTO dla tabel: pakiety, pakiet_specjalizacje, pakiet_badania, pakiet_rehabilitacja, pakiet_stomatologia, pakiet_telemedycyna.<br/>
-      <strong>Nie wklejaj cen</strong> — składki wprowadzasz w zakładce Admin.
-    </p>
-    <textarea id="sqlInput" rows="12" style="width:100%;font-family:monospace;font-size:0.82rem;padding:12px;border:1.5px solid var(--border);border-radius:8px;resize:vertical;" placeholder="-- Wklej tutaj SQL wygenerowany przez MEDICALAURA GOD PROMPT&#10;INSERT INTO pakiety ..."></textarea>
-    <div style="margin-top:12px;display:flex;gap:10px;">
-      <button class="btn btn-primary" onclick="validateAndInsertSQL()">✔ Waliduj i zapisz</button>
-      <button class="btn btn-outline btn-sm" onclick="clearSQL()">✕ Wyczyść</button>
-    </div>
-    <div id="sqlValidation" class="notif" style="margin-top:12px;"></div>
-  </div>
-
-  <!-- MODE: FORMULARZ -->
-  <div class="card" id="learnForm" style="display:none;">
-    <h2>Dodaj pakiet ręcznie</h2>
-    <div class="grid-2">
-      <div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>Dostawca</label>
-          <select id="fProvider">
-            <option value="">— wybierz —</option>
+  <!-- TAB: BIBLIOTEKA -->
+  <div id="tab-library" class="tab-panel">
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+      <h2 class="text-xl font-bold text-brand-navy mb-6">Baza wgranych pakietów</h2>
+      <div class="flex flex-wrap gap-4 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100 items-end">
+        <div class="flex-grow min-w-[150px]">
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Dostawca</label>
+          <select id="libProvider" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-brand-pink">
+            <option value="">— Wszyscy —</option>
           </select>
         </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>Nazwa wariantu</label>
-          <input type="text" id="fName" placeholder="np. Optimum, Standard+" />
-        </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>Tier (1=Basic, 5=VIP)</label>
-          <select id="fTier">
-            <option value="1">1 — Basic</option>
-            <option value="2">2 — Standard</option>
-            <option value="3">3 — Premium</option>
-            <option value="4">4 — Prestige/Select</option>
-            <option value="5">5 — VIP/Platinum</option>
+        <div class="flex-grow min-w-[150px]">
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tier</label>
+          <select id="libTier" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-brand-pink">
+            <option value="">— Wszystkie —</option>
+            <option value="1">Tier 1</option><option value="2">Tier 2</option>
+            <option value="3">Tier 3</option><option value="4">Tier 4</option>
+            <option value="5">Tier 5</option><option value="6">Tier 6</option>
           </select>
         </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>Wersja (MMYYYY)</label>
-          <input type="text" id="fVersion" placeholder="032026" maxlength="6" />
+        <div class="flex-grow min-w-[150px]">
+          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Wersja</label>
+          <input type="text" id="libVersion" placeholder="np. 202506" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-brand-pink" />
         </div>
+        <button onclick="loadLibrary()" class="bg-brand-navy hover:bg-slate-800 text-white font-bold py-2.5 px-8 rounded-xl transition-colors shadow-md">Szukaj</button>
       </div>
-      <div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>Min. pracowników</label>
-          <input type="number" id="fMinWorkers" value="3" min="1" style="width:100px;" />
+      <div id="libraryTable" class="table-container overflow-x-auto">
+        <div class="flex items-center gap-3 text-slate-500 justify-center py-10"><div class="loader"></div> Ładowanie...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: BAZA SQL -->
+  <div id="tab-learn" class="tab-panel">
+    <div id="notif-learn" class="hidden mb-6 p-4 rounded-xl text-sm font-semibold shadow-sm border"></div>
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-8">
+      <h2 class="text-xl font-bold text-brand-navy mb-2">Dodaj pakiety via SQL (God Prompt)</h2>
+      <p class="text-sm text-slate-500 mb-6">Wklej gotowy kod SQL wygenerowany przez asystenta AI. System zwaliduje zapytanie przed wykonaniem w Supabase.</p>
+      <textarea id="sqlInput" rows="10" class="w-full bg-slate-800 text-green-400 font-mono text-sm p-4 rounded-2xl border border-slate-700 outline-none focus:ring-2 focus:ring-brand-pink" placeholder="-- Wklej tutaj SQL...&#10;INSERT INTO pakiety ..."></textarea>
+      <div class="flex gap-3 mt-4">
+        <button onclick="validateAndInsertSQL()" class="bg-brand-emerald hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-md">✔ Waliduj SQL</button>
+        <button onclick="clearSQL()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl transition-colors border border-slate-300">Wyczyść</button>
+      </div>
+      <div id="sqlValidation" class="hidden mt-6 p-4 rounded-xl text-sm font-semibold shadow-sm border"></div>
+    </div>
+    <div class="bg-slate-50 border border-slate-200 rounded-3xl p-8 shadow-sm">
+      <h2 class="text-lg font-bold text-brand-navy mb-4">Klonowanie wersji pakietu</h2>
+      <div class="flex flex-wrap gap-4 items-end">
+        <div class="flex-grow">
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Dostawca</label>
+          <select id="vProvider" onchange="loadProviderPackages('vPackage',this.value)" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none"><option value="">— wybierz —</option></select>
         </div>
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>Typ</label>
-          <select id="fType">
-            <option value="abonament">Abonament</option>
-            <option value="ubezpieczenie">Ubezpieczenie</option>
-            <option value="hybryda">Hybryda</option>
-          </select>
+        <div class="flex-grow">
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Pakiet bazowy</label>
+          <select id="vPackage" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none"><option value="">— wybierz dostawcę —</option></select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
-            <input type="checkbox" id="fCiaza" /> Prowadzenie ciąży
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
-            <input type="checkbox" id="fSzpital" /> Leczenie szpitalne
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
-            <input type="checkbox" id="fHotline" checked /> Infolinia 24h
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
-            <input type="checkbox" id="fTele" checked /> Telemedycyna
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
-            <input type="checkbox" id="fJdg" checked /> Dostępny dla JDG
-          </label>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Nowa wersja (MMYYYY)</label>
+          <input type="text" id="vNewVersion" placeholder="062026" maxlength="6" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm outline-none w-32" />
         </div>
+        <button onclick="createNewVersion()" class="bg-brand-navy text-white font-bold py-3 px-6 rounded-xl">Utwórz Klona</button>
       </div>
-    </div>
-    <div class="form-group" style="margin-top:12px;">
-      <label>Notatki</label>
-      <input type="text" id="fNotatki" placeholder="np. Oferta dla 3-10 pracowników, ważna do 01.04.2026" style="width:100%;" />
-    </div>
-    <div style="margin-top:16px;display:flex;gap:10px;">
-      <button class="btn btn-primary" onclick="submitForm()">💾 Zapisz pakiet</button>
-      <button class="btn btn-outline btn-sm" onclick="resetForm()">↺ Reset</button>
+      <div id="versionNotif" class="hidden mt-4 p-4 rounded-xl text-sm font-semibold border"></div>
     </div>
   </div>
 
-  <!-- MODE: NOWA WERSJA -->
-  <div class="card" id="learnVersion" style="display:none;">
-    <h2>🔄 Nowa wersja istniejącego pakietu</h2>
-    <p style="font-size:0.85rem;color:#666;margin-bottom:14px;">
-      Wybierz istniejący pakiet i wprowadź nową wersję. Stara wersja zostanie zachowana (wersjonowanie).
-    </p>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Dostawca</label>
-        <select id="vProvider" onchange="loadProviderPackages('vPackage', this.value)">
-          <option value="">— wybierz —</option>
-        </select>
+  <!-- TAB: ADMIN -->
+  <div id="tab-admin" class="tab-panel">
+    <div id="notif-admin" class="hidden mb-6 p-4 rounded-xl text-sm font-semibold shadow-sm border"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <h2 class="text-lg font-bold text-brand-navy mb-6 flex items-center gap-2"><span>🔌</span> Baza Danych (Supabase)</h2>
+        <div class="space-y-4 mb-6">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Project URL</label>
+            <input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-pink" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Anon / API Key</label>
+            <input type="password" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-pink" />
+          </div>
+        </div>
+        <div class="flex gap-3 items-center">
+          <button onclick="saveConfig()" class="bg-brand-navy text-white font-bold py-2.5 px-6 rounded-xl shadow-md">Zapisz w przeglądarce</button>
+          <button onclick="testConnection()" class="bg-slate-100 text-slate-700 font-bold py-2.5 px-6 rounded-xl border border-slate-300">Testuj API</button>
+        </div>
+        <p id="connStatus" class="mt-4 text-sm font-semibold"></p>
       </div>
-      <div class="form-group">
-        <label>Pakiet do skopiowania</label>
-        <select id="vPackage"><option value="">— najpierw wybierz dostawcę —</option></select>
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <h2 class="text-lg font-bold text-brand-navy mb-6 flex items-center gap-2"><span>💰</span> Aktualizacja Składek</h2>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Dostawca</label>
+            <select id="aProvider" onchange="loadProviderPackages('aPackage',this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none"><option value="">— wybierz —</option></select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Pakiet</label>
+            <select id="aPackage" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none"><option value="">Wybierz dostawcę</option></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Indyw. (zł)</label><input type="number" id="aPriceInd" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none" /></div>
+          <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Grupowa (zł)</label><input type="number" id="aPriceGrup" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none" /></div>
+          <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Rodzina (zł)</label><input type="number" id="aPriceRodzina" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none" /></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Data ważności</label><input type="date" id="aDateStart" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none" /></div>
+          <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Notatka</label><input type="text" id="aNotes" placeholder="np. Negocjacje e-mail" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm outline-none" /></div>
+        </div>
+        <button onclick="savePrice()" class="w-full bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors">Aktualizuj i Zapisz Historię</button>
       </div>
-      <div class="form-group">
-        <label>Nowa wersja (MMYYYY)</label>
-        <input type="text" id="vNewVersion" placeholder="062026" maxlength="6" style="width:120px;" />
-      </div>
-      <div class="form-group" style="justify-content:flex-end;">
-        <button class="btn btn-accent" onclick="createNewVersion()">➕ Utwórz nową wersję</button>
-      </div>
-    </div>
-    <div id="versionNotif" class="notif"></div>
-  </div>
-
-</div>
-</div>
-
-<!-- ===================== TAB: ADMIN ===================== -->
-<div id="tab-admin" class="tab-panel">
-<div class="container">
-
-  <div id="notif-admin" class="notif"></div>
-
-  <!-- SKŁADKI -->
-  <div class="card">
-    <h2>💰 Zarządzanie składkami</h2>
-    <p style="font-size:0.85rem;color:#666;margin-bottom:14px;">
-      Składki wprowadzasz tutaj — <strong>oddzielnie od zakresu pakietu</strong>. 
-      Możesz aktualizować po negocjacjach bez ingerencji w dane merytoryczne.
-    </p>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Dostawca</label>
-        <select id="aProvider" onchange="loadProviderPackages('aPackage', this.value)">
-          <option value="">— wybierz —</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Pakiet</label>
-        <select id="aPackage"><option value="">— najpierw wybierz dostawcę —</option></select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Składka ind. (zł/mies.)</label>
-        <input type="number" id="aPriceInd" placeholder="89.00" step="0.01" style="width:140px;" />
-      </div>
-      <div class="form-group">
-        <label>Składka grupowa (zł/os.)</label>
-        <input type="number" id="aPriceGrup" placeholder="75.00" step="0.01" style="width:140px;" />
-      </div>
-      <div class="form-group">
-        <label>Składka rodzinna (zł/mies.)</label>
-        <input type="number" id="aPriceRodzina" placeholder="178.00" step="0.01" style="width:150px;" />
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Data wejścia</label>
-        <input type="text" id="aDateStart" placeholder="2026-03-01" style="width:140px;" />
-      </div>
-      <div class="form-group">
-        <label>Źródło</label>
-        <select id="aSource" style="width:200px;">
-          <option value="oferta_PDF">Oferta PDF</option>
-          <option value="negocjacje_email">Negocjacje e-mail</option>
-          <option value="aktualizacja_operatora">Aktualizacja operatora</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Notatki</label>
-        <input type="text" id="aNotes" placeholder="np. po negocjacjach 08.03.2026" style="width:260px;" />
-      </div>
-    </div>
-    <div style="margin-top:8px;display:flex;gap:10px;">
-      <button class="btn btn-primary" onclick="savePrice()">💾 Zapisz składkę</button>
     </div>
   </div>
 
-  <!-- HISTORIA SKŁADEK -->
-  <div class="card">
-    <h2>📋 Historia składek</h2>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Dostawca</label>
-        <select id="histProvider" onchange="loadPriceHistory()">
-          <option value="">— wszyscy —</option>
-        </select>
-      </div>
-      <button class="btn btn-outline btn-sm" style="margin-top:22px;" onclick="loadPriceHistory()">🔍 Pokaż historię</button>
-    </div>
-    <div id="priceHistoryTable">
-      <p style="color:#888;font-size:0.85rem;">Wybierz dostawcę aby zobaczyć historię składek.</p>
-    </div>
-  </div>
-
-  <!-- KONFIGURACJA POŁĄCZENIA -->
-  <div class="card">
-    <h2>🔌 Konfiguracja Supabase</h2>
-    <div class="form-row">
-      <div class="form-group" style="flex:1;">
-        <label>Supabase URL</label>
-        <input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" style="width:100%;" />
-      </div>
-      <div class="form-group" style="flex:1;">
-        <label>Anon Key (publiczny)</label>
-        <input type="text" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..." style="width:100%;" />
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:8px;">
-      <button class="btn btn-primary" onclick="saveConfig()">💾 Zapisz połączenie</button>
-      <button class="btn btn-outline btn-sm" onclick="testConnection()">🔌 Test połączenia</button>
-      <span id="connStatus" style="font-size:0.85rem;padding:10px 0;color:#888;"></span>
-    </div>
-  </div>
-
-</div>
-</div>
-
-<!-- FOOTER -->
-<footer>
-  <strong>MEDICALAURA</strong> — System zarządzania pakietami medycznymi | Aura Consulting &copy; 2026 |
-  Dane mają charakter informacyjny. Wiążące są wyłącznie oferty wystawione przez operatorów medycznych.
-</footer>
+</main>
 
 <script>
 // ============================================================
-// KONFIGURACJA — zmień na własne dane Supabase
+// STATE
 // ============================================================
 let SUPABASE_URL = localStorage.getItem('ma_url') || '';
 let SUPABASE_KEY = localStorage.getItem('ma_key') || '';
-
-const DOSTAWCY = [
-  {skrot:'MED', nazwa:'Medicover'},
-  {skrot:'LUX', nazwa:'LuxMed'},
-  {skrot:'ENE', nazwa:'Enel-Med'},
-  {skrot:'TUZ', nazwa:'TU Zdrowie'},
-  {skrot:'POL', nazwa:'Polmed'},
-  {skrot:'SAL', nazwa:'Saltus'},
-  {skrot:'ALZ', nazwa:'Allianz'},
-  {skrot:'COM', nazwa:'Compensa'},
-  {skrot:'INR', nazwa:'InterRisk'},
-  {skrot:'PZU', nazwa:'PZU Zdrowie'},
-];
-
-const BLOKI = [
-  {key:'konsultacje', label:'Konsultacje specjalistyczne'},
-  {key:'diagnostyka', label:'Diagnostyka'},
-  {key:'rehabilitacja', label:'Rehabilitacja'},
-  {key:'stomatologia', label:'Stomatologia'},
-  {key:'telemedycyna', label:'Telemedycyna & Assistance'},
-  {key:'formalne', label:'Parametry formalne'},
-];
-
-let selectedProviders = [];
+let selectedProviderIds = [];  // przechowujemy ID (integer), nie skróty
+let allProviders = [];         // [{id, nazwa, skrot}] — z bazy
+let allPackages  = [];         // [{id, nazwa, tier, dostawca_id, dostawca_nazwa, ...}]
 
 // ============================================================
 // TABS
 // ============================================================
-function showTab(id, btn) {
+function switchTab(id, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('active','bg-white','text-brand-navy','shadow-sm');
+    b.classList.add('text-slate-300');
+  });
   document.getElementById('tab-' + id).classList.add('active');
-  btn.classList.add('active');
-  if(id === 'library') loadLibrary();
-}
-function switchTab(id, a) {
-  document.querySelectorAll('header nav a').forEach(x => x.classList.remove('active'));
-  a.classList.add('active');
-  const map = {compare:0, library:1, learn:2, admin:3};
-  const btns = document.querySelectorAll('.tab-btn');
-  btns.forEach(b => b.classList.remove('active'));
-  btns[map[id]].classList.add('active');
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active','bg-white','text-brand-navy','shadow-sm');
+  btn.classList.remove('text-slate-300');
   if(id === 'library') loadLibrary();
 }
 
 // ============================================================
-// API HELPER
+// API
 // ============================================================
 async function apiGet(table, params='') {
   if(!SUPABASE_URL || !SUPABASE_KEY) return null;
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json'
-    }
-  });
-  if(!res.ok) return null;
-  return res.json();
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+      headers:{ 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+SUPABASE_KEY, 'Content-Type':'application/json' }
+    });
+    return res.ok ? res.json() : null;
+  } catch(e){ return null; }
 }
 
-async function apiPost(table, body) {
+async function apiPatch(table, params, body) {
   if(!SUPABASE_URL || !SUPABASE_KEY) return false;
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify(body)
-  });
-  return res.ok;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+      method:'PATCH',
+      headers:{ 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+SUPABASE_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
+      body: JSON.stringify(body)
+    });
+    return res.ok;
+  } catch(e){ return false; }
 }
 
 // ============================================================
-// INIT — status bazy i dostawcy pills
+// INIT
 // ============================================================
 async function init() {
-  const cfgUrl = document.getElementById('cfgUrl');
-  const cfgKey = document.getElementById('cfgKey');
-  if(cfgUrl) cfgUrl.value = SUPABASE_URL;
-  if(cfgKey) cfgKey.value = SUPABASE_KEY;
-
+  document.getElementById('cfgUrl').value = SUPABASE_URL;
+  document.getElementById('cfgKey').value = SUPABASE_KEY;
+  await loadProvidersFromDB();
   await checkDbStatus();
-  await populateProviderPills();
+}
+
+async function loadProvidersFromDB() {
+  const data = await apiGet('dostawcy', 'select=id,nazwa,skrot&aktywny=eq.true&order=nazwa');
+  if(data && data.length > 0) {
+    allProviders = data;
+  } else {
+    // fallback: dostawcy z seed
+    allProviders = [
+      {id:1,nazwa:'Medicover',skrot:'MED'},{id:2,nazwa:'LuxMed',skrot:'LUX'},
+      {id:3,nazwa:'Enel-Med',skrot:'ENE'},{id:4,nazwa:'TU Zdrowie',skrot:'TUZ'},
+      {id:5,nazwa:'Polmed',skrot:'POL'},{id:6,nazwa:'Saltus',skrot:'SAL'},
+      {id:7,nazwa:'Allianz',skrot:'ALZ'},{id:8,nazwa:'Compensa',skrot:'COM'},
+      {id:9,nazwa:'InterRisk',skrot:'INR'},{id:10,nazwa:'PZU Zdrowie',skrot:'PZU'}
+    ];
+  }
+  populateProviderPills();
   populateAllSelects();
 }
 
 async function checkDbStatus() {
+  const dot = document.getElementById('dotDb');
+  const txt = document.getElementById('statusDb');
   if(!SUPABASE_URL || !SUPABASE_KEY) {
-    document.getElementById('statusDb').textContent = '⚠ skonfiguruj połączenie';
-    return;
+    txt.textContent='Wymagana konfiguracja';
+    dot.className='w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse'; return;
   }
-  const data = await apiGet('dostawcy', 'select=id,nazwa&aktywny=eq.true');
+  const data = await apiGet('dostawcy','select=id&aktywny=eq.true');
   if(data) {
-    document.getElementById('statusDb').textContent = '✓ online';
+    txt.textContent='Połączono (Online)';
+    dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]';
     document.getElementById('statusProviders').textContent = data.length;
-    const pkts = await apiGet('pakiety', 'select=id&aktywna=eq.true');
+    const pkts = await apiGet('pakiety','select=id&aktywna=eq.true');
     document.getElementById('statusPackages').textContent = pkts ? pkts.length : '–';
   } else {
-    document.getElementById('statusDb').textContent = '⚠ brak połączenia';
+    txt.textContent='Błąd połączenia';
+    dot.className='w-2.5 h-2.5 rounded-full bg-red-500';
   }
 }
 
-async function populateProviderPills() {
+// ============================================================
+// PROVIDER PILLS — z bazy
+// ============================================================
+function populateProviderPills() {
   const pills = document.getElementById('providerPills');
-  let providers = DOSTAWCY;
-  if(SUPABASE_URL && SUPABASE_KEY) {
-    const data = await apiGet('dostawcy', 'select=skrot,nazwa&aktywny=eq.true&order=nazwa');
-    if(data && data.length) providers = data;
-  }
   pills.innerHTML = '';
-  providers.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'provider-pill';
-    div.textContent = p.nazwa || p.skrot;
-    div.dataset.skrot = p.skrot;
-    div.onclick = () => toggleProvider(div, p.skrot);
-    pills.appendChild(div);
+  allProviders.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className='px-4 py-2 border-2 border-slate-200 text-slate-600 font-bold text-sm rounded-full transition-all hover:border-brand-navy';
+    btn.textContent = p.nazwa;
+    btn.dataset.id = p.id;
+    btn.onclick = () => {
+      if(btn.classList.contains('bg-brand-navy')) {
+        btn.classList.remove('bg-brand-navy','text-white','border-brand-navy');
+        btn.classList.add('border-slate-200','text-slate-600');
+        selectedProviderIds = selectedProviderIds.filter(id => id !== p.id);
+      } else {
+        if(selectedProviderIds.length >= 5){ showNotif('compare','Maksymalnie 5 dostawców.','border-red-500 bg-red-50 text-red-700'); return; }
+        btn.classList.remove('border-slate-200','text-slate-600');
+        btn.classList.add('bg-brand-navy','text-white','border-brand-navy');
+        selectedProviderIds.push(p.id);
+      }
+    };
+    pills.appendChild(btn);
   });
 }
 
 function populateAllSelects() {
-  const selects = ['libProvider','fProvider','vProvider','aProvider','histProvider'];
-  selects.forEach(id => {
-    const el = document.getElementById(id);
+  ['libProvider','vProvider','aProvider'].forEach(selId => {
+    const el = document.getElementById(selId);
     if(!el) return;
-    DOSTAWCY.forEach(p => {
+    // zachowaj pierwszą opcję
+    while(el.options.length > 1) el.remove(1);
+    allProviders.forEach(p => {
       const opt = document.createElement('option');
-      opt.value = p.skrot; opt.textContent = p.nazwa;
+      opt.value = p.id;           // wartość = ID (integer)
+      opt.textContent = p.nazwa;
       el.appendChild(opt);
     });
   });
 }
 
-function toggleProvider(el, skrot) {
-  if(el.classList.contains('selected')) {
-    el.classList.remove('selected');
-    selectedProviders = selectedProviders.filter(s => s !== skrot);
-  } else {
-    if(selectedProviders.length >= 5) { showNotif('compare','Maksymalnie 5 dostawców.','error'); return; }
-    el.classList.add('selected');
-    selectedProviders.push(skrot);
-  }
-}
-
 // ============================================================
-// PORÓWNYWARKA
+// PORÓWNYWARKA — z bazy przez pakiety_pelne (VIEW)
 // ============================================================
 async function runComparison() {
-  if(selectedProviders.length < 2) {
-    showNotif('compare','Zaznacz co najmniej 2 dostawców.','error'); return;
+  if(selectedProviderIds.length < 2) {
+    showNotif('compare','Wybierz minimum 2 dostawców.','border-red-500 bg-red-50 text-red-700'); return;
   }
-  const tierLow = document.getElementById('tierLow').value;
-  const tierHigh = document.getElementById('tierHigh').value;
-
-  showNotif('compare','Ładowanie danych z bazy...','info');
+  const tLow  = parseInt(document.getElementById('tierLow').value);
+  const tHigh = parseInt(document.getElementById('tierHigh').value);
+  showNotif('compare','Pobieranie danych z bazy...','border-blue-500 bg-blue-50 text-blue-700');
 
   // Pobierz pakiety dla wybranych dostawców i tierów
-  const skroty = selectedProviders.join(',');
-  let packages = [];
-  if(SUPABASE_URL && SUPABASE_KEY) {
-    const data = await apiGet('v_porownanie_pakietow',
-      `select=*&dostawca=in.(${skroty})&tier=in.(${tierLow},${tierHigh})&order=dostawca,tier`);
-    if(data) packages = data;
+  const idList = selectedProviderIds.join(',');
+  const params = `select=*&dostawca_id=in.(${idList})&tier=gte.${tLow}&tier=lte.${tHigh}&aktywna=eq.true&order=dostawca_id,tier`;
+  const data = await apiGet('pakiety_pelne', params);
+
+  if(!data || data.length === 0) {
+    showNotif('compare','Brak danych dla wybranych dostawców i tierów.','border-amber-500 bg-amber-50 text-amber-700'); return;
   }
 
-  document.getElementById('comparisonResult').style.display = 'block';
-  document.getElementById('deltaResult').style.display = 'block';
-  document.getElementById('compTitle').textContent =
-    `Porównanie: ${selectedProviders.join(' vs ')} | Tier ${tierLow} i Tier ${tierHigh}`;
+  document.getElementById('comparisonResult').classList.remove('hidden');
+  document.getElementById('comp-badge-low').textContent  = `Tier ${tLow}`;
+  document.getElementById('comp-badge-high').textContent = `Tier ${tHigh}`;
 
-  document.getElementById('comp-badge-low').textContent = `Tier ${tierLow}`;
-  document.getElementById('comp-badge-high').textContent = `Tier ${tierHigh}`;
+  // Grupuj po dostawcy
+  const byProvider = {};
+  selectedProviderIds.forEach(id => {
+    const prov = allProviders.find(p => p.id === id);
+    byProvider[id] = { nazwa: prov ? prov.nazwa : id, pakiety: data.filter(d => d.dostawca_id === id) };
+  });
 
-  renderComparisonTable(packages, tierLow, tierHigh);
-  renderDeltaTable(packages, tierLow);
-  showNotif('compare','Porównanie załadowane.','success');
-  setTimeout(() => document.getElementById('notif-compare').style.display='none', 2500);
-}
-
-function renderComparisonTable(packages, tierLow, tierHigh) {
-  if(!packages.length) {
-    document.getElementById('compTableWrap').innerHTML =
-      '<div class="notif info" style="display:block;">Brak danych w bazie dla wybranych dostawców. Dodaj pakiety przez zakładkę <strong>Ucz bazę</strong>.</div>';
-    return;
-  }
-
-  const providers = [...new Set(packages.map(p => p.dostawca))];
-  const params = [
-    {label:'Specjalizacje (liczba)', key:'liczba_spec'},
-    {label:'Badania (liczba)', key:'liczba_badan'},
-    {label:'Ciąża', key:'ciaza', bool:true},
-    {label:'Leczenie szpitalne', key:'leczenie_szpitalne', bool:true},
-    {label:'Hotline 24h', key:'hotline_24h', bool:true},
-    {label:'Telemedycyna', key:'telemedycyna', bool:true},
-    {label:'Wizyty profesorskie', key:'wizyty_profesorskie', bool:true},
-    {label:'Karencja (dni)', key:'karencja_dni'},
-    {label:'Dzieci do (lat)', key:'wiek_dzieci_do'},
-    {label:'Dostępny JDG', key:'jdg', bool:true},
-    {label:'Aplikacja mobilna', key:'aplikacja_mobilna', bool:true},
+  const ROWS = [
+    {key:'tier',            label:'Tier',                   fmt: v => `<span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded">T${v}</span>`},
+    {key:'pakiet_nazwa',    label:'Nazwa wariantu',          fmt: v => `<strong>${v||'–'}</strong>`},
+    {key:'telemedycyna',    label:'Telemedycyna',            fmt: v => v ? '✅' : '❌'},
+    {key:'ciaza',           label:'Opieka w ciąży',         fmt: v => v ? '✅' : '❌'},
+    {key:'leczenie_szpitalne',label:'Leczenie szpitalne',   fmt: v => v ? '✅' : '❌'},
+    {key:'hotline_24h',     label:'Hotline 24h',            fmt: v => v ? '✅' : '❌'},
+    {key:'aplikacja_mobilna',label:'Aplikacja mobilna',     fmt: v => v ? '✅' : '❌'},
+    {key:'jdg',             label:'JDG',                    fmt: v => v ? '✅' : '❌'},
+    {key:'min_pracownicy',  label:'Min. pracownicy',        fmt: v => v||'–'},
+    {key:'wiek_dzieci_do',  label:'Dzieci do (lat)',        fmt: v => v||'–'},
+    {key:'karencja_dni',    label:'Karencja (dni)',         fmt: v => v===0?'Brak':v||'–'},
+    {key:'cena_ind_mies',   label:'Składka ind. (zł/mies)', fmt: v => v ? `<strong class="text-brand-pink">${parseFloat(v).toFixed(2)} zł</strong>` : '<em class="text-slate-400">brak danych</em>'},
+    {key:'cena_grup_mies',  label:'Składka grup. (zł/mies)',fmt: v => v ? `<strong class="text-brand-pink">${parseFloat(v).toFixed(2)} zł</strong>` : '<em class="text-slate-400">brak danych</em>'},
+    {key:'notatki',         label:'Uwagi',                  fmt: v => `<span class="text-xs text-slate-500">${(v||'–').substring(0,80)}${v&&v.length>80?'…':''}</span>`},
   ];
 
-  let html = `<table class="compare-table"><thead>`;
-  html += `<tr class="provider-header"><th>Parametr</th>`;
-  providers.forEach(p => html += `<th class="tier" colspan="2">${p}</th>`);
-  html += `</tr><tr><th></th>`;
-  providers.forEach(() => {
-    html += `<th class="tier">Tier ${tierLow}</th><th class="tier">Tier ${tierHigh}</th>`;
+  // Dla każdego dostawcy weź pakiet z najniższym i najwyższym tierem w zakresie
+  const cols = selectedProviderIds.map(id => {
+    const pkts = byProvider[id].pakiety;
+    const low  = pkts.reduce((a,b) => a.tier <= b.tier ? a : b, pkts[0]);
+    const high = pkts.reduce((a,b) => a.tier >= b.tier ? a : b, pkts[0]);
+    return { nazwa: byProvider[id].nazwa, low, high };
   });
-  html += `</tr></thead><tbody>`;
 
-  params.forEach(param => {
-    html += `<tr><td><strong>${param.label}</strong></td>`;
-    providers.forEach(prov => {
-      const pkgLow = packages.find(p => p.dostawca === prov && p.tier == tierLow);
-      const pkgHigh = packages.find(p => p.dostawca === prov && p.tier == tierHigh);
-      [pkgLow, pkgHigh].forEach(pkg => {
-        if(!pkg) { html += `<td><span class="badge badge-gray">brak</span></td>`; return; }
-        const val = pkg[param.key];
-        if(param.bool) {
-          html += `<td>${val ? '<span class="yes">✓ TAK</span>' : '<span class="no">✗ NIE</span>'}</td>`;
-        } else {
-          html += `<td>${val !== null && val !== undefined ? val : '<span style="color:#aaa">—</span>'}</td>`;
-        }
-      });
+  let html = `<table class="w-full text-left text-sm border-collapse min-w-[900px] compare-table">
+    <thead>
+      <tr class="bg-brand-navy text-white">
+        <th class="p-4 border-b border-slate-700 w-48">Parametr</th>`;
+  cols.forEach(c => html += `<th colspan="2" class="p-4 border-b border-slate-700 text-center border-l border-slate-600">${c.nazwa}</th>`);
+  html += `</tr><tr class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
+        <th class="p-3 border-b border-slate-200"></th>`;
+  cols.forEach(() => html += `<th class="p-3 border-b border-slate-200 text-center border-l border-slate-200">Niższy</th><th class="p-3 border-b border-slate-200 text-center">Wyższy</th>`);
+  html += `</tr></thead><tbody class="divide-y divide-slate-100">`;
+
+  ROWS.forEach(row => {
+    html += `<tr class="hover:bg-slate-50 transition-colors"><td class="p-4 font-semibold text-slate-600 text-xs uppercase tracking-wide">${row.label}</td>`;
+    cols.forEach(c => {
+      html += `<td class="p-4 text-center border-l border-slate-100">${row.fmt(c.low  ? c.low[row.key]  : null)}</td>`;
+      html += `<td class="p-4 text-center">${row.fmt(c.high ? c.high[row.key] : null)}</td>`;
     });
     html += `</tr>`;
   });
 
   html += `</tbody></table>`;
   document.getElementById('compTableWrap').innerHTML = html;
-}
-
-function renderDeltaTable(packages, tier) {
-  if(!packages.length) {
-    document.getElementById('deltaTableWrap').innerHTML =
-      '<p style="color:#888;font-size:0.88rem;">Brak danych do porównania.</p>';
-    return;
-  }
-  document.getElementById('deltaTableWrap').innerHTML =
-    '<p style="color:#888;font-size:0.88rem;">Macierz DELTA generowana automatycznie po wczytaniu pełnych danych o zakresach pakietów.</p>';
-}
-
-function exportComparison() {
-  showNotif('compare','Funkcja eksportu PDF — wkrótce dostępna.','info');
+  showNotif('compare',`Załadowano ${data.length} pakietów dla ${cols.length} dostawców.`,'border-emerald-500 bg-emerald-50 text-emerald-700');
 }
 
 // ============================================================
-// BIBLIOTEKA
+// BIBLIOTEKA — z bazy przez VIEW pakiety_pelne
 // ============================================================
 async function loadLibrary() {
-  const provider = document.getElementById('libProvider').value;
-  const type = document.getElementById('libType').value;
-  const version = document.getElementById('libVersion').value;
-
-  let params = 'select=dostawca,pakiet,tier,wersja,liczba_spec,liczba_badan,hotline_24h,telemedycyna,ciaza,leczenie_szpitalne,jdg&order=dostawca,tier';
-  if(provider) params += `&dostawca=eq.${provider}`;
-
   const el = document.getElementById('libraryTable');
-  el.innerHTML = '<div class="loading"><div class="spinner"></div>Ładowanie...</div>';
+  el.innerHTML = '<div class="flex items-center gap-3 text-slate-500 justify-center py-10"><div class="loader"></div> Ładowanie...</div>';
 
-  const data = await apiGet('v_porownanie_pakietow', params);
+  const provId  = document.getElementById('libProvider').value;
+  const tier    = document.getElementById('libTier').value;
+  const version = document.getElementById('libVersion').value.trim();
 
-  if(!data || !data.length) {
-    el.innerHTML = '<div class="notif info" style="display:block;">Brak danych. Dodaj pakiety przez <strong>Ucz bazę</strong> lub skonfiguruj połączenie Supabase.</div>';
-    return;
+  let params = 'select=id,pakiet_nazwa,tier,wersja,dostawca_nazwa,telemedycyna,ciaza,leczenie_szpitalne,cena_ind_mies,cena_grup_mies,notatki&aktywna=eq.true&order=dostawca_nazwa,tier';
+  if(provId)  params += `&dostawca_id=eq.${provId}`;
+  if(tier)    params += `&tier=eq.${tier}`;
+  if(version) params += `&wersja=eq.${version}`;
+
+  const data = await apiGet('pakiety_pelne', params);
+
+  if(!data || data.length === 0) {
+    el.innerHTML = '<div class="text-center py-10 text-slate-400">Brak wyników dla wybranych filtrów.</div>'; return;
   }
 
-  let html = `<table class="admin-table">
-    <thead><tr>
-      <th>Dostawca</th><th>Wariant</th><th>Tier</th><th>Wersja</th>
-      <th>Spec.</th><th>Badania</th><th>Hotline</th><th>Tele</th><th>Ciąża</th><th>Szpital</th><th>JDG</th><th></th>
-    </tr></thead><tbody>`;
+  const tierColors = ['bg-slate-200 text-slate-700','bg-blue-100 text-blue-700','bg-violet-100 text-violet-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-rose-100 text-rose-700'];
+
+  let html = `<table class="w-full text-left text-sm border-collapse min-w-[900px]">
+    <thead class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
+      <tr>
+        <th class="p-4">Dostawca</th>
+        <th class="p-4">Wariant</th>
+        <th class="p-4">Tier</th>
+        <th class="p-4">Wersja</th>
+        <th class="p-4 text-center">Tele</th>
+        <th class="p-4 text-center">Ciąża</th>
+        <th class="p-4 text-center">Szpital</th>
+        <th class="p-4">Składka ind.</th>
+        <th class="p-4">Składka grup.</th>
+        <th class="p-4">Notatki</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">`;
 
   data.forEach(p => {
-    html += `<tr>
-      <td><strong>${p.dostawca}</strong></td>
-      <td>${p.pakiet}</td>
-      <td><span class="badge badge-blue">T${p.tier}</span></td>
-      <td><span class="badge badge-gray">${p.wersja || '—'}</span></td>
-      <td>${p.liczba_spec || '—'}</td>
-      <td>${p.liczba_badan || '—'}</td>
-      <td>${p.hotline_24h ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
-      <td>${p.telemedycyna ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
-      <td>${p.ciaza ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
-      <td>${p.leczenie_szpitalne ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
-      <td>${p.jdg ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
-      <td><button class="btn btn-outline btn-sm">Szczegóły</button></td>
+    const tc = tierColors[Math.min((p.tier||1)-1, tierColors.length-1)];
+    html += `<tr class="hover:bg-slate-50 transition-colors">
+      <td class="p-4 font-bold text-brand-navy">${p.dostawca_nazwa||'–'}</td>
+      <td class="p-4 font-semibold">${p.pakiet_nazwa||'–'}</td>
+      <td class="p-4"><span class="px-2 py-1 rounded text-xs font-bold ${tc}">T${p.tier||'?'}</span></td>
+      <td class="p-4 text-xs text-slate-500 font-mono">${p.wersja||'–'}</td>
+      <td class="p-4 text-center">${p.telemedycyna?'✅':'❌'}</td>
+      <td class="p-4 text-center">${p.ciaza?'✅':'❌'}</td>
+      <td class="p-4 text-center">${p.leczenie_szpitalne?'✅':'❌'}</td>
+      <td class="p-4 font-bold text-brand-pink">${p.cena_ind_mies ? parseFloat(p.cena_ind_mies).toFixed(2)+' zł' : '<span class=\"text-slate-300\">–</span>'}</td>
+      <td class="p-4 font-bold text-brand-pink">${p.cena_grup_mies ? parseFloat(p.cena_grup_mies).toFixed(2)+' zł' : '<span class=\"text-slate-300\">–</span>'}</td>
+      <td class="p-4 text-xs text-slate-500 max-w-xs truncate" title="${(p.notatki||'')}"> ${p.notatki ? p.notatki.substring(0,60)+(p.notatki.length>60?'…':'') : '–'}</td>
     </tr>`;
   });
 
-  html += '</tbody></table>';
+  html += `</tbody></table><div class="text-xs text-slate-400 p-4 text-right">Wyników: ${data.length}</div>`;
   el.innerHTML = html;
 }
 
-function closeDetail() {
-  document.getElementById('packageDetail').style.display = 'none';
-}
-
 // ============================================================
-// UCZENIE BAZY
+// LOAD PACKAGES FOR SELECT (Admin + Wersja)
 // ============================================================
-function showLearnMode(mode) {
-  ['learnSql','learnForm','learnVersion'].forEach(id => {
-    document.getElementById(id).style.display = 'none';
-  });
-  document.getElementById('learn' + mode.charAt(0).toUpperCase() + mode.slice(1)).style.display = 'block';
-}
-
-function validateAndInsertSQL() {
-  const sql = document.getElementById('sqlInput').value.trim();
-  const notif = document.getElementById('sqlValidation');
-  if(!sql) { showNotif('learn','Wklej SQL.','error'); return; }
-  if(sql.toLowerCase().includes('cena_ind') || sql.toLowerCase().includes('cena_grup')) {
-    notif.className = 'notif error'; notif.style.display = 'block';
-    notif.textContent = '⚠ SQL zawiera pola cen (cena_ind, cena_grup). Usuń je — składki wprowadza się przez zakładkę Admin.';
-    return;
-  }
-  if(!sql.toLowerCase().startsWith('insert')) {
-    notif.className = 'notif error'; notif.style.display = 'block';
-    notif.textContent = '⚠ SQL musi zaczynać się od INSERT. Inne operacje nieobsługiwane tutaj.';
-    return;
-  }
-  notif.className = 'notif success'; notif.style.display = 'block';
-  notif.textContent = '✓ Walidacja OK. Wykonaj SQL bezpośrednio w Supabase SQL Editor — otwórz w nowej karcie.';
-}
-
-function clearSQL() {
-  document.getElementById('sqlInput').value = '';
-  document.getElementById('sqlValidation').style.display = 'none';
-}
-
-async function submitForm() {
-  const provider = document.getElementById('fProvider').value;
-  const name = document.getElementById('fName').value.trim();
-  const tier = parseInt(document.getElementById('fTier').value);
-  const version = document.getElementById('fVersion').value.trim();
-  if(!provider || !name || !version) {
-    showNotif('learn','Wypełnij: dostawca, nazwa, wersja.','error'); return;
-  }
-  if(!/^\d{6}$/.test(version)) {
-    showNotif('learn','Wersja musi być w formacie MMYYYY np. 032026.','error'); return;
-  }
-  const dostawca = await apiGet('dostawcy', `select=id&skrot=eq.${provider}`);
-  if(!dostawca || !dostawca.length) {
-    showNotif('learn','Nie znaleziono dostawcy w bazie.','error'); return;
-  }
-  const body = {
-    dostawca_id: dostawca[0].id, nazwa: name, tier, wersja: version,
-    min_pracownicy: parseInt(document.getElementById('fMinWorkers').value) || 3,
-    hotline_24h: document.getElementById('fHotline').checked,
-    telemedycyna: document.getElementById('fTele').checked,
-    aplikacja_mobilna: true,
-    ciaza: document.getElementById('fCiaza').checked,
-    leczenie_szpitalne: document.getElementById('fSzpital').checked,
-    jdg: document.getElementById('fJdg').checked,
-    notatki: document.getElementById('fNotatki').value,
-    aktywna: true
-  };
-  const ok = await apiPost('pakiety', body);
-  if(ok) {
-    showNotif('learn','✓ Pakiet zapisany pomyślnie!','success');
-    resetForm();
-  } else {
-    showNotif('learn','⚠ Błąd zapisu. Sprawdź połączenie lub duplikat.','error');
-  }
-}
-
-function resetForm() {
-  ['fName','fVersion','fNotatki'].forEach(id => document.getElementById(id).value = '');
-}
-
-async function loadProviderPackages(selectId, skrot) {
-  const el = document.getElementById(selectId);
-  el.innerHTML = '<option>Ładowanie...</option>';
-  if(!skrot) { el.innerHTML = '<option>— wybierz dostawcę —</option>'; return; }
-  const dostawca = await apiGet('dostawcy', `select=id&skrot=eq.${skrot}`);
-  if(!dostawca || !dostawca.length) { el.innerHTML = '<option>Brak danych</option>'; return; }
-  const pkts = await apiGet('pakiety', `select=id,nazwa,tier,wersja&dostawca_id=eq.${dostawca[0].id}&aktywna=eq.true&order=tier`);
+async function loadProviderPackages(targetId, provId) {
+  const el = document.getElementById(targetId);
+  el.innerHTML = '<option value="">Ładowanie...</option>';
+  if(!provId) { el.innerHTML='<option value="">— wybierz dostawcę —</option>'; return; }
+  const data = await apiGet('pakiety', `select=id,nazwa,tier&dostawca_id=eq.${provId}&aktywna=eq.true&order=tier,nazwa`);
   el.innerHTML = '<option value="">— wybierz pakiet —</option>';
-  if(pkts) pkts.forEach(p => {
+  (data||[]).forEach(p => {
     const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = `${p.nazwa} (T${p.tier} | ${p.wersja})`;
+    opt.value = p.id; opt.textContent = `T${p.tier} — ${p.nazwa}`;
     el.appendChild(opt);
   });
 }
 
-async function createNewVersion() {
-  const pkgId = document.getElementById('vPackage').value;
-  const newVer = document.getElementById('vNewVersion').value.trim();
-  const notif = document.getElementById('versionNotif');
-  if(!pkgId || !newVer) {
-    notif.className='notif error'; notif.style.display='block';
-    notif.textContent='Wybierz pakiet i podaj nową wersję.'; return;
-  }
-  if(!/^\d{6}$/.test(newVer)) {
-    notif.className='notif error'; notif.style.display='block';
-    notif.textContent='Format wersji: MMYYYY np. 062026.'; return;
-  }
-  // Pobierz istniejący pakiet
-  const existing = await apiGet('pakiety', `select=*&id=eq.${pkgId}`);
-  if(!existing || !existing.length) {
-    notif.className='notif error'; notif.style.display='block';
-    notif.textContent='Nie znaleziono pakietu.'; return;
-  }
-  const pkg = {...existing[0]};
-  delete pkg.id; delete pkg.data_dodania;
-  pkg.wersja = newVer; pkg.aktywna = true;
-  const ok = await apiPost('pakiety', pkg);
-  if(ok) {
-    notif.className='notif success'; notif.style.display='block';
-    notif.textContent=`✓ Nowa wersja ${newVer} utworzona. Stara wersja zachowana.`;
-  } else {
-    notif.className='notif error'; notif.style.display='block';
-    notif.textContent='⚠ Błąd — możliwy duplikat wersji.';
-  }
-}
-
 // ============================================================
-// ADMIN — SKŁADKI
+// SKŁADKI — zapis przez PATCH (ceny nie są w SQL, tylko przez UI)
 // ============================================================
 async function savePrice() {
-  const pkgId = document.getElementById('aPackage').value;
-  const ind = document.getElementById('aPriceInd').value;
-  const grup = document.getElementById('aPriceGrup').value;
+  const pakietId = document.getElementById('aPackage').value;
+  if(!pakietId){ showNotif('admin','Wybierz pakiet.','border-red-500 bg-red-50 text-red-700'); return; }
+  const body = {};
+  const ind     = document.getElementById('aPriceInd').value;
+  const grup    = document.getElementById('aPriceGrup').value;
   const rodzina = document.getElementById('aPriceRodzina').value;
-  const dateStart = document.getElementById('aDateStart').value;
-  const source = document.getElementById('aSource').value;
-  const notes = document.getElementById('aNotes').value;
-
-  if(!pkgId) { showNotif('admin','Wybierz pakiet.','error'); return; }
-  if(!dateStart) { showNotif('admin','Podaj datę wejścia.','error'); return; }
-
-  const body = {
-    pakiet_id: parseInt(pkgId),
-    data_wejscia: dateStart,
-    zrodlo: source,
-    notatki: notes,
-  };
-  if(ind) body.cena_ind_mies = parseFloat(ind);
-  if(grup) body.cena_grup_mies = parseFloat(grup);
-  if(rodzina) body.cena_rodzina = parseFloat(rodzina);
-
-  const ok = await apiPost('pakiet_skladki_historia', body);
+  if(ind)     body.cena_ind_mies     = parseFloat(ind);
+  if(grup)    body.cena_grup_mies    = parseFloat(grup);
+  if(rodzina) body.cena_rodzina_mies = parseFloat(rodzina);
+  if(Object.keys(body).length === 0){ showNotif('admin','Wpisz przynajmniej jedną składkę.','border-amber-500 bg-amber-50 text-amber-700'); return; }
+  const ok = await apiPatch('pakiety', `id=eq.${pakietId}`, body);
   if(ok) {
-    // Aktualizuj też główny pakiet
-    if(SUPABASE_URL && SUPABASE_KEY && pkgId) {
-      const updateBody = {};
-      if(ind) updateBody.cena_ind_mies = parseFloat(ind);
-      if(grup) updateBody.cena_grup_mies = parseFloat(grup);
-      if(rodzina) updateBody.cena_rodzina_mies = parseFloat(rodzina);
-      await fetch(`${SUPABASE_URL}/rest/v1/pakiety?id=eq.${pkgId}`, {
-        method:'PATCH',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-        body: JSON.stringify(updateBody)
-      });
-    }
-    showNotif('admin','✓ Składka zapisana i zarchiwizowana w historii.','success');
+    showNotif('admin','✓ Składki zapisane w bazie.','border-emerald-500 bg-emerald-50 text-emerald-700');
+    // czyść pola
+    ['aPriceInd','aPriceGrup','aPriceRodzina'].forEach(id => document.getElementById(id).value='');
   } else {
-    showNotif('admin','⚠ Błąd zapisu składki.','error');
+    showNotif('admin','Błąd zapisu. Sprawdź uprawnienia RLS.','border-red-500 bg-red-50 text-red-700');
   }
 }
 
-async function loadPriceHistory() {
-  const skrot = document.getElementById('histProvider').value;
-  const el = document.getElementById('priceHistoryTable');
-  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+// ============================================================
+// SQL VALIDATION
+// ============================================================
+function validateAndInsertSQL() {
+  const sql   = document.getElementById('sqlInput').value.trim().toUpperCase();
+  const notif = document.getElementById('sqlValidation');
+  notif.classList.remove('hidden');
+  if(!sql){ notif.className='mt-6 p-4 rounded-xl text-sm font-bold border block border-red-500 bg-red-50 text-red-700'; notif.textContent='Wklej kod SQL.'; return; }
+  if(!sql.startsWith('INSERT')){ notif.className='mt-6 p-4 rounded-xl text-sm font-bold border block border-red-500 bg-red-50 text-red-700'; notif.textContent='BŁĄD: Dozwolone tylko INSERT INTO.'; return; }
+  const priceCols = ['CENA_IND_MIES','CENA_GRUP_MIES','CENA_RODZINA_MIES'];
+  const found = priceCols.filter(c => sql.includes(c));
+  if(found.length){ notif.className='mt-6 p-4 rounded-xl text-sm font-bold border block border-red-500 bg-red-50 text-red-700'; notif.textContent=`BLOKADA: SQL zawiera kolumny cenowe (${found.join(', ')}). Składki wpisuj przez zakładkę Konfiguracja.`; return; }
+  notif.className='mt-6 p-4 rounded-xl text-sm font-bold border block border-emerald-500 bg-emerald-50 text-emerald-700';
+  notif.textContent='✓ SQL zwalidowany. Wykonaj w panelu Supabase → SQL Editor.';
+}
 
-  let params = 'select=pakiet_id,data_wejscia,cena_ind_mies,cena_grup_mies,cena_rodzina,zrodlo,notatki&order=data_wejscia.desc&limit=50';
-  const data = await apiGet('pakiet_skladki_historia', params);
-  if(!data || !data.length) {
-    el.innerHTML = '<p style="color:#888;font-size:0.85rem;">Brak historii składek.</p>'; return;
-  }
-  let html = `<table class="admin-table"><thead><tr>
-    <th>Pakiet ID</th><th>Data wejścia</th><th>Ind. (zł)</th><th>Grup. (zł)</th><th>Rodzina (zł)</th><th>Źródło</th><th>Notatki</th>
-  </tr></thead><tbody>`;
-  data.forEach(r => {
-    html += `<tr>
-      <td>${r.pakiet_id}</td>
-      <td>${r.data_wejscia}</td>
-      <td>${r.cena_ind_mies || '—'}</td>
-      <td>${r.cena_grup_mies || '—'}</td>
-      <td>${r.cena_rodzina || '—'}</td>
-      <td><span class="badge badge-blue">${r.zrodlo}</span></td>
-      <td>${r.notatki || '—'}</td>
-    </tr>`;
-  });
-  html += '</tbody></table>';
-  el.innerHTML = html;
+function clearSQL() {
+  document.getElementById('sqlInput').value='';
+  document.getElementById('sqlValidation').classList.add('hidden');
+}
+
+async function createNewVersion() {
+  const pakietId  = document.getElementById('vPackage').value;
+  const newVer    = document.getElementById('vNewVersion').value.trim();
+  const notif     = document.getElementById('versionNotif');
+  if(!pakietId||!newVer||newVer.length!==6){ notif.className='mt-4 p-4 rounded-xl text-sm font-semibold border block border-red-500 bg-red-50 text-red-700'; notif.textContent='Wybierz pakiet i podaj wersję (6 znaków, np. 062026).'; notif.classList.remove('hidden'); return; }
+  const src = await apiGet('pakiety', `select=*&id=eq.${pakietId}`);
+  if(!src||!src[0]){ notif.className='mt-4 p-4 rounded-xl text-sm font-semibold border block border-red-500 bg-red-50 text-red-700'; notif.textContent='Nie znaleziono pakietu.'; notif.classList.remove('hidden'); return; }
+  const clone = {...src[0]};
+  delete clone.id; delete clone.data_dodania;
+  clone.wersja = newVer;
+  clone.cena_ind_mies=null; clone.cena_grup_mies=null; clone.cena_rodzina_mies=null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pakiety`, {
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify(clone)
+    });
+    if(res.ok){
+      notif.className='mt-4 p-4 rounded-xl text-sm font-semibold border block border-emerald-500 bg-emerald-50 text-emerald-700';
+      notif.textContent=`✓ Klonowanie zakończone. Wersja ${newVer} utworzona (bez cen).`;
+    } else {
+      notif.className='mt-4 p-4 rounded-xl text-sm font-semibold border block border-red-500 bg-red-50 text-red-700';
+      notif.textContent='Błąd zapisu.';
+    }
+  } catch(e){ notif.textContent='Błąd sieci.'; }
+  notif.classList.remove('hidden');
 }
 
 // ============================================================
@@ -1116,34 +605,28 @@ function saveConfig() {
   SUPABASE_KEY = document.getElementById('cfgKey').value.trim();
   localStorage.setItem('ma_url', SUPABASE_URL);
   localStorage.setItem('ma_key', SUPABASE_KEY);
-  showNotif('admin','✓ Dane połączenia zapisane lokalnie (localStorage).','success');
   checkDbStatus();
+  loadProvidersFromDB();
+  showNotif('admin','Zapisano konfigurację lokalnie.','border-emerald-500 bg-emerald-50 text-emerald-700');
 }
 
 async function testConnection() {
   const status = document.getElementById('connStatus');
-  status.textContent = '⏳ testowanie...';
-  const data = await apiGet('dostawcy', 'select=id&limit=1');
-  status.textContent = data ? '✓ Połączenie OK!' : '✗ Błąd — sprawdź URL i klucz.';
-  status.style.color = data ? '#1a8a3a' : '#c52040';
+  status.textContent='Testowanie...'; status.className='mt-4 text-sm font-semibold text-slate-500';
+  const data = await apiGet('dostawcy','select=id&limit=1');
+  if(data){ status.textContent='✓ Połączono z Supabase (HTTP 200)'; status.className='mt-4 text-sm font-bold text-emerald-600'; }
+  else { status.textContent='✗ Błąd połączenia. Sprawdź URL i klucz API.'; status.className='mt-4 text-sm font-bold text-red-600'; }
 }
 
-// ============================================================
-// NOTIF HELPER
-// ============================================================
-function showNotif(tab, msg, type) {
-  const el = document.getElementById('notif-' + tab);
+function showNotif(tab, msg, classes) {
+  const el = document.getElementById('notif-'+tab);
   if(!el) return;
-  el.className = 'notif ' + type;
-  el.textContent = msg;
-  el.style.display = 'block';
-  if(type === 'success') setTimeout(() => el.style.display='none', 3000);
+  el.className='mb-6 p-4 rounded-xl text-sm font-semibold shadow-sm border block '+classes;
+  el.textContent=msg;
+  setTimeout(()=>el.classList.add('hidden'),5000);
 }
 
-// ============================================================
-// START
-// ============================================================
 window.onload = init;
-</script>
+<\/script>
 </body>
 </html>
