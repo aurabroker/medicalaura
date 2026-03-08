@@ -830,7 +830,6 @@ async function runComparison(){
     (labsData || []).forEach(row => { labCounts[row.pakiet_id] = (labCounts[row.pakiet_id] || 0) + 1; });
 
     data.forEach(d => {
-      // Dynamicznie podstawia zliczoną liczbę z bazy, dzięki czemu omija potencjalne braki lub null-e w samej tabeli 'pakiety'
       if (specCounts[d.id] !== undefined) d.liczba_specjalizacji = specCounts[d.id];
       if (labCounts[d.id] !== undefined) d.liczba_badan_lab = labCounts[d.id];
     });
@@ -891,7 +890,7 @@ function renderPriceSection(sorted){
     div.className='bg-slate-50 border border-slate-200 rounded-2xl p-5';
     div.innerHTML=`
       <div class="font-bold text-brand-navy text-sm">${p.dostawca_nazwa}</div>
-      <div class="text-xs text-slate-500 mb-4">${p.pakiet_nazwa} · T${p.tier}</div>
+      <div class="text-xs text-slate-500 mb-4">${p.pakiet_nazwa || p.nazwa} · T${p.tier}</div>
       <div class="space-y-3">
         <div><label class="lbl">Indyw. (zł/mies)</label>
           <input type="number" step="0.01" class="price-inp" id="pi_ind_${p.id}" value="${p.cena_ind_mies||''}" placeholder="–" oninput="checkPricesComplete()"/></div>
@@ -948,7 +947,7 @@ function exportCSV(){
   const sorted=lastCompData;
   const fmap=(id,p)=>({cena_ind_mies:'pi_ind_'+p.id,cena_grup_mies:'pi_par_'+p.id,cena_rodzina_mies:'pi_rod_'+p.id}[id]);
   let csv='\uFEFF';
-  csv+='Parametr;'+sorted.map(p=>`${p.dostawca_nazwa} — ${p.pakiet_nazwa}`).join(';')+'\n';
+  csv+='Parametr;'+sorted.map(p=>`${p.dostawca_nazwa} — ${p.pakiet_nazwa || p.nazwa}`).join(';')+'\n';
   ROWS.forEach(row=>{
     if(row.sep){csv+=`\n${row.sep}\n`;return;}
     const vals=sorted.map(p=>{
@@ -989,7 +988,7 @@ function exportPDF(){
   <h1>MEDICALAURA — Zestawienie Porównawcze</h1>
   <div class="sub">Data: ${new Date().toLocaleString('pl-PL')}</div>
   <table><thead><tr><th class="first">Parametr</th>`;
-  sorted.forEach(p=>body+=`<th>${p.dostawca_nazwa}<br/><span style="font-weight:400;opacity:.8">${p.pakiet_nazwa}</span></th>`);
+  sorted.forEach(p=>body+=`<th>${p.dostawca_nazwa}<br/><span style="font-weight:400;opacity:.8">${p.pakiet_nazwa || p.nazwa}</span></th>`);
   body+=`</tr></thead><tbody>`;
   ROWS.forEach(row=>{
     if(row.sep){body+=`<tr class="sep"><td colspan="${sorted.length+1}">${row.sep}</td></tr>`;return;}
@@ -1039,9 +1038,11 @@ async function runSearch(){
   document.getElementById('searchHint').textContent='Szukam...';
   document.getElementById('searchResult').classList.add('hidden');
 
-  const params=`select=*&aktywna=eq.true&notatki=ilike.*${encodeURIComponent(q)}*&order=dostawca_nazwa,tier`;
-  const data=await fetchEnhancedPackages(params);
+  // Wyszukiwanie w kolumnie Notatki (Jako zapasowe/dodatkowe)
+  const params=`select=*&aktywna=eq.true&notatki=ilike.*${encodeURIComponent(q)}*`;
+  const dataFromNotes=await fetchEnhancedPackages(params);
 
+  // Wyszukiwanie w dedykowanych tabelach specjalizacji/badań
   const specData=searchType==='spec'
     ? await apiGet('pakiety_specjalizacje',`select=pakiet_id,specjalizacja_nazwa&specjalizacja_nazwa=ilike.*${encodeURIComponent(q)}*`)
     : await apiGet('pakiety_badania',`select=pakiet_id,badanie_nazwa&badanie_nazwa=ilike.*${encodeURIComponent(q)}*`);
@@ -1050,14 +1051,37 @@ async function runSearch(){
   document.getElementById('searchResultTitle').textContent=`Wyniki dla "${q}" (${searchType==='spec'?'specjalizacja':'badanie'})`;
 
   let results=[];
-
-  if(specData&&specData.length){
-    const pkgIds=[...new Set(specData.map(s=>s.pakiet_id))];
-    const pkts=await fetchEnhancedPackages(`select=*&id=in.(${pkgIds.join(',')})&aktywna=eq.true&order=dostawca_nazwa,tier,nazwa`);
-    results=pkts||[];
-  } else if(data&&data.length){
-    results=data;
+  let pkgIdsToFetch = new Set();
+  
+  if(specData && specData.length) {
+    specData.forEach(s => pkgIdsToFetch.add(s.pakiet_id));
   }
+  
+  // Zbieramy pakiety z notatek, które już mamy pobrane
+  if(dataFromNotes && dataFromNotes.length) {
+    dataFromNotes.forEach(d => {
+      if(!pkgIdsToFetch.has(d.id)) {
+        results.push(d); 
+        pkgIdsToFetch.add(d.id); 
+      }
+    });
+  }
+
+  // Pobieramy resztę pakietów, które wystąpiły w tabelach dedykowanych
+  const idsToFetch = [...pkgIdsToFetch].filter(id => !results.some(r => r.id === id));
+  if(idsToFetch.length > 0) {
+    const pkts = await fetchEnhancedPackages(`select=*&id=in.(${idsToFetch.join(',')})&aktywna=eq.true`);
+    if(pkts && pkts.length) {
+      results = results.concat(pkts);
+    }
+  }
+
+  // Sortowanie
+  results.sort((a, b) => {
+    if ((a.dostawca_nazwa || '') < (b.dostawca_nazwa || '')) return -1;
+    if ((a.dostawca_nazwa || '') > (b.dostawca_nazwa || '')) return 1;
+    return (a.tier || 0) - (b.tier || 0);
+  });
 
   if(!results.length){
     document.getElementById('searchResultBody').innerHTML=`
@@ -1073,8 +1097,9 @@ async function runSearch(){
   // Grupowanie po dostawcy
   const grouped = {};
   results.forEach(p => {
-    if(!grouped[p.dostawca_nazwa]) grouped[p.dostawca_nazwa] = [];
-    grouped[p.dostawca_nazwa].push(p);
+    const provName = p.dostawca_nazwa || 'Nieznany dostawca';
+    if(!grouped[provName]) grouped[provName] = [];
+    grouped[provName].push(p);
   });
 
   let html=`<div class="space-y-4">`;
@@ -1087,7 +1112,7 @@ async function runSearch(){
         <div class="sm:w-3/4 xl:w-4/5 flex flex-wrap gap-2 items-center">
           ${pkgs.map(p => `
             <button onclick="showPackageDetails(${p.id})" class="bg-white border-2 border-slate-200 hover:border-brand-pink text-slate-700 hover:text-brand-pink px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">
-              ${p.pakiet_nazwa}
+              ${p.pakiet_nazwa || p.nazwa}
             </button>
           `).join('')}
         </div>
@@ -1127,7 +1152,7 @@ async function loadLibrary(){
     const t=tc[Math.min((p.tier||1)-1,tc.length-1)];
     html+=`<tr class="hover:bg-slate-50 transition-colors">
       <td class="p-3 font-bold text-brand-navy">${p.dostawca_nazwa||'–'}</td>
-      <td class="p-3 font-bold text-brand-pink hover:underline cursor-pointer" onclick="showPackageDetails(${p.id})">${p.pakiet_nazwa||'–'} <span class="text-[10px] text-slate-400 font-normal ml-1">#${p.id}</span></td>
+      <td class="p-3 font-bold text-brand-pink hover:underline cursor-pointer" onclick="showPackageDetails(${p.id})">${p.pakiet_nazwa || p.nazwa ||'–'} <span class="text-[10px] text-slate-400 font-normal ml-1">#${p.id}</span></td>
       <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-xs font-bold ${t}">T${p.tier||'?'}</span></td>
       <td class="p-3 text-center font-bold">${isValid(p.liczba_specjalizacji)?p.liczba_specjalizacji:'<span class="text-slate-300">–</span>'}</td>
       <td class="p-3 text-center font-bold">${isValid(p.liczba_badan_lab)?p.liczba_badan_lab:'<span class="text-slate-300">–</span>'}</td>
@@ -1150,7 +1175,7 @@ async function openEdit(pkgId){
   if(!data||!data[0]) return;
   const p=data[0];
   document.getElementById('editPkgId').value=pkgId;
-  document.getElementById('editPkgName').textContent=`${p.dostawca_nazwa} — ${p.pakiet_nazwa}`;
+  document.getElementById('editPkgName').textContent=`${p.dostawca_nazwa} — ${p.pakiet_nazwa || p.nazwa}`;
   const map={eSpecjalizacje:'liczba_specjalizacji',eBadania:'liczba_badan_lab',ePoz:'czas_oczekiwania_poz',eSpec:'czas_oczekiwania_spec',eMinPrac:'min_pracownicy',eDzieci:'wiek_dzieci_do',eKarencja:'karencja_dni'};
   Object.entries(map).forEach(([id,key])=>document.getElementById(id).value=isValid(p[key])?p[key]:'');
   document.getElementById('eZasieg').value=p.zasieg_placowek||'';
@@ -1205,7 +1230,7 @@ function renderCalcList(){
     div.className='pkg-chip'+(sel?' sel':'');
     div.innerHTML=`<div class="flex items-center justify-between gap-2">
       <div><div class="font-bold text-xs">${p.dostawca_nazwa}</div>
-      <div class="text-xs ${sel?'text-slate-300':'text-slate-400'}">${p.nazwa} · T${p.tier}</div></div>
+      <div class="text-xs ${sel?'text-slate-300':'text-slate-400'}">${p.pakiet_nazwa || p.nazwa} · T${p.tier}</div></div>
       <div class="chk${sel?' on':''}">${sel?'✓':''}</div></div>`;
     div.onclick=()=>{
       sel?selectedCalc.delete(p.id):selectedCalc.add(p.id);
@@ -1240,7 +1265,7 @@ function calcUpdate(){
     const diff=price&&cheapest&&!isChp?(price-cheapest)*workers:null;
     html+=`<tr class="${isChp?'bg-emerald-50':''} hover:bg-slate-50">
       <td class="p-4 font-bold text-brand-navy">${p.dostawca_nazwa}</td>
-      <td class="p-4 font-bold text-brand-pink hover:underline cursor-pointer" onclick="showPackageDetails(${p.id})">${p.nazwa}</td>
+      <td class="p-4 font-bold text-brand-pink hover:underline cursor-pointer" onclick="showPackageDetails(${p.id})">${p.pakiet_nazwa || p.nazwa}</td>
       <td class="p-4 text-center"><span class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded">T${p.tier}</span></td>
       <td class="p-4 text-right font-bold">${price?price.toFixed(2)+' zł':'<span class="text-slate-300">brak</span>'}</td>
       <td class="p-4 text-right font-black text-brand-navy text-base">${monthly?monthly.toFixed(2)+' zł':'–'}${isChp?' <span class="text-emerald-500 text-xs">★</span>':''}</td>
@@ -1350,13 +1375,13 @@ async function acInput(q) {
   const table = searchType === 'spec' ? 'pakiety_specjalizacje' : 'pakiety_badania';
   const col   = searchType === 'spec' ? 'specjalizacja_nazwa'   : 'badanie_nazwa';
   const data  = await apiGet(table,
-    `select=${col}&${col}=ilike.${encodeURIComponent(q)}%25&order=${col}&limit=10`);
+    `select=${col}&${col}=ilike.*${encodeURIComponent(q)}*&order=${col}&limit=10`);
   if (!data || !data.length) { acHide(); return; }
   acItems = [...new Set(data.map(d => d[col]))];
   acIndex = -1;
   list.innerHTML = acItems.map((s, i) => {
     const hi = s.replace(new RegExp(`(${q})`, 'gi'), '<strong>$1</strong>');
-    return `<li class="ac-item" data-i="${i}" onmousedown="acSelect('${s.replace(/'/g,"\'")}')"> ${hi}</li>`;
+    return `<li class="ac-item" data-i="${i}" onmousedown="acSelect('${s.replace(/'/g,"\\'").replace(/"/g, "&quot;")}')"> ${hi}</li>`;
   }).join('');
   list.classList.remove('hidden');
 }
