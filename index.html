@@ -373,6 +373,39 @@ async function apiPatch(table,params,body){
   }catch(e){return false}
 }
 
+// ─── AUTO-PATCH MECHANIZM (ŁATANIE NIEZAKTUALIZOWANEGO WIDOKU SQL)
+async function fetchEnhancedPackages(params) {
+  let data = await apiGet('pakiety_pelne', params);
+  if (!data || !data.length) return data;
+  
+  // Jeśli widok pakiety_pelne z jakiegoś powodu nie zwraca nowo dodanych kolumn, 
+  // pobieramy je cichaczem z głównej tabeli 'pakiety' i doklejamy.
+  const first = data[0];
+  const missingData = !('liczba_specjalizacji' in first) || !('liczba_badan_lab' in first);
+  
+  if (missingData) {
+    const ids = data.map(d => d.id).join(',');
+    if (ids) {
+      const raw = await apiGet('pakiety', `select=id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do&id=in.(${ids})`);
+      if (raw && raw.length) {
+        data.forEach(d => {
+          const r = raw.find(x => x.id === d.id);
+          if (r) {
+            d.liczba_specjalizacji = r.liczba_specjalizacji ?? d.liczba_specjalizacji;
+            d.liczba_badan_lab = r.liczba_badan_lab ?? d.liczba_badan_lab;
+            d.czas_oczekiwania_poz = r.czas_oczekiwania_poz ?? d.czas_oczekiwania_poz;
+            d.czas_oczekiwania_spec = r.czas_oczekiwania_spec ?? d.czas_oczekiwania_spec;
+            d.karencja_dni = r.karencja_dni ?? d.karencja_dni;
+            d.min_pracownicy = r.min_pracownicy ?? d.min_pracownicy;
+            d.wiek_dzieci_do = r.wiek_dzieci_do ?? d.wiek_dzieci_do;
+          }
+        });
+      }
+    }
+  }
+  return data;
+}
+
 // ─── INIT ───────────────────────────────────────────────
 async function init(){
   document.getElementById('cfgUrl').value=SB_URL;
@@ -574,7 +607,7 @@ function clearAll(){
 }
 
 // ─── PORÓWNANIE (POPRAWIONE FORMATOWANIE BŁĘDNYCH DANYCH) ───
-const isValid = v => v !== null && v !== undefined && v !== '';
+const isValid = v => v !== null && v !== undefined && v !== '' && String(v).toLowerCase() !== 'null' && String(v).toLowerCase() !== 'nan';
 const fNum = v => isValid(v) ? `<strong class="text-xl">${v}</strong>` : '<span class="text-slate-300">–</span>';
 const fVal = v => isValid(v) ? v : '<span class="text-slate-300">–</span>';
 const fDays = v => isValid(v) ? (v===0 ? '<span class="text-emerald-600 font-bold">Brak</span>' : `≤${v} dni`) : '<span class="text-slate-300">–</span>';
@@ -612,8 +645,7 @@ async function runComparison(){
   if(ids.length<2){showNotif('compare','Zaznacz minimum 2 pakiety.','border-red-500 bg-red-50 text-red-700');return;}
   showNotif('compare','Pobieranie danych...','border-blue-500 bg-blue-50 text-blue-700');
   
-  // W przypadku widoków upewniamy się, że API połączy tabele poprawnie
-  const data=await apiGet('pakiety_pelne',`select=*&id=in.(${ids.join(',')})`);
+  const data=await fetchEnhancedPackages(`select=*&id=in.(${ids.join(',')})`);
   
   if(!data||!data.length){showNotif('compare','Brak danych w bazie. Sprawdź widok pakiety_pelne.','border-red-500 bg-red-50 text-red-700');return;}
   lastCompData=ids.map(id=>data.find(d=>d.id===parseInt(id))).filter(Boolean);
@@ -817,8 +849,8 @@ async function runSearch(){
   document.getElementById('searchHint').textContent='Szukam...';
   document.getElementById('searchResult').classList.add('hidden');
 
-  const params=`select=id,pakiet_nazwa,tier,dostawca_nazwa,liczba_specjalizacji,liczba_badan_lab,notatki,cena_ind_mies&aktywna=eq.true&notatki=ilike.*${encodeURIComponent(q)}*&order=dostawca_nazwa,tier`;
-  const data=await apiGet('pakiety_pelne',params);
+  const params=`select=*&aktywna=eq.true&notatki=ilike.*${encodeURIComponent(q)}*&order=dostawca_nazwa,tier`;
+  const data=await fetchEnhancedPackages(params);
 
   const specData=searchType==='spec'
     ? await apiGet('pakiety_specjalizacje',`select=pakiet_id,specjalizacja_nazwa&specjalizacja_nazwa=ilike.*${encodeURIComponent(q)}*`)
@@ -831,7 +863,7 @@ async function runSearch(){
 
   if(specData&&specData.length){
     const pkgIds=[...new Set(specData.map(s=>s.pakiet_id))];
-    const pkts=await apiGet('pakiety_pelne',`select=id,pakiet_nazwa,tier,dostawca_nazwa,liczba_specjalizacji,liczba_badan_lab,cena_ind_mies&id=in.(${pkgIds.join(',')})&aktywna=eq.true&order=dostawca_nazwa,tier`);
+    const pkts=await fetchEnhancedPackages(`select=*&id=in.(${pkgIds.join(',')})&aktywna=eq.true&order=dostawca_nazwa,tier`);
     results=pkts||[];
   } else if(data&&data.length){
     results=data;
@@ -884,10 +916,13 @@ async function loadLibrary(){
   document.getElementById('editPanel').classList.add('hidden');
   const provId=document.getElementById('libProvider').value;
   const tier=document.getElementById('libTier').value;
-  let params='select=id,pakiet_nazwa,tier,dostawca_nazwa,telemedycyna,ciaza,rehabilitacja,stomatologia,liczba_specjalizacji,liczba_badan_lab,cena_ind_mies,cena_grup_mies,cena_rodzina_mies&aktywna=eq.true&order=dostawca_nazwa,tier';
+  
+  // Zmiana na select=* aby zapobiec awarii jeśli widok jest niekompletny
+  let params='select=*&aktywna=eq.true&order=dostawca_nazwa,tier';
   if(provId) params+=`&dostawca_id=eq.${provId}`;
   if(tier)   params+=`&tier=eq.${tier}`;
-  const data=await apiGet('pakiety_pelne',params);
+  
+  const data=await fetchEnhancedPackages(params);
   if(!data||!data.length){el.innerHTML='<div class="text-center py-10 text-slate-400">Brak wyników.</div>';return;}
   const tc=['bg-slate-200 text-slate-700','bg-blue-100 text-blue-700','bg-violet-100 text-violet-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-rose-100 text-rose-700'];
   let html=`<table class="w-full text-sm border-collapse min-w-[1000px]">
@@ -920,7 +955,7 @@ async function loadLibrary(){
 }
 
 async function openEdit(pkgId){
-  const data=await apiGet('pakiety_pelne',`select=*&id=eq.${pkgId}`);
+  const data=await fetchEnhancedPackages(`select=*&id=eq.${pkgId}`);
   if(!data||!data[0]) return;
   const p=data[0];
   document.getElementById('editPkgId').value=pkgId;
@@ -962,9 +997,9 @@ async function saveEdit(){
 // ─── KALKULATOR ─────────────────────────────────────────
 async function calcLoadPackages(){
   const provId=document.getElementById('calcProvider').value;
-  let params='select=id,nazwa,tier,dostawca_nazwa,dostawca_id,cena_ind_mies,cena_grup_mies,cena_rodzina_mies&aktywna=eq.true&order=dostawca_nazwa,tier';
+  let params='select=*&aktywna=eq.true&order=dostawca_nazwa,tier';
   if(provId) params+=`&dostawca_id=eq.${provId}`;
-  const data=await apiGet('pakiety_pelne',params);
+  const data=await fetchEnhancedPackages(params);
   allCalcPkgs=data||[];selectedCalc=new Set();
   renderCalcList();
 }
