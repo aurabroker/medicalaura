@@ -12,6 +12,7 @@
     .loader{border:3px solid #f3f3f3;border-top:3px solid #e11d48;border-radius:50%;width:20px;height:20px;animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     .tbl::-webkit-scrollbar{height:7px;width:7px}.tbl::-webkit-scrollbar-track{background:#f1f5f9;border-radius:4px}.tbl::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+    .custom-scroll::-webkit-scrollbar{height:5px;width:5px}.custom-scroll::-webkit-scrollbar-track{background:#f8fafc;border-radius:4px}.custom-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
     .diff-best{background:#ecfdf5!important;color:#065f46;font-weight:800}
     .diff-worst{background:#fef2f2!important;color:#b91c1c;font-weight:700}
     .prov-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:background .1s;user-select:none}
@@ -36,24 +37,24 @@
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
 
-<header class="bg-brand-navy text-white shadow-md sticky top-0 z-50">
+<header class="bg-brand-navy text-white shadow-md sticky top-0 z-40">
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div>
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
       <div class="text-xs text-slate-400 tracking-wide uppercase mt-0.5">Zarządzanie Ofertami Medycznymi</div>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl">
-      <button onclick="switchTab('compare',this)" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
-      <button onclick="switchTab('search',this)"  class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🔎 Wyszukaj</button>
-      <button onclick="switchTab('library',this)" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">📚 Biblioteka</button>
-      <button onclick="switchTab('calc',this)"    class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧮 Kalkulator</button>
-      <button onclick="switchTab('learn',this)"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧠 SQL</button>
-      <button onclick="switchTab('admin',this)"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">⚙️ Admin</button>
+      <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
+      <button onclick="switchTab('search',this)"  id="btn-search"  class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🔎 Wyszukaj</button>
+      <button onclick="switchTab('library',this)" id="btn-library" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">📚 Biblioteka</button>
+      <button onclick="switchTab('calc',this)"    id="btn-calc"    class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧮 Kalkulator</button>
+      <button onclick="switchTab('learn',this)"   id="btn-learn"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧠 SQL</button>
+      <button onclick="switchTab('admin',this)"   id="btn-admin"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white flex items-center gap-1">🔒 Admin</button>
     </nav>
   </div>
 </header>
 
-<main class="flex-grow max-w-[1500px] mx-auto w-full px-6 py-8">
+<main class="flex-grow max-w-[1500px] mx-auto w-full px-6 py-8 relative">
 
 <!-- ══════════════════════════════ PORÓWNAJ -->
 <div id="tab-compare" class="tab-panel active">
@@ -81,7 +82,7 @@
 
     <div class="flex" style="min-height:320px">
       <!-- LEWA: lista dostawców -->
-      <div class="w-56 flex-shrink-0 border-r border-slate-100 p-3 overflow-y-auto" style="max-height:420px">
+      <div class="w-56 flex-shrink-0 border-r border-slate-100 p-3 overflow-y-auto custom-scroll" style="max-height:420px">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Dostawcy</p>
         <div id="provList" class="space-y-1">
           <div class="flex items-center gap-2 text-slate-400 text-xs p-2"><div class="loader"></div>Ładowanie...</div>
@@ -89,7 +90,7 @@
       </div>
 
       <!-- PRAWA: pakiety wybranego dostawcy -->
-      <div class="flex-grow p-5 overflow-y-auto" style="max-height:420px">
+      <div class="flex-grow p-5 overflow-y-auto custom-scroll" style="max-height:420px">
         <div id="pkgPanelHint" class="flex items-center justify-center h-full text-slate-300 text-sm flex-col gap-2">
           <span class="text-4xl">←</span>
           <span>Wybierz dostawcę z lewej</span>
@@ -155,7 +156,7 @@
 <div id="tab-search" class="tab-panel">
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
     <h2 class="text-xl font-bold text-brand-navy mb-2">🔎 Wyszukiwarka zakresów</h2>
-    <p class="text-sm text-slate-500 mb-6">Sprawdź w których pakietach i u których dostawców dostępna jest dana specjalizacja lub badanie.</p>
+    <p class="text-sm text-slate-500 mb-6">Sprawdź jacy dostawcy i w jakich pakietach oferują wybraną specjalizację lub badanie.</p>
     <div class="flex gap-3 mb-6">
       <button onclick="setSearchType('spec')" id="stype-spec" class="px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm">Specjalizacja</button>
       <button onclick="setSearchType('bad')"  id="stype-bad"  class="px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200">Badanie laboratoryjne</button>
@@ -175,9 +176,9 @@
   <div id="searchResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
     <div class="bg-brand-navy p-5">
       <h3 id="searchResultTitle" class="text-base font-bold text-white"></h3>
-      <p class="text-xs text-slate-400 mt-0.5">Wyniki z bazy danych pakietów</p>
+      <p class="text-xs text-slate-400 mt-0.5">Dostępne pakiety (kliknij pakiet, aby zobaczyć jego pełne szczegóły)</p>
     </div>
-    <div id="searchResultBody" class="tbl overflow-x-auto"></div>
+    <div id="searchResultBody" class="p-5"></div>
   </div>
 </div>
 
@@ -193,7 +194,7 @@
           <option value="4">T4</option><option value="5">T5</option><option value="6">T6</option>
         </select>
       </div>
-      <button onclick="loadLibrary()" class="bg-brand-navy text-white font-bold py-2.5 px-7 rounded-xl shadow-md">Szukaj</button>
+      <button onclick="loadLibrary()" class="bg-brand-navy text-white font-bold py-2.5 px-7 rounded-xl shadow-md">Filtruj</button>
     </div>
     <div id="libraryTable" class="tbl overflow-x-auto">
       <div class="flex items-center gap-3 text-slate-400 justify-center py-10"><div class="loader"></div>Ładowanie...</div>
@@ -326,6 +327,38 @@
 
 </main>
 
+<!-- ══════════════════════════════ MODAL: LOGOWANIE ADMINA -->
+<div id="adminAuthModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+  <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform scale-100 transition-transform">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🔒</div>
+      <h2 class="text-xl font-bold text-brand-navy">Dostęp Zastrzeżony</h2>
+      <p class="text-xs text-slate-400 mt-1">Podaj kod PIN, aby odblokować panel administracyjny.</p>
+    </div>
+    <input type="password" id="adminPin" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-4 text-center text-2xl tracking-widest outline-none focus:border-brand-navy mb-4" placeholder="••••">
+    <button onclick="unlockAdmin()" class="w-full bg-brand-navy hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md mb-2">Odblokuj</button>
+    <button onclick="document.getElementById('adminAuthModal').classList.add('hidden')" class="w-full text-slate-400 hover:text-slate-600 font-bold py-2 text-sm">Anuluj</button>
+    <p id="adminAuthError" class="text-red-500 text-xs text-center font-bold mt-2 hidden">Błędny kod PIN!</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ MODAL: SZCZEGÓŁY PAKIETU -->
+<div id="pkgDetailsModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+  <div class="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+    <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-brand-navy text-white relative">
+      <div>
+        <h3 id="pdmTitle" class="font-bold text-xl md:text-2xl tracking-tight">Ładowanie...</h3>
+        <p id="pdmSub" class="text-brand-pink font-bold text-xs uppercase tracking-widest mt-0.5"></p>
+      </div>
+      <button onclick="document.getElementById('pkgDetailsModal').classList.add('hidden')" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-xl transition-colors">&times;</button>
+    </div>
+    
+    <div class="flex-grow overflow-y-auto custom-scroll p-6 md:p-8 bg-slate-50 relative" id="pdmBody">
+      <div class="flex items-center justify-center py-20 text-slate-400"><div class="loader mr-3"></div> Pobieranie szczegółów z bazy...</div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─── STATE ──────────────────────────────────────────────
 let SB_URL = localStorage.getItem('ma_url')||'';
@@ -340,8 +373,17 @@ let allCalcPkgs    = [];
 let selectedCalc   = new Set();
 let searchType     = 'spec';
 
-// ─── TABS ───────────────────────────────────────────────
+// ─── TABS & ADMIN AUTH ──────────────────────────────────
 function switchTab(id,btn){
+  if(id === 'admin' && sessionStorage.getItem('adminUnlocked') !== 'true') {
+    document.getElementById('adminPin').value = '';
+    document.getElementById('adminAuthError').classList.add('hidden');
+    document.getElementById('adminAuthModal').classList.remove('hidden');
+    document.getElementById('adminAuthModal').classList.add('flex');
+    setTimeout(() => document.getElementById('adminPin').focus(), 100);
+    return;
+  }
+
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>{
     b.classList.remove('bg-white','text-brand-navy','shadow-sm');
@@ -353,6 +395,23 @@ function switchTab(id,btn){
   if(id==='library') loadLibrary();
   if(id==='calc') calcLoadPackages();
 }
+
+function unlockAdmin() {
+  const pin = document.getElementById('adminPin').value;
+  if(pin === 'aura2026') { // <--- TUTAJ JEST HASŁO DO ADMINA
+    sessionStorage.setItem('adminUnlocked', 'true');
+    document.getElementById('adminAuthModal').classList.add('hidden');
+    document.getElementById('btn-admin').innerHTML = '⚙️ Admin (Odblokowano)';
+    switchTab('admin', document.getElementById('btn-admin'));
+  } else {
+    document.getElementById('adminAuthError').classList.remove('hidden');
+  }
+}
+
+// Opcjonalnie: logowanie Enterem
+document.getElementById('adminPin')?.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') unlockAdmin();
+});
 
 // ─── API ────────────────────────────────────────────────
 async function apiGet(table,params=''){
@@ -378,8 +437,6 @@ async function fetchEnhancedPackages(params) {
   let data = await apiGet('pakiety_pelne', params);
   if (!data || !data.length) return data;
   
-  // Jeśli widok pakiety_pelne z jakiegoś powodu nie zwraca nowo dodanych kolumn, 
-  // pobieramy je cichaczem z głównej tabeli 'pakiety' i doklejamy.
   const first = data[0];
   const missingData = !('liczba_specjalizacji' in first) || !('liczba_badan_lab' in first);
   
@@ -438,6 +495,120 @@ async function loadProvidersFromDB(){
   allProviders=d||[];
   buildProvList();
   populateAllSelects();
+}
+
+// ─── GLOBALNY WIDOK SZCZEGÓŁÓW PAKIETU ──────────────────
+async function showPackageDetails(pkgId) {
+  const modal = document.getElementById('pkgDetailsModal');
+  const mBody = document.getElementById('pdmBody');
+  const mTitle = document.getElementById('pdmTitle');
+  const mSub = document.getElementById('pdmSub');
+  
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  mTitle.textContent = 'Pobieranie danych...';
+  mSub.textContent = '';
+  mBody.innerHTML = '<div class="flex items-center justify-center py-20 text-slate-400"><div class="loader mr-3"></div> Ładowanie pełnych informacji z bazy...</div>';
+
+  try {
+    const [pkgDataRes, specRes, labRes] = await Promise.all([
+      fetchEnhancedPackages(`select=*&id=eq.${pkgId}`),
+      apiGet('pakiety_specjalizacje', `select=specjalizacja_nazwa&pakiet_id=eq.${pkgId}&order=specjalizacja_nazwa`),
+      apiGet('pakiety_badania', `select=badanie_nazwa&pakiet_id=eq.${pkgId}&order=badanie_nazwa`)
+    ]);
+
+    if(!pkgDataRes || !pkgDataRes.length) {
+      mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Wystąpił błąd podczas pobierania danych o pakiecie.</div>';
+      return;
+    }
+
+    const p = pkgDataRes[0];
+    const specs = specRes || [];
+    const labs = labRes || [];
+
+    mTitle.textContent = p.pakiet_nazwa;
+    mSub.textContent = p.dostawca_nazwa;
+
+    const boolIco = v => v ? '✅ <span class="text-emerald-700 font-bold">Dostępne</span>' : '❌ <span class="text-red-700 font-bold">Brak</span>';
+    const val = v => (v !== null && v !== undefined && v !== '') ? v : '–';
+    
+    let html = `
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        
+        <!-- Kolumna 1: Opłaty i podstawy -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Informacje podstawowe</h4>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Składka Indywidualna:</span> <strong class="text-brand-pink text-base">${val(p.cena_ind_mies)} zł</strong></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Składka Partnerska:</span> <strong class="text-brand-pink text-base">${val(p.cena_grup_mies)} zł</strong></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Składka Rodzinna:</span> <strong class="text-brand-pink text-base">${val(p.cena_rodzina_mies)} zł</strong></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Zasięg placówek:</span> <strong class="text-brand-navy">${val(p.zasieg_placowek)}</strong></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Minimalna liczba pracowników:</span> <strong class="text-brand-navy">${val(p.min_pracownicy)}</strong></div>
+          </div>
+        </div>
+
+        <!-- Kolumna 2: Warunki -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Warunki dostępu</h4>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Czas oczekiwania POZ:</span> <strong class="text-brand-navy">${p.czas_oczekiwania_poz != null ? 'do '+p.czas_oczekiwania_poz+' dni' : '–'}</strong></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Czas oczekiwania Specjalista:</span> <strong class="text-brand-navy">${p.czas_oczekiwania_spec != null ? 'do '+p.czas_oczekiwania_spec+' dni' : '–'}</strong></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Karencja:</span> <strong class="${p.karencja_dni === 0 ? 'text-emerald-600' : 'text-brand-navy'}">${p.karencja_dni === 0 ? 'Brak' : (p.karencja_dni != null ? p.karencja_dni+' dni' : '–')}</strong></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Wiek dzieci do:</span> <strong class="text-brand-navy">${p.wiek_dzieci_do != null ? p.wiek_dzieci_do+' lat' : '–'}</strong></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Hotline 24h:</span> <span>${boolIco(p.hotline_24h)}</span></div>
+          </div>
+        </div>
+
+        <!-- Kolumna 3: Zakres usług -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Zakres usług</h4>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Telemedycyna:</span> <span>${boolIco(p.telemedycyna)}</span></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Opieka w ciąży:</span> <span>${boolIco(p.ciaza)}</span></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Rehabilitacja:</span> <span>${boolIco(p.rehabilitacja)}</span></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Stomatologia:</span> <span>${boolIco(p.stomatologia)}</span></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Opieka psychiatryczna:</span> <span>${boolIco(p.opieka_psychiatryczna)}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Wizyty domowe / Szpital:</span> <span>${p.wizyty_domowe?'✅':'❌'} / ${p.leczenie_szpitalne?'✅':'❌'}</span></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Listy (Specjalizacje i Badania) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-4">
+            <h4 class="text-sm font-black text-brand-navy uppercase">Lista Specjalizacji</h4>
+            <span class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full">${specs.length} szt.</span>
+          </div>
+          <div class="max-h-[300px] overflow-y-auto custom-scroll pr-2">
+            ${specs.length > 0 
+              ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 ml-1">
+                  ${specs.map(s => `<li>${s.specjalizacja_nazwa}</li>`).join('')}
+                 </ul>` 
+              : `<p class="text-slate-400 text-sm text-center italic py-10">Brak wgranej listy specjalizacji do bazy dla tego pakietu.</p>`}
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-4">
+            <h4 class="text-sm font-black text-brand-navy uppercase">Lista Badań Lab. / Obrazowych</h4>
+            <span class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full">${labs.length} szt.</span>
+          </div>
+          <div class="max-h-[300px] overflow-y-auto custom-scroll pr-2">
+            ${labs.length > 0 
+              ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 ml-1">
+                  ${labs.map(s => `<li>${s.badanie_nazwa}</li>`).join('')}
+                 </ul>` 
+              : `<p class="text-slate-400 text-sm text-center italic py-10">Brak wgranej listy badań do bazy dla tego pakietu.</p>`}
+          </div>
+        </div>
+      </div>
+    `;
+    mBody.innerHTML = html;
+
+  } catch (error) {
+    mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Wystąpił błąd komunikacji z bazą.</div>';
+  }
 }
 
 // ─── LISTA DOSTAWCÓW (LEWA) ─────────────────────────────
@@ -519,7 +690,7 @@ function renderPkgGrid(){
     div.innerHTML=`
       <div class="flex items-start justify-between gap-2">
         <div>
-          <div class="font-bold text-sm leading-tight">${pk.nazwa}</div>
+          <div class="font-bold text-sm leading-tight hover:underline" onclick="event.stopPropagation(); showPackageDetails(${pk.id})">${pk.nazwa}</div>
           <div class="text-xs mt-0.5 ${sel?'text-slate-300':'text-slate-400'}">Tier ${pk.tier}</div>
         </div>
         <div id="pkgck_${pk.id}" class="chk mt-0.5 ${sel?'on':''}">${sel?'✓':''}</div>
@@ -574,7 +745,7 @@ function updateSelectedBar(){
   items.forEach(p=>{
     const sp=document.createElement('span');
     sp.className='inline-flex items-center gap-1.5 bg-brand-navy text-white text-xs font-bold px-3 py-1.5 rounded-full';
-    sp.innerHTML=`${p.dostawca_nazwa} — ${p.nazwa} <button onclick="removePkg(${p.id})" class="hover:text-red-300 ml-0.5 font-bold">✕</button>`;
+    sp.innerHTML=`<button onclick="showPackageDetails(${p.id})" class="hover:underline">${p.dostawca_nazwa} — ${p.nazwa}</button> <button onclick="removePkg(${p.id})" class="hover:text-red-300 ml-0.5 font-bold">✕</button>`;
     chips.appendChild(sp);
   });
 }
@@ -606,7 +777,7 @@ function clearAll(){
   document.getElementById('priceSection').classList.add('hidden');
 }
 
-// ─── PORÓWNANIE (POPRAWIONE FORMATOWANIE BŁĘDNYCH DANYCH) ───
+// ─── PORÓWNANIE ─────────────────────────────────────────
 const isValid = v => v !== null && v !== undefined && v !== '' && String(v).toLowerCase() !== 'null' && String(v).toLowerCase() !== 'nan';
 const fNum = v => isValid(v) ? `<strong class="text-xl">${v}</strong>` : '<span class="text-slate-300">–</span>';
 const fVal = v => isValid(v) ? v : '<span class="text-slate-300">–</span>';
@@ -614,7 +785,7 @@ const fDays = v => isValid(v) ? (v===0 ? '<span class="text-emerald-600 font-bol
 
 const ROWS=[
   {label:'Dostawca',           key:'dostawca_nazwa',        fmt:v=>`<span class="font-black text-brand-navy">${v||'–'}</span>`},
-  {label:'Wariant',            key:'pakiet_nazwa',          fmt:v=>`<strong>${v||'–'}</strong>`},
+  {label:'Wariant (Kliknij)',  key:'pakiet_nazwa',          fmt:(v,p)=>`<button onclick="showPackageDetails(${p.id})" class="text-brand-pink hover:underline font-bold text-base whitespace-nowrap">${v||'–'}</button>`},
   {label:'Tier',               key:'tier',                  fmt:v=>v?`<span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded">T${v}</span>`:'–'},
   {sep:'Zakres opieki'},
   {label:'Specjalizacje',      key:'liczba_specjalizacji',  fmt:fNum, num:true},
@@ -647,7 +818,7 @@ async function runComparison(){
   
   const data=await fetchEnhancedPackages(`select=*&id=in.(${ids.join(',')})`);
   
-  if(!data||!data.length){showNotif('compare','Brak danych w bazie. Sprawdź widok pakiety_pelne.','border-red-500 bg-red-50 text-red-700');return;}
+  if(!data||!data.length){showNotif('compare','Brak danych w bazie. Sprawdź połączenie z serwerem.','border-red-500 bg-red-50 text-red-700');return;}
   lastCompData=ids.map(id=>data.find(d=>d.id===parseInt(id))).filter(Boolean);
   renderCompTable(lastCompData);
   renderPriceSection(lastCompData);
@@ -682,7 +853,7 @@ function renderCompTable(sorted){
       <td class="p-3 text-xs font-bold text-slate-500 uppercase tracking-wide border-r border-slate-100 sticky left-0 ${bg}">${row.label}</td>`;
     sorted.forEach((p,ci)=>{
       const iB=bestIdx===ci,iW=worstIdx===ci;
-      html+=`<td class="p-3 text-center border-r border-slate-100${iB?' diff-best':iW?' diff-worst':''}">${row.fmt(p[row.key])}${iB?' 🟢':''}${iW?' 🔴':''}</td>`;
+      html+=`<td class="p-3 text-center border-r border-slate-100${iB?' diff-best':iW?' diff-worst':''}">${row.fmt(p[row.key], p)}${iB?' 🟢':''}${iW?' 🔴':''}</td>`;
     });
     html+=`</tr>`;
   });
@@ -835,7 +1006,7 @@ function exportPDF(){
   setTimeout(()=>{w.focus();w.print();},600);
 }
 
-// ─── WYSZUKIWARKA SPECJALIZACJI / BADAŃ ─────────────────
+// ─── NOWA, POGRUPOWANA WYSZUKIWARKA SPECJALIZACJI / BADAŃ ───
 function setSearchType(t){
   searchType=t;
   document.getElementById('stype-spec').className=t==='spec'?'px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm':'px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200';
@@ -863,7 +1034,7 @@ async function runSearch(){
 
   if(specData&&specData.length){
     const pkgIds=[...new Set(specData.map(s=>s.pakiet_id))];
-    const pkts=await fetchEnhancedPackages(`select=*&id=in.(${pkgIds.join(',')})&aktywna=eq.true&order=dostawca_nazwa,tier`);
+    const pkts=await fetchEnhancedPackages(`select=*&id=in.(${pkgIds.join(',')})&aktywna=eq.true&order=dostawca_nazwa,tier,nazwa`);
     results=pkts||[];
   } else if(data&&data.length){
     results=data;
@@ -880,33 +1051,35 @@ async function runSearch(){
     return;
   }
 
-  const tc=['bg-slate-200 text-slate-700','bg-blue-100 text-blue-700','bg-violet-100 text-violet-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-rose-100 text-rose-700'];
-  let html=`<table class="w-full text-sm border-collapse min-w-[600px]">
-    <thead class="bg-slate-100 text-slate-500 text-xs uppercase sticky top-0">
-      <tr>
-        <th class="p-3 text-left">Dostawca</th>
-        <th class="p-3 text-left">Pakiet</th>
-        <th class="p-3">Tier</th>
-        <th class="p-3 text-center">Spec.</th>
-        <th class="p-3 text-center">Bad.lab</th>
-        <th class="p-3">Składka ind.</th>
-      </tr>
-    </thead><tbody class="divide-y divide-slate-100">`;
-  results.forEach(p=>{
-    const t=tc[Math.min((p.tier||1)-1,tc.length-1)];
-    html+=`<tr class="hover:bg-emerald-50 transition-colors">
-      <td class="p-3 font-bold text-brand-navy">${p.dostawca_nazwa||'–'}</td>
-      <td class="p-3 font-semibold">${p.pakiet_nazwa||'–'}</td>
-      <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-xs font-bold ${t}">T${p.tier||'?'}</span></td>
-      <td class="p-3 text-center font-bold">${isValid(p.liczba_specjalizacji)?p.liczba_specjalizacji:'–'}</td>
-      <td class="p-3 text-center font-bold">${isValid(p.liczba_badan_lab)?p.liczba_badan_lab:'–'}</td>
-      <td class="p-3 font-bold ${p.cena_ind_mies?'text-brand-pink':'text-slate-300'}">${p.cena_ind_mies?parseFloat(p.cena_ind_mies).toFixed(2)+' zł':'–'}</td>
-    </tr>`;
+  // Grupowanie po dostawcy
+  const grouped = {};
+  results.forEach(p => {
+    if(!grouped[p.dostawca_nazwa]) grouped[p.dostawca_nazwa] = [];
+    grouped[p.dostawca_nazwa].push(p);
   });
-  html+=`</tbody></table><div class="text-xs text-slate-400 p-4 text-right">Wyników: ${results.length}</div>`;
+
+  let html=`<div class="space-y-4">`;
+  for(const [provName, pkgs] of Object.entries(grouped)) {
+    html += `
+      <div class="flex flex-col sm:flex-row gap-4 p-5 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm hover:border-brand-navy transition-colors">
+        <div class="sm:w-1/4 xl:w-1/5 font-black text-brand-navy text-lg sm:border-r border-slate-200 sm:pr-4 flex items-center">
+          ${provName}
+        </div>
+        <div class="sm:w-3/4 xl:w-4/5 flex flex-wrap gap-2 items-center">
+          ${pkgs.map(p => `
+            <button onclick="showPackageDetails(${p.id})" class="bg-white border-2 border-slate-200 hover:border-brand-pink text-slate-700 hover:text-brand-pink px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">
+              ${p.pakiet_nazwa}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+  html += `</div><div class="text-xs text-slate-400 mt-6 text-right">Znaleziono w ${results.length} pakietach.</div>`;
+  
   document.getElementById('searchResultBody').innerHTML=html;
   document.getElementById('searchResult').classList.remove('hidden');
-  document.getElementById('searchResult').scrollIntoView({behavior:'smooth'});
+  document.getElementById('searchResult').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 // ─── BIBLIOTEKA ─────────────────────────────────────────
@@ -917,8 +1090,7 @@ async function loadLibrary(){
   const provId=document.getElementById('libProvider').value;
   const tier=document.getElementById('libTier').value;
   
-  // Zmiana na select=* aby zapobiec awarii jeśli widok jest niekompletny
-  let params='select=*&aktywna=eq.true&order=dostawca_nazwa,tier';
+  let params='select=*&aktywna=eq.true&order=dostawca_nazwa,tier,pakiet_nazwa';
   if(provId) params+=`&dostawca_id=eq.${provId}`;
   if(tier)   params+=`&tier=eq.${tier}`;
   
@@ -926,17 +1098,17 @@ async function loadLibrary(){
   if(!data||!data.length){el.innerHTML='<div class="text-center py-10 text-slate-400">Brak wyników.</div>';return;}
   const tc=['bg-slate-200 text-slate-700','bg-blue-100 text-blue-700','bg-violet-100 text-violet-700','bg-amber-100 text-amber-700','bg-emerald-100 text-emerald-700','bg-rose-100 text-rose-700'];
   let html=`<table class="w-full text-sm border-collapse min-w-[1000px]">
-    <thead class="bg-slate-100 text-slate-500 text-xs uppercase sticky top-0">
-      <tr><th class="p-3 text-left">Dostawca</th><th class="p-3 text-left">Wariant</th><th class="p-3">Tier</th>
+    <thead class="bg-slate-100 text-slate-500 text-xs uppercase sticky top-0 z-10">
+      <tr><th class="p-3 text-left">Dostawca</th><th class="p-3 text-left">Wariant (Kliknij)</th><th class="p-3">Tier</th>
       <th class="p-3 text-center">Spec.</th><th class="p-3 text-center">Bad.lab</th>
       <th class="p-3 text-center">Tele</th><th class="p-3 text-center">Ciąża</th><th class="p-3 text-center">Rehab</th><th class="p-3 text-center">Stom</th>
       <th class="p-3">Ind.</th><th class="p-3">Partner.</th><th class="p-3">Rodzin.</th><th class="p-3"></th></tr>
     </thead><tbody class="divide-y divide-slate-100">`;
   data.forEach(p=>{
     const t=tc[Math.min((p.tier||1)-1,tc.length-1)];
-    html+=`<tr class="hover:bg-slate-50">
+    html+=`<tr class="hover:bg-slate-50 transition-colors">
       <td class="p-3 font-bold text-brand-navy">${p.dostawca_nazwa||'–'}</td>
-      <td class="p-3 font-semibold">${p.pakiet_nazwa||'–'}</td>
+      <td class="p-3 font-bold text-brand-pink hover:underline cursor-pointer" onclick="showPackageDetails(${p.id})">${p.pakiet_nazwa||'–'}</td>
       <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-xs font-bold ${t}">T${p.tier||'?'}</span></td>
       <td class="p-3 text-center font-bold">${isValid(p.liczba_specjalizacji)?p.liczba_specjalizacji:'<span class="text-slate-300">–</span>'}</td>
       <td class="p-3 text-center font-bold">${isValid(p.liczba_badan_lab)?p.liczba_badan_lab:'<span class="text-slate-300">–</span>'}</td>
@@ -1035,7 +1207,7 @@ function calcUpdate(){
   const cheapest=withP.length?Math.min(...withP.map(p=>parseFloat(p[type]))):null;
   let html=`<table class="w-full text-sm border-collapse min-w-[600px]">
     <thead class="bg-slate-100 text-slate-500 text-xs uppercase"><tr>
-      <th class="p-4 text-left">Dostawca</th><th class="p-4 text-left">Pakiet</th><th class="p-4">Tier</th>
+      <th class="p-4 text-left">Dostawca</th><th class="p-4 text-left">Pakiet (Kliknij)</th><th class="p-4">Tier</th>
       <th class="p-4 text-right">Składka/os.</th>
       <th class="p-4 text-right">Miesięcznie (${workers} os.)</th>
       <th class="p-4 text-right">Rocznie</th>
@@ -1049,7 +1221,7 @@ function calcUpdate(){
     const diff=price&&cheapest&&!isChp?(price-cheapest)*workers:null;
     html+=`<tr class="${isChp?'bg-emerald-50':''} hover:bg-slate-50">
       <td class="p-4 font-bold text-brand-navy">${p.dostawca_nazwa}</td>
-      <td class="p-4">${p.nazwa}</td>
+      <td class="p-4 font-bold text-brand-pink hover:underline cursor-pointer" onclick="showPackageDetails(${p.id})">${p.nazwa}</td>
       <td class="p-4 text-center"><span class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded">T${p.tier}</span></td>
       <td class="p-4 text-right font-bold">${price?price.toFixed(2)+' zł':'<span class="text-slate-300">brak</span>'}</td>
       <td class="p-4 text-right font-black text-brand-navy text-base">${monthly?monthly.toFixed(2)+' zł':'–'}${isChp?' <span class="text-emerald-500 text-xs">★</span>':''}</td>
