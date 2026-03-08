@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MEDICALAURA — Porównywarka Pakietów Medycznych</title>
+  <style>
+    :root {
+      --primary: #1a6b74;
+      --primary-light: #e8f4f5;
+      --accent: #bf912d;
+      --danger: #c52040;
+      --text: #13343b;
+      --border: #d0e4e6;
+      --bg: #f7fafa;
+      --white: #ffffff;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(26,107,116,0.10);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* HEADER */
+    header {
+      background: var(--primary);
+      color: var(--white);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    header .logo { font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; }
+    header .logo span { color: #7fd6de; }
+    header .tagline { font-size: 0.82rem; opacity: 0.8; margin-top: 2px; }
+    header nav a {
+      color: var(--white); text-decoration: none; margin-left: 20px;
+      font-size: 0.9rem; opacity: 0.85; transition: opacity 0.2s;
+    }
+    header nav a:hover { opacity: 1; text-decoration: underline; }
+    header nav a.active { opacity: 1; font-weight: 600; border-bottom: 2px solid #7fd6de; }
+
+    /* TABS */
+    .tabs {
+      display: flex; background: var(--white);
+      border-bottom: 2px solid var(--border); padding: 0 32px;
+    }
+    .tab-btn {
+      padding: 14px 22px; cursor: pointer; font-size: 0.92rem;
+      border: none; background: none; color: var(--text);
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: all 0.2s; font-weight: 500;
+    }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+
+    /* MAIN LAYOUT */
+    .container { max-width: 1400px; margin: 0 auto; padding: 28px 32px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* CARDS */
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+    .card h2 { font-size: 1.05rem; color: var(--primary); margin-bottom: 16px; font-weight: 700; }
+    .card h3 { font-size: 0.95rem; color: var(--text); margin-bottom: 10px; font-weight: 600; }
+
+    /* FORM ELEMENTS */
+    .form-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; align-items: flex-end; }
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--primary); margin-bottom: 5px; }
+    select, input[type="text"], input[type="number"] {
+      padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 7px;
+      font-size: 0.9rem; color: var(--text); background: var(--white);
+      transition: border-color 0.2s; min-width: 160px;
+    }
+    select:focus, input:focus { outline: none; border-color: var(--primary); }
+    .form-group { display: flex; flex-direction: column; }
+
+    /* BUTTONS */
+    .btn {
+      padding: 10px 22px; border-radius: 7px; border: none; cursor: pointer;
+      font-size: 0.9rem; font-weight: 600; transition: all 0.18s;
+    }
+    .btn-primary { background: var(--primary); color: var(--white); }
+    .btn-primary:hover { background: #135960; }
+    .btn-accent { background: var(--accent); color: var(--white); }
+    .btn-accent:hover { background: #a07820; }
+    .btn-outline {
+      background: var(--white); color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+    .btn-danger { background: var(--danger); color: var(--white); }
+    .btn-sm { padding: 6px 14px; font-size: 0.82rem; }
+
+    /* COMPARISON TABLE */
+    .compare-table-wrap { overflow-x: auto; }
+    .compare-table {
+      width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 700px;
+    }
+    .compare-table th {
+      background: var(--primary); color: var(--white);
+      padding: 11px 14px; text-align: left; font-weight: 600;
+      position: sticky; top: 0;
+    }
+    .compare-table th.tier { background: #135960; text-align: center; }
+    .compare-table td {
+      padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top;
+    }
+    .compare-table tr:hover td { background: var(--primary-light); }
+    .compare-table .section-header td {
+      background: #e0f0f2; font-weight: 700; color: var(--primary);
+      font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 7px 14px;
+    }
+    .compare-table .provider-header th {
+      background: #0e4a52; font-size: 0.85rem; text-align: center;
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 0.76rem; font-weight: 700;
+    }
+    .badge-green { background: #d4edda; color: #1a6b3a; }
+    .badge-red { background: #fde8ec; color: var(--danger); }
+    .badge-yellow { background: #fff3cd; color: #856404; }
+    .badge-gray { background: #e9ecef; color: #6c757d; }
+    .badge-blue { background: var(--primary-light); color: var(--primary); }
+
+    /* ICONS */
+    .yes { color: #1a8a3a; font-weight: 700; }
+    .no { color: var(--danger); }
+    .maybe { color: var(--accent); }
+
+    /* STATUS BAR */
+    .status-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      background: var(--primary-light); border-radius: var(--radius);
+      padding: 12px 18px; margin-bottom: 20px; align-items: center;
+    }
+    .status-item { font-size: 0.85rem; color: var(--primary); }
+    .status-item strong { color: var(--text); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); display: inline-block; margin-right: 6px; }
+    .dot.green { background: #1a8a3a; }
+    .dot.orange { background: var(--accent); }
+
+    /* GRID */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    @media(max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    /* PROVIDER PILL SELECTOR */
+    .provider-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .provider-pill {
+      padding: 7px 16px; border-radius: 20px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; border: 2px solid var(--border);
+      background: var(--white); transition: all 0.18s; user-select: none;
+    }
+    .provider-pill:hover { border-color: var(--primary); color: var(--primary); }
+    .provider-pill.selected { background: var(--primary); color: var(--white); border-color: var(--primary); }
+
+    /* TIER BAR */
+    .tier-bar {
+      display: flex; gap: 6px; margin: 10px 0;
+      background: var(--bg); border-radius: 8px; padding: 8px;
+    }
+    .tier-item {
+      flex: 1; text-align: center; padding: 8px 4px;
+      border-radius: 6px; font-size: 0.78rem; font-weight: 600;
+      border: 2px solid var(--border); cursor: pointer;
+      transition: all 0.18s;
+    }
+    .tier-item:hover, .tier-item.selected { border-color: var(--primary); background: var(--primary-light); }
+    .tier-item .tier-name { display: block; color: var(--primary); }
+    .tier-item .tier-price { display: block; color: var(--accent); font-size: 0.72rem; margin-top: 2px; }
+
+    /* DELTA TABLE */
+    .delta-better-a { background: #d4f5e0; }
+    .delta-better-b { background: #fde8ec; }
+    .delta-tie { background: #f8f9fa; }
+
+    /* LOADING */
+    .loading {
+      text-align: center; padding: 40px; color: var(--primary);
+      font-size: 0.95rem; opacity: 0.7;
+    }
+    .spinner {
+      border: 3px solid var(--border); border-top-color: var(--primary);
+      border-radius: 50%; width: 32px; height: 32px;
+      animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* NOTIFICATION */
+    .notif {
+      padding: 12px 18px; border-radius: 8px; margin-bottom: 14px;
+      font-size: 0.88rem; display: none;
+    }
+    .notif.success { background: #d4edda; color: #1a6b3a; border-left: 4px solid #1a8a3a; display: block; }
+    .notif.error { background: #fde8ec; color: var(--danger); border-left: 4px solid var(--danger); display: block; }
+    .notif.info { background: var(--primary-light); color: var(--primary); border-left: 4px solid var(--primary); display: block; }
+
+    /* ADMIN TABLE */
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+    .admin-table th { background: var(--bg); padding: 9px 12px; text-align: left; font-weight: 700; border-bottom: 2px solid var(--border); }
+    .admin-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .admin-table tr:hover td { background: var(--primary-light); }
+
+    /* FOOTER */
+    footer {
+      background: var(--primary); color: rgba(255,255,255,0.7);
+      text-align: center; padding: 14px; font-size: 0.78rem; margin-top: 40px;
+    }
+    footer strong { color: var(--white); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="logo">MEDICAL<span>AURA</span></div>
+    <div class="tagline">Biblioteka &amp; Porównywarka Pakietów Medycznych | Aura Consulting</div>
+  </div>
+  <nav>
+    <a href="#" class="active" onclick="switchTab('compare', this)">Porównywarka</a>
+    <a href="#" onclick="switchTab('library', this)">Biblioteka</a>
+    <a href="#" onclick="switchTab('learn', this)">Uczenie bazy</a>
+    <a href="#" onclick="switchTab('admin', this)">Admin</a>
+  </nav>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('compare', this)">🔍 Porównaj pakiety</button>
+  <button class="tab-btn" onclick="showTab('library', this)">📚 Biblioteka</button>
+  <button class="tab-btn" onclick="showTab('learn', this)">🧠 Ucz bazę</button>
+  <button class="tab-btn" onclick="showTab('admin', this)">⚙️ Admin / Składki</button>
+</div>
+
+<!-- ===================== TAB: PORÓWNYWARKA ===================== -->
+<div id="tab-compare" class="tab-panel active">
+<div class="container">
+
+  <div id="notif-compare" class="notif"></div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar" id="statusBar">
+    <span class="status-item"><span class="dot green"></span>Baza: <strong id="statusDb">łączenie...</strong></span>
+    <span class="status-item"><span class="dot"></span>Dostawcy: <strong id="statusProviders">–</strong></span>
+    <span class="status-item"><span class="dot"></span>Pakietów: <strong id="statusPackages">–</strong></span>
+    <span class="status-item"><span class="dot orange"></span>Wersja ofert: <strong id="statusVersion">032026</strong></span>
+  </div>
+
+  <div class="grid-2">
+    <!-- LEWA: WYBÓR DOSTAWCÓW -->
+    <div class="card">
+      <h2>1. Wybierz dostawców do porównania</h2>
+      <div class="provider-pills" id="providerPills">
+        <div class="loading"><div class="spinner"></div>Ładowanie dostawców...</div>
+      </div>
+      <p style="font-size:0.8rem;color:#888;margin-top:8px;">Zaznacz 2–5 dostawców. Porównanie najtańszy vs najtańszy / najdroższy vs najdroższy.</p>
+    </div>
+
+    <!-- PRAWA: WYBÓR TIERÓW -->
+    <div class="card">
+      <h2>2. Wybierz tier porównania</h2>
+      <div style="margin-bottom:10px;">
+        <label>Tier dolny (najtańszy wariant)</label>
+        <select id="tierLow">
+          <option value="1">Tier 1 — Basic</option>
+          <option value="2">Tier 2 — Standard</option>
+        </select>
+      </div>
+      <div>
+        <label>Tier górny (najdroższy wariant)</label>
+        <select id="tierHigh">
+          <option value="3">Tier 3 — Premium</option>
+          <option value="4">Tier 4 — Prestige</option>
+          <option value="5" selected>Tier 5 — VIP/Platinum</option>
+        </select>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="runComparison()">▶ Porównaj</button>
+        <button class="btn btn-outline btn-sm" onclick="exportComparison()">⬇ Eksportuj PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WYNIK PORÓWNANIA -->
+  <div class="card" id="comparisonResult" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 id="compTitle">Porównanie pakietów</h2>
+      <div>
+        <span id="comp-badge-low" class="badge badge-blue" style="margin-right:6px;"></span>
+        <span id="comp-badge-high" class="badge badge-green"></span>
+      </div>
+    </div>
+    <div class="compare-table-wrap" id="compTableWrap">
+      <!-- dynamicznie wypełniany -->
+    </div>
+  </div>
+
+  <!-- MACIERZ DELTA -->
+  <div class="card" id="deltaResult" style="display:none;">
+    <h2>⚡ Macierz różnic (DELTA)</h2>
+    <div class="compare-table-wrap" id="deltaTableWrap"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ===================== TAB: BIBLIOTEKA ===================== -->
+<div id="tab-library" class="tab-panel">
+<div class="container">
+
+  <div class="card">
+    <h2>Biblioteka pakietów</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Dostawca</label>
+        <select id="libProvider">
+          <option value="">— wszyscy —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Typ</label>
+        <select id="libType">
+          <option value="">— wszystkie —</option>
+          <option value="abonament">Abonament</option>
+          <option value="ubezpieczenie">Ubezpieczenie</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Wersja</label>
+        <input type="text" id="libVersion" placeholder="np. 032026" style="width:120px;" />
+      </div>
+      <div class="form-group" style="justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="loadLibrary()">🔍 Szukaj</button>
+      </div>
+    </div>
+    <div id="libraryTable">
+      <div class="loading"><div class="spinner"></div>Ładowanie...</div>
+    </div>
+  </div>
+
+  <!-- SZCZEGÓŁY PAKIETU -->
+  <div class="card" id="packageDetail" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2 id="detailTitle">Szczegóły pakietu</h2>
+      <button class="btn btn-outline btn-sm" onclick="closeDetail()">✕ Zamknij</button>
+    </div>
+    <div id="detailContent"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ===================== TAB: UCZENIE BAZY ===================== -->
+<div id="tab-learn" class="tab-panel">
+<div class="container">
+
+  <div id="notif-learn" class="notif"></div>
+
+  <div class="card">
+    <h2>🧠 Dodaj lub zaktualizuj pakiet</h2>
+    <p style="font-size:0.85rem;color:#666;margin-bottom:16px;">
+      Wklej SQL wygenerowany przez GOD PROMPT (po sygnale <code>↓ zapisz do bazy</code>) 
+      lub użyj formularza poniżej.
+    </p>
+    <div class="form-row" style="margin-bottom:0;">
+      <button class="btn btn-primary" onclick="showLearnMode('sql')">📋 Wklej SQL</button>
+      <button class="btn btn-outline" onclick="showLearnMode('form')">📝 Formularz ręczny</button>
+      <button class="btn btn-outline" onclick="showLearnMode('version')">🔄 Nowa wersja pakietu</button>
+    </div>
+  </div>
+
+  <!-- MODE: SQL -->
+  <div class="card" id="learnSql" style="display:none;">
+    <h2>Wklej SQL INSERT</h2>
+    <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">
+      SQL musi zawierać INSERT INTO dla tabel: pakiety, pakiet_specjalizacje, pakiet_badania, pakiet_rehabilitacja, pakiet_stomatologia, pakiet_telemedycyna.<br/>
+      <strong>Nie wklejaj cen</strong> — składki wprowadzasz w zakładce Admin.
+    </p>
+    <textarea id="sqlInput" rows="12" style="width:100%;font-family:monospace;font-size:0.82rem;padding:12px;border:1.5px solid var(--border);border-radius:8px;resize:vertical;" placeholder="-- Wklej tutaj SQL wygenerowany przez MEDICALAURA GOD PROMPT&#10;INSERT INTO pakiety ..."></textarea>
+    <div style="margin-top:12px;display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="validateAndInsertSQL()">✔ Waliduj i zapisz</button>
+      <button class="btn btn-outline btn-sm" onclick="clearSQL()">✕ Wyczyść</button>
+    </div>
+    <div id="sqlValidation" class="notif" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- MODE: FORMULARZ -->
+  <div class="card" id="learnForm" style="display:none;">
+    <h2>Dodaj pakiet ręcznie</h2>
+    <div class="grid-2">
+      <div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Dostawca</label>
+          <select id="fProvider">
+            <option value="">— wybierz —</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Nazwa wariantu</label>
+          <input type="text" id="fName" placeholder="np. Optimum, Standard+" />
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Tier (1=Basic, 5=VIP)</label>
+          <select id="fTier">
+            <option value="1">1 — Basic</option>
+            <option value="2">2 — Standard</option>
+            <option value="3">3 — Premium</option>
+            <option value="4">4 — Prestige/Select</option>
+            <option value="5">5 — VIP/Platinum</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Wersja (MMYYYY)</label>
+          <input type="text" id="fVersion" placeholder="032026" maxlength="6" />
+        </div>
+      </div>
+      <div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Min. pracowników</label>
+          <input type="number" id="fMinWorkers" value="3" min="1" style="width:100px;" />
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Typ</label>
+          <select id="fType">
+            <option value="abonament">Abonament</option>
+            <option value="ubezpieczenie">Ubezpieczenie</option>
+            <option value="hybryda">Hybryda</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
+            <input type="checkbox" id="fCiaza" /> Prowadzenie ciąży
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
+            <input type="checkbox" id="fSzpital" /> Leczenie szpitalne
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
+            <input type="checkbox" id="fHotline" checked /> Infolinia 24h
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
+            <input type="checkbox" id="fTele" checked /> Telemedycyna
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:0.88rem;cursor:pointer;">
+            <input type="checkbox" id="fJdg" checked /> Dostępny dla JDG
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:12px;">
+      <label>Notatki</label>
+      <input type="text" id="fNotatki" placeholder="np. Oferta dla 3-10 pracowników, ważna do 01.04.2026" style="width:100%;" />
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="submitForm()">💾 Zapisz pakiet</button>
+      <button class="btn btn-outline btn-sm" onclick="resetForm()">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- MODE: NOWA WERSJA -->
+  <div class="card" id="learnVersion" style="display:none;">
+    <h2>🔄 Nowa wersja istniejącego pakietu</h2>
+    <p style="font-size:0.85rem;color:#666;margin-bottom:14px;">
+      Wybierz istniejący pakiet i wprowadź nową wersję. Stara wersja zostanie zachowana (wersjonowanie).
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Dostawca</label>
+        <select id="vProvider" onchange="loadProviderPackages('vPackage', this.value)">
+          <option value="">— wybierz —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Pakiet do skopiowania</label>
+        <select id="vPackage"><option value="">— najpierw wybierz dostawcę —</option></select>
+      </div>
+      <div class="form-group">
+        <label>Nowa wersja (MMYYYY)</label>
+        <input type="text" id="vNewVersion" placeholder="062026" maxlength="6" style="width:120px;" />
+      </div>
+      <div class="form-group" style="justify-content:flex-end;">
+        <button class="btn btn-accent" onclick="createNewVersion()">➕ Utwórz nową wersję</button>
+      </div>
+    </div>
+    <div id="versionNotif" class="notif"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ===================== TAB: ADMIN ===================== -->
+<div id="tab-admin" class="tab-panel">
+<div class="container">
+
+  <div id="notif-admin" class="notif"></div>
+
+  <!-- SKŁADKI -->
+  <div class="card">
+    <h2>💰 Zarządzanie składkami</h2>
+    <p style="font-size:0.85rem;color:#666;margin-bottom:14px;">
+      Składki wprowadzasz tutaj — <strong>oddzielnie od zakresu pakietu</strong>. 
+      Możesz aktualizować po negocjacjach bez ingerencji w dane merytoryczne.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Dostawca</label>
+        <select id="aProvider" onchange="loadProviderPackages('aPackage', this.value)">
+          <option value="">— wybierz —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Pakiet</label>
+        <select id="aPackage"><option value="">— najpierw wybierz dostawcę —</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Składka ind. (zł/mies.)</label>
+        <input type="number" id="aPriceInd" placeholder="89.00" step="0.01" style="width:140px;" />
+      </div>
+      <div class="form-group">
+        <label>Składka grupowa (zł/os.)</label>
+        <input type="number" id="aPriceGrup" placeholder="75.00" step="0.01" style="width:140px;" />
+      </div>
+      <div class="form-group">
+        <label>Składka rodzinna (zł/mies.)</label>
+        <input type="number" id="aPriceRodzina" placeholder="178.00" step="0.01" style="width:150px;" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data wejścia</label>
+        <input type="text" id="aDateStart" placeholder="2026-03-01" style="width:140px;" />
+      </div>
+      <div class="form-group">
+        <label>Źródło</label>
+        <select id="aSource" style="width:200px;">
+          <option value="oferta_PDF">Oferta PDF</option>
+          <option value="negocjacje_email">Negocjacje e-mail</option>
+          <option value="aktualizacja_operatora">Aktualizacja operatora</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notatki</label>
+        <input type="text" id="aNotes" placeholder="np. po negocjacjach 08.03.2026" style="width:260px;" />
+      </div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="savePrice()">💾 Zapisz składkę</button>
+    </div>
+  </div>
+
+  <!-- HISTORIA SKŁADEK -->
+  <div class="card">
+    <h2>📋 Historia składek</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Dostawca</label>
+        <select id="histProvider" onchange="loadPriceHistory()">
+          <option value="">— wszyscy —</option>
+        </select>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:22px;" onclick="loadPriceHistory()">🔍 Pokaż historię</button>
+    </div>
+    <div id="priceHistoryTable">
+      <p style="color:#888;font-size:0.85rem;">Wybierz dostawcę aby zobaczyć historię składek.</p>
+    </div>
+  </div>
+
+  <!-- KONFIGURACJA POŁĄCZENIA -->
+  <div class="card">
+    <h2>🔌 Konfiguracja Supabase</h2>
+    <div class="form-row">
+      <div class="form-group" style="flex:1;">
+        <label>Supabase URL</label>
+        <input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" style="width:100%;" />
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label>Anon Key (publiczny)</label>
+        <input type="text" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..." style="width:100%;" />
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Zapisz połączenie</button>
+      <button class="btn btn-outline btn-sm" onclick="testConnection()">🔌 Test połączenia</button>
+      <span id="connStatus" style="font-size:0.85rem;padding:10px 0;color:#888;"></span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <strong>MEDICALAURA</strong> — System zarządzania pakietami medycznymi | Aura Consulting &copy; 2026 |
+  Dane mają charakter informacyjny. Wiążące są wyłącznie oferty wystawione przez operatorów medycznych.
+</footer>
+
+<script>
+// ============================================================
+// KONFIGURACJA — zmień na własne dane Supabase
+// ============================================================
+let SUPABASE_URL = localStorage.getItem('ma_url') || '';
+let SUPABASE_KEY = localStorage.getItem('ma_key') || '';
+
+const DOSTAWCY = [
+  {skrot:'MED', nazwa:'Medicover'},
+  {skrot:'LUX', nazwa:'LuxMed'},
+  {skrot:'ENE', nazwa:'Enel-Med'},
+  {skrot:'TUZ', nazwa:'TU Zdrowie'},
+  {skrot:'POL', nazwa:'Polmed'},
+  {skrot:'SAL', nazwa:'Saltus'},
+  {skrot:'ALZ', nazwa:'Allianz'},
+  {skrot:'COM', nazwa:'Compensa'},
+  {skrot:'INR', nazwa:'InterRisk'},
+  {skrot:'PZU', nazwa:'PZU Zdrowie'},
+];
+
+const BLOKI = [
+  {key:'konsultacje', label:'Konsultacje specjalistyczne'},
+  {key:'diagnostyka', label:'Diagnostyka'},
+  {key:'rehabilitacja', label:'Rehabilitacja'},
+  {key:'stomatologia', label:'Stomatologia'},
+  {key:'telemedycyna', label:'Telemedycyna & Assistance'},
+  {key:'formalne', label:'Parametry formalne'},
+];
+
+let selectedProviders = [];
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if(id === 'library') loadLibrary();
+}
+function switchTab(id, a) {
+  document.querySelectorAll('header nav a').forEach(x => x.classList.remove('active'));
+  a.classList.add('active');
+  const map = {compare:0, library:1, learn:2, admin:3};
+  const btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  btns[map[id]].classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if(id === 'library') loadLibrary();
+}
+
+// ============================================================
+// API HELPER
+// ============================================================
+async function apiGet(table, params='') {
+  if(!SUPABASE_URL || !SUPABASE_KEY) return null;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json'
+    }
+  });
+  if(!res.ok) return null;
+  return res.json();
+}
+
+async function apiPost(table, body) {
+  if(!SUPABASE_URL || !SUPABASE_KEY) return false;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(body)
+  });
+  return res.ok;
+}
+
+// ============================================================
+// INIT — status bazy i dostawcy pills
+// ============================================================
+async function init() {
+  const cfgUrl = document.getElementById('cfgUrl');
+  const cfgKey = document.getElementById('cfgKey');
+  if(cfgUrl) cfgUrl.value = SUPABASE_URL;
+  if(cfgKey) cfgKey.value = SUPABASE_KEY;
+
+  await checkDbStatus();
+  await populateProviderPills();
+  populateAllSelects();
+}
+
+async function checkDbStatus() {
+  if(!SUPABASE_URL || !SUPABASE_KEY) {
+    document.getElementById('statusDb').textContent = '⚠ skonfiguruj połączenie';
+    return;
+  }
+  const data = await apiGet('dostawcy', 'select=id,nazwa&aktywny=eq.true');
+  if(data) {
+    document.getElementById('statusDb').textContent = '✓ online';
+    document.getElementById('statusProviders').textContent = data.length;
+    const pkts = await apiGet('pakiety', 'select=id&aktywna=eq.true');
+    document.getElementById('statusPackages').textContent = pkts ? pkts.length : '–';
+  } else {
+    document.getElementById('statusDb').textContent = '⚠ brak połączenia';
+  }
+}
+
+async function populateProviderPills() {
+  const pills = document.getElementById('providerPills');
+  let providers = DOSTAWCY;
+  if(SUPABASE_URL && SUPABASE_KEY) {
+    const data = await apiGet('dostawcy', 'select=skrot,nazwa&aktywny=eq.true&order=nazwa');
+    if(data && data.length) providers = data;
+  }
+  pills.innerHTML = '';
+  providers.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'provider-pill';
+    div.textContent = p.nazwa || p.skrot;
+    div.dataset.skrot = p.skrot;
+    div.onclick = () => toggleProvider(div, p.skrot);
+    pills.appendChild(div);
+  });
+}
+
+function populateAllSelects() {
+  const selects = ['libProvider','fProvider','vProvider','aProvider','histProvider'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    DOSTAWCY.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.skrot; opt.textContent = p.nazwa;
+      el.appendChild(opt);
+    });
+  });
+}
+
+function toggleProvider(el, skrot) {
+  if(el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    selectedProviders = selectedProviders.filter(s => s !== skrot);
+  } else {
+    if(selectedProviders.length >= 5) { showNotif('compare','Maksymalnie 5 dostawców.','error'); return; }
+    el.classList.add('selected');
+    selectedProviders.push(skrot);
+  }
+}
+
+// ============================================================
+// PORÓWNYWARKA
+// ============================================================
+async function runComparison() {
+  if(selectedProviders.length < 2) {
+    showNotif('compare','Zaznacz co najmniej 2 dostawców.','error'); return;
+  }
+  const tierLow = document.getElementById('tierLow').value;
+  const tierHigh = document.getElementById('tierHigh').value;
+
+  showNotif('compare','Ładowanie danych z bazy...','info');
+
+  // Pobierz pakiety dla wybranych dostawców i tierów
+  const skroty = selectedProviders.join(',');
+  let packages = [];
+  if(SUPABASE_URL && SUPABASE_KEY) {
+    const data = await apiGet('v_porownanie_pakietow',
+      `select=*&dostawca=in.(${skroty})&tier=in.(${tierLow},${tierHigh})&order=dostawca,tier`);
+    if(data) packages = data;
+  }
+
+  document.getElementById('comparisonResult').style.display = 'block';
+  document.getElementById('deltaResult').style.display = 'block';
+  document.getElementById('compTitle').textContent =
+    `Porównanie: ${selectedProviders.join(' vs ')} | Tier ${tierLow} i Tier ${tierHigh}`;
+
+  document.getElementById('comp-badge-low').textContent = `Tier ${tierLow}`;
+  document.getElementById('comp-badge-high').textContent = `Tier ${tierHigh}`;
+
+  renderComparisonTable(packages, tierLow, tierHigh);
+  renderDeltaTable(packages, tierLow);
+  showNotif('compare','Porównanie załadowane.','success');
+  setTimeout(() => document.getElementById('notif-compare').style.display='none', 2500);
+}
+
+function renderComparisonTable(packages, tierLow, tierHigh) {
+  if(!packages.length) {
+    document.getElementById('compTableWrap').innerHTML =
+      '<div class="notif info" style="display:block;">Brak danych w bazie dla wybranych dostawców. Dodaj pakiety przez zakładkę <strong>Ucz bazę</strong>.</div>';
+    return;
+  }
+
+  const providers = [...new Set(packages.map(p => p.dostawca))];
+  const params = [
+    {label:'Specjalizacje (liczba)', key:'liczba_spec'},
+    {label:'Badania (liczba)', key:'liczba_badan'},
+    {label:'Ciąża', key:'ciaza', bool:true},
+    {label:'Leczenie szpitalne', key:'leczenie_szpitalne', bool:true},
+    {label:'Hotline 24h', key:'hotline_24h', bool:true},
+    {label:'Telemedycyna', key:'telemedycyna', bool:true},
+    {label:'Wizyty profesorskie', key:'wizyty_profesorskie', bool:true},
+    {label:'Karencja (dni)', key:'karencja_dni'},
+    {label:'Dzieci do (lat)', key:'wiek_dzieci_do'},
+    {label:'Dostępny JDG', key:'jdg', bool:true},
+    {label:'Aplikacja mobilna', key:'aplikacja_mobilna', bool:true},
+  ];
+
+  let html = `<table class="compare-table"><thead>`;
+  html += `<tr class="provider-header"><th>Parametr</th>`;
+  providers.forEach(p => html += `<th class="tier" colspan="2">${p}</th>`);
+  html += `</tr><tr><th></th>`;
+  providers.forEach(() => {
+    html += `<th class="tier">Tier ${tierLow}</th><th class="tier">Tier ${tierHigh}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  params.forEach(param => {
+    html += `<tr><td><strong>${param.label}</strong></td>`;
+    providers.forEach(prov => {
+      const pkgLow = packages.find(p => p.dostawca === prov && p.tier == tierLow);
+      const pkgHigh = packages.find(p => p.dostawca === prov && p.tier == tierHigh);
+      [pkgLow, pkgHigh].forEach(pkg => {
+        if(!pkg) { html += `<td><span class="badge badge-gray">brak</span></td>`; return; }
+        const val = pkg[param.key];
+        if(param.bool) {
+          html += `<td>${val ? '<span class="yes">✓ TAK</span>' : '<span class="no">✗ NIE</span>'}</td>`;
+        } else {
+          html += `<td>${val !== null && val !== undefined ? val : '<span style="color:#aaa">—</span>'}</td>`;
+        }
+      });
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table>`;
+  document.getElementById('compTableWrap').innerHTML = html;
+}
+
+function renderDeltaTable(packages, tier) {
+  if(!packages.length) {
+    document.getElementById('deltaTableWrap').innerHTML =
+      '<p style="color:#888;font-size:0.88rem;">Brak danych do porównania.</p>';
+    return;
+  }
+  document.getElementById('deltaTableWrap').innerHTML =
+    '<p style="color:#888;font-size:0.88rem;">Macierz DELTA generowana automatycznie po wczytaniu pełnych danych o zakresach pakietów.</p>';
+}
+
+function exportComparison() {
+  showNotif('compare','Funkcja eksportu PDF — wkrótce dostępna.','info');
+}
+
+// ============================================================
+// BIBLIOTEKA
+// ============================================================
+async function loadLibrary() {
+  const provider = document.getElementById('libProvider').value;
+  const type = document.getElementById('libType').value;
+  const version = document.getElementById('libVersion').value;
+
+  let params = 'select=dostawca,pakiet,tier,wersja,liczba_spec,liczba_badan,hotline_24h,telemedycyna,ciaza,leczenie_szpitalne,jdg&order=dostawca,tier';
+  if(provider) params += `&dostawca=eq.${provider}`;
+
+  const el = document.getElementById('libraryTable');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Ładowanie...</div>';
+
+  const data = await apiGet('v_porownanie_pakietow', params);
+
+  if(!data || !data.length) {
+    el.innerHTML = '<div class="notif info" style="display:block;">Brak danych. Dodaj pakiety przez <strong>Ucz bazę</strong> lub skonfiguruj połączenie Supabase.</div>';
+    return;
+  }
+
+  let html = `<table class="admin-table">
+    <thead><tr>
+      <th>Dostawca</th><th>Wariant</th><th>Tier</th><th>Wersja</th>
+      <th>Spec.</th><th>Badania</th><th>Hotline</th><th>Tele</th><th>Ciąża</th><th>Szpital</th><th>JDG</th><th></th>
+    </tr></thead><tbody>`;
+
+  data.forEach(p => {
+    html += `<tr>
+      <td><strong>${p.dostawca}</strong></td>
+      <td>${p.pakiet}</td>
+      <td><span class="badge badge-blue">T${p.tier}</span></td>
+      <td><span class="badge badge-gray">${p.wersja || '—'}</span></td>
+      <td>${p.liczba_spec || '—'}</td>
+      <td>${p.liczba_badan || '—'}</td>
+      <td>${p.hotline_24h ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
+      <td>${p.telemedycyna ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
+      <td>${p.ciaza ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
+      <td>${p.leczenie_szpitalne ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
+      <td>${p.jdg ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>
+      <td><button class="btn btn-outline btn-sm">Szczegóły</button></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function closeDetail() {
+  document.getElementById('packageDetail').style.display = 'none';
+}
+
+// ============================================================
+// UCZENIE BAZY
+// ============================================================
+function showLearnMode(mode) {
+  ['learnSql','learnForm','learnVersion'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('learn' + mode.charAt(0).toUpperCase() + mode.slice(1)).style.display = 'block';
+}
+
+function validateAndInsertSQL() {
+  const sql = document.getElementById('sqlInput').value.trim();
+  const notif = document.getElementById('sqlValidation');
+  if(!sql) { showNotif('learn','Wklej SQL.','error'); return; }
+  if(sql.toLowerCase().includes('cena_ind') || sql.toLowerCase().includes('cena_grup')) {
+    notif.className = 'notif error'; notif.style.display = 'block';
+    notif.textContent = '⚠ SQL zawiera pola cen (cena_ind, cena_grup). Usuń je — składki wprowadza się przez zakładkę Admin.';
+    return;
+  }
+  if(!sql.toLowerCase().startsWith('insert')) {
+    notif.className = 'notif error'; notif.style.display = 'block';
+    notif.textContent = '⚠ SQL musi zaczynać się od INSERT. Inne operacje nieobsługiwane tutaj.';
+    return;
+  }
+  notif.className = 'notif success'; notif.style.display = 'block';
+  notif.textContent = '✓ Walidacja OK. Wykonaj SQL bezpośrednio w Supabase SQL Editor — otwórz w nowej karcie.';
+}
+
+function clearSQL() {
+  document.getElementById('sqlInput').value = '';
+  document.getElementById('sqlValidation').style.display = 'none';
+}
+
+async function submitForm() {
+  const provider = document.getElementById('fProvider').value;
+  const name = document.getElementById('fName').value.trim();
+  const tier = parseInt(document.getElementById('fTier').value);
+  const version = document.getElementById('fVersion').value.trim();
+  if(!provider || !name || !version) {
+    showNotif('learn','Wypełnij: dostawca, nazwa, wersja.','error'); return;
+  }
+  if(!/^\d{6}$/.test(version)) {
+    showNotif('learn','Wersja musi być w formacie MMYYYY np. 032026.','error'); return;
+  }
+  const dostawca = await apiGet('dostawcy', `select=id&skrot=eq.${provider}`);
+  if(!dostawca || !dostawca.length) {
+    showNotif('learn','Nie znaleziono dostawcy w bazie.','error'); return;
+  }
+  const body = {
+    dostawca_id: dostawca[0].id, nazwa: name, tier, wersja: version,
+    min_pracownicy: parseInt(document.getElementById('fMinWorkers').value) || 3,
+    hotline_24h: document.getElementById('fHotline').checked,
+    telemedycyna: document.getElementById('fTele').checked,
+    aplikacja_mobilna: true,
+    ciaza: document.getElementById('fCiaza').checked,
+    leczenie_szpitalne: document.getElementById('fSzpital').checked,
+    jdg: document.getElementById('fJdg').checked,
+    notatki: document.getElementById('fNotatki').value,
+    aktywna: true
+  };
+  const ok = await apiPost('pakiety', body);
+  if(ok) {
+    showNotif('learn','✓ Pakiet zapisany pomyślnie!','success');
+    resetForm();
+  } else {
+    showNotif('learn','⚠ Błąd zapisu. Sprawdź połączenie lub duplikat.','error');
+  }
+}
+
+function resetForm() {
+  ['fName','fVersion','fNotatki'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function loadProviderPackages(selectId, skrot) {
+  const el = document.getElementById(selectId);
+  el.innerHTML = '<option>Ładowanie...</option>';
+  if(!skrot) { el.innerHTML = '<option>— wybierz dostawcę —</option>'; return; }
+  const dostawca = await apiGet('dostawcy', `select=id&skrot=eq.${skrot}`);
+  if(!dostawca || !dostawca.length) { el.innerHTML = '<option>Brak danych</option>'; return; }
+  const pkts = await apiGet('pakiety', `select=id,nazwa,tier,wersja&dostawca_id=eq.${dostawca[0].id}&aktywna=eq.true&order=tier`);
+  el.innerHTML = '<option value="">— wybierz pakiet —</option>';
+  if(pkts) pkts.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = `${p.nazwa} (T${p.tier} | ${p.wersja})`;
+    el.appendChild(opt);
+  });
+}
+
+async function createNewVersion() {
+  const pkgId = document.getElementById('vPackage').value;
+  const newVer = document.getElementById('vNewVersion').value.trim();
+  const notif = document.getElementById('versionNotif');
+  if(!pkgId || !newVer) {
+    notif.className='notif error'; notif.style.display='block';
+    notif.textContent='Wybierz pakiet i podaj nową wersję.'; return;
+  }
+  if(!/^\d{6}$/.test(newVer)) {
+    notif.className='notif error'; notif.style.display='block';
+    notif.textContent='Format wersji: MMYYYY np. 062026.'; return;
+  }
+  // Pobierz istniejący pakiet
+  const existing = await apiGet('pakiety', `select=*&id=eq.${pkgId}`);
+  if(!existing || !existing.length) {
+    notif.className='notif error'; notif.style.display='block';
+    notif.textContent='Nie znaleziono pakietu.'; return;
+  }
+  const pkg = {...existing[0]};
+  delete pkg.id; delete pkg.data_dodania;
+  pkg.wersja = newVer; pkg.aktywna = true;
+  const ok = await apiPost('pakiety', pkg);
+  if(ok) {
+    notif.className='notif success'; notif.style.display='block';
+    notif.textContent=`✓ Nowa wersja ${newVer} utworzona. Stara wersja zachowana.`;
+  } else {
+    notif.className='notif error'; notif.style.display='block';
+    notif.textContent='⚠ Błąd — możliwy duplikat wersji.';
+  }
+}
+
+// ============================================================
+// ADMIN — SKŁADKI
+// ============================================================
+async function savePrice() {
+  const pkgId = document.getElementById('aPackage').value;
+  const ind = document.getElementById('aPriceInd').value;
+  const grup = document.getElementById('aPriceGrup').value;
+  const rodzina = document.getElementById('aPriceRodzina').value;
+  const dateStart = document.getElementById('aDateStart').value;
+  const source = document.getElementById('aSource').value;
+  const notes = document.getElementById('aNotes').value;
+
+  if(!pkgId) { showNotif('admin','Wybierz pakiet.','error'); return; }
+  if(!dateStart) { showNotif('admin','Podaj datę wejścia.','error'); return; }
+
+  const body = {
+    pakiet_id: parseInt(pkgId),
+    data_wejscia: dateStart,
+    zrodlo: source,
+    notatki: notes,
+  };
+  if(ind) body.cena_ind_mies = parseFloat(ind);
+  if(grup) body.cena_grup_mies = parseFloat(grup);
+  if(rodzina) body.cena_rodzina = parseFloat(rodzina);
+
+  const ok = await apiPost('pakiet_skladki_historia', body);
+  if(ok) {
+    // Aktualizuj też główny pakiet
+    if(SUPABASE_URL && SUPABASE_KEY && pkgId) {
+      const updateBody = {};
+      if(ind) updateBody.cena_ind_mies = parseFloat(ind);
+      if(grup) updateBody.cena_grup_mies = parseFloat(grup);
+      if(rodzina) updateBody.cena_rodzina_mies = parseFloat(rodzina);
+      await fetch(`${SUPABASE_URL}/rest/v1/pakiety?id=eq.${pkgId}`, {
+        method:'PATCH',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+        body: JSON.stringify(updateBody)
+      });
+    }
+    showNotif('admin','✓ Składka zapisana i zarchiwizowana w historii.','success');
+  } else {
+    showNotif('admin','⚠ Błąd zapisu składki.','error');
+  }
+}
+
+async function loadPriceHistory() {
+  const skrot = document.getElementById('histProvider').value;
+  const el = document.getElementById('priceHistoryTable');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  let params = 'select=pakiet_id,data_wejscia,cena_ind_mies,cena_grup_mies,cena_rodzina,zrodlo,notatki&order=data_wejscia.desc&limit=50';
+  const data = await apiGet('pakiet_skladki_historia', params);
+  if(!data || !data.length) {
+    el.innerHTML = '<p style="color:#888;font-size:0.85rem;">Brak historii składek.</p>'; return;
+  }
+  let html = `<table class="admin-table"><thead><tr>
+    <th>Pakiet ID</th><th>Data wejścia</th><th>Ind. (zł)</th><th>Grup. (zł)</th><th>Rodzina (zł)</th><th>Źródło</th><th>Notatki</th>
+  </tr></thead><tbody>`;
+  data.forEach(r => {
+    html += `<tr>
+      <td>${r.pakiet_id}</td>
+      <td>${r.data_wejscia}</td>
+      <td>${r.cena_ind_mies || '—'}</td>
+      <td>${r.cena_grup_mies || '—'}</td>
+      <td>${r.cena_rodzina || '—'}</td>
+      <td><span class="badge badge-blue">${r.zrodlo}</span></td>
+      <td>${r.notatki || '—'}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// ============================================================
+// KONFIGURACJA
+// ============================================================
+function saveConfig() {
+  SUPABASE_URL = document.getElementById('cfgUrl').value.trim();
+  SUPABASE_KEY = document.getElementById('cfgKey').value.trim();
+  localStorage.setItem('ma_url', SUPABASE_URL);
+  localStorage.setItem('ma_key', SUPABASE_KEY);
+  showNotif('admin','✓ Dane połączenia zapisane lokalnie (localStorage).','success');
+  checkDbStatus();
+}
+
+async function testConnection() {
+  const status = document.getElementById('connStatus');
+  status.textContent = '⏳ testowanie...';
+  const data = await apiGet('dostawcy', 'select=id&limit=1');
+  status.textContent = data ? '✓ Połączenie OK!' : '✗ Błąd — sprawdź URL i klucz.';
+  status.style.color = data ? '#1a8a3a' : '#c52040';
+}
+
+// ============================================================
+// NOTIF HELPER
+// ============================================================
+function showNotif(tab, msg, type) {
+  const el = document.getElementById('notif-' + tab);
+  if(!el) return;
+  el.className = 'notif ' + type;
+  el.textContent = msg;
+  el.style.display = 'block';
+  if(type === 'success') setTimeout(() => el.style.display='none', 3000);
+}
+
+// ============================================================
+// START
+// ============================================================
+window.onload = init;
+</script>
+</body>
+</html>
