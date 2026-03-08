@@ -101,12 +101,7 @@
               <span id="pkgPanelTitle" class="font-bold text-brand-navy text-base"></span>
               <span id="pkgPanelSub" class="text-xs text-slate-400 ml-2"></span>
             </div>
-            <div class="flex gap-2">
-              <button onclick="filterPkgs('ind')"     id="pf-ind"     class="px-3 py-1 text-xs font-bold rounded-lg bg-brand-navy text-white">Indyw.</button>
-              <button onclick="filterPkgs('partner')" id="pf-partner" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600">Partnerski</button>
-              <button onclick="filterPkgs('rodzinny')"id="pf-rodzinny"class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600">Rodzinny</button>
-              <button onclick="filterPkgs('all')"     id="pf-all"     class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600">Wszystkie</button>
-            </div>
+            <!-- FILTRY USUNIĘTE ZGODNIE Z ŻYCZENIEM -->
           </div>
           <div id="pkgGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2"></div>
         </div>
@@ -367,7 +362,6 @@ let allProviders   = [];
 let providerPkgs   = {};    // {provId:[pkg,...]}
 let selectedPkgs   = {};    // {pkgId: pkgObj}
 let activeProv     = null;  // currently shown in right panel
-let pkgFilter      = 'ind';
 let lastCompData   = [];
 let allCalcPkgs    = [];
 let selectedCalc   = new Set();
@@ -642,45 +636,19 @@ async function selectProvider(provId, provNazwa){
     const d=await apiGet('pakiety',`select=id,nazwa,tier,dostawca_id&dostawca_id=eq.${provId}&aktywna=eq.true&order=tier,nazwa`);
     providerPkgs[provId]=d||[];
   }
-  pkgFilter='ind';
-  updateFilterBtns();
   renderPkgGrid();
 }
-
-function updateFilterBtns(){
-  ['ind','partner','rodzinny','all'].forEach(f=>{
-    const b=document.getElementById('pf-'+f);
-    if(!b) return;
-    b.className=f===pkgFilter
-      ?'px-3 py-1 text-xs font-bold rounded-lg bg-brand-navy text-white'
-      :'px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600';
-  });
-}
-
-function filterPkgs(f){pkgFilter=f;updateFilterBtns();renderPkgGrid();}
-
-const PKG_FILTERS={
-  ind:    ['basic','standard','premium','prestige','vip','senior','indyw','klasyczny','komfort','optimum','rubinowy','perłowy','bursztynowy','lazurowy','szmaragdowy','diamentowy'],
-  partner:['partner','duo','plus','para','partnerski'],
-  rodzinny:['rodzin','family','dom','familijny'],
-};
 
 function renderPkgGrid(){
   const pkts=providerPkgs[activeProv]||[];
   const grid=document.getElementById('pkgGrid');
   const sub=document.getElementById('pkgPanelSub');
 
-  let filtered=pkts;
-  if(pkgFilter!=='all'){
-    const keys=PKG_FILTERS[pkgFilter]||[];
-    const f=pkts.filter(p=>keys.some(k=>p.nazwa.toLowerCase().includes(k)));
-    if(f.length) filtered=f;
-  }
-  sub.textContent=`${filtered.length} wariantów`;
+  sub.textContent=`${pkts.length} wariantów`;
 
-  if(!filtered.length){grid.innerHTML='<p class="text-slate-400 text-sm col-span-4">Brak pakietów dla tego filtru.</p>';return;}
+  if(!pkts.length){grid.innerHTML='<p class="text-slate-400 text-sm col-span-4">Brak pakietów dla tego dostawcy.</p>';return;}
   grid.innerHTML='';
-  filtered.forEach(pk=>{
+  pkts.forEach(pk=>{
     const sel=!!selectedPkgs[pk.id];
     const div=document.createElement('div');
     div.className='pkg-chip'+(sel?' sel':'');
