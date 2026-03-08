@@ -437,29 +437,26 @@ async function fetchEnhancedPackages(params) {
   let data = await apiGet('pakiety_pelne', params);
   if (!data || !data.length) return data;
   
-  const first = data[0];
-  const missingData = !('liczba_specjalizacji' in first) || !('liczba_badan_lab' in first);
-  
-  if (missingData) {
-    const ids = data.map(d => d.id).join(',');
-    if (ids) {
-      const raw = await apiGet('pakiety', `select=id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do&id=in.(${ids})`);
-      if (raw && raw.length) {
-        data.forEach(d => {
-          const r = raw.find(x => x.id === d.id);
-          if (r) {
-            d.liczba_specjalizacji = r.liczba_specjalizacji ?? d.liczba_specjalizacji;
-            d.liczba_badan_lab = r.liczba_badan_lab ?? d.liczba_badan_lab;
-            d.czas_oczekiwania_poz = r.czas_oczekiwania_poz ?? d.czas_oczekiwania_poz;
-            d.czas_oczekiwania_spec = r.czas_oczekiwania_spec ?? d.czas_oczekiwania_spec;
-            d.karencja_dni = r.karencja_dni ?? d.karencja_dni;
-            d.min_pracownicy = r.min_pracownicy ?? d.min_pracownicy;
-            d.wiek_dzieci_do = r.wiek_dzieci_do ?? d.wiek_dzieci_do;
-          }
-        });
-      }
+  // Zawsze pobieramy te dane z głównej tabeli, omijając potencjalne braki w widoku SQL.
+  const ids = data.map(d => d.id).join(',');
+  if (ids) {
+    const raw = await apiGet('pakiety', `select=id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do&id=in.(${ids})`);
+    if (raw && raw.length) {
+      data.forEach(d => {
+        const r = raw.find(x => x.id === d.id);
+        if (r) {
+          if (r.liczba_specjalizacji !== null && r.liczba_specjalizacji !== undefined) d.liczba_specjalizacji = r.liczba_specjalizacji;
+          if (r.liczba_badan_lab !== null && r.liczba_badan_lab !== undefined) d.liczba_badan_lab = r.liczba_badan_lab;
+          if (r.czas_oczekiwania_poz !== null && r.czas_oczekiwania_poz !== undefined) d.czas_oczekiwania_poz = r.czas_oczekiwania_poz;
+          if (r.czas_oczekiwania_spec !== null && r.czas_oczekiwania_spec !== undefined) d.czas_oczekiwania_spec = r.czas_oczekiwania_spec;
+          if (r.karencja_dni !== null && r.karencja_dni !== undefined) d.karencja_dni = r.karencja_dni;
+          if (r.min_pracownicy !== null && r.min_pracownicy !== undefined) d.min_pracownicy = r.min_pracownicy;
+          if (r.wiek_dzieci_do !== null && r.wiek_dzieci_do !== undefined) d.wiek_dzieci_do = r.wiek_dzieci_do;
+        }
+      });
     }
   }
+  
   return data;
 }
 
@@ -820,6 +817,27 @@ async function runComparison(){
   const data=await fetchEnhancedPackages(`select=*&id=in.(${ids.join(',')})`);
   
   if(!data||!data.length){showNotif('compare','Brak danych w bazie. Sprawdź połączenie z serwerem.','border-red-500 bg-red-50 text-red-700');return;}
+
+  // NOWOŚĆ: Automatyczne doliczanie rzeczywistych rekordów w locie
+  try {
+    const [specsData, labsData] = await Promise.all([
+      apiGet('pakiety_specjalizacje', `select=pakiet_id&pakiet_id=in.(${ids.join(',')})`),
+      apiGet('pakiety_badania', `select=pakiet_id&pakiet_id=in.(${ids.join(',')})`)
+    ]);
+    const specCounts = {};
+    const labCounts = {};
+    (specsData || []).forEach(row => { specCounts[row.pakiet_id] = (specCounts[row.pakiet_id] || 0) + 1; });
+    (labsData || []).forEach(row => { labCounts[row.pakiet_id] = (labCounts[row.pakiet_id] || 0) + 1; });
+
+    data.forEach(d => {
+      // Dynamicznie podstawia zliczoną liczbę z bazy, dzięki czemu omija potencjalne braki lub null-e w samej tabeli 'pakiety'
+      if (specCounts[d.id] !== undefined) d.liczba_specjalizacji = specCounts[d.id];
+      if (labCounts[d.id] !== undefined) d.liczba_badan_lab = labCounts[d.id];
+    });
+  } catch(e) {
+    console.warn("Błąd doliczania w locie:", e);
+  }
+
   lastCompData=ids.map(id=>data.find(d=>d.id===parseInt(id))).filter(Boolean);
   renderCompTable(lastCompData);
   renderPriceSection(lastCompData);
