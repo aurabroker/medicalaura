@@ -49,9 +49,10 @@
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
       <div class="text-xs text-slate-400 tracking-wide uppercase mt-0.5">Zarządzanie Ofertami Medycznymi</div>
     </div>
-    <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl">
+    <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
       <button onclick="switchTab('search',this)"  id="btn-search"  class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🔎 Wyszukaj</button>
+      <button onclick="switchTab('clinics',this)" id="btn-clinics" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🏥 Placówki</button>
       <button onclick="switchTab('library',this)" id="btn-library" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">📚 Biblioteka</button>
       <button onclick="switchTab('calc',this)"    id="btn-calc"    class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧮 Kalkulator</button>
       <button onclick="switchTab('learn',this)"   id="btn-learn"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧠 SQL</button>
@@ -122,11 +123,11 @@
     <div id="selectedChips" class="flex flex-wrap gap-2"></div>
   </div>
 
-  <!-- ANALIZA PLACÓWEK (Nowość UI) -->
+  <!-- ANALIZA PLACÓWEK -->
   <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm mb-6 flex flex-col sm:flex-row gap-6 items-center justify-between">
     <div>
       <h3 class="text-sm font-bold text-brand-navy">Analiza dostępności placówek (Opcjonalnie)</h3>
-      <p class="text-xs text-slate-500 mt-1">Podaj miasto, aby zliczyć dostępne placówki dla wybranych pakietów.</p>
+      <p class="text-xs text-slate-500 mt-1">Podaj miasto, aby zliczyć dostępne placówki dla wybranych pakietów w module PDF.</p>
     </div>
     <div class="flex items-center gap-3 w-full sm:w-auto">
       <input type="text" id="locCity" placeholder="np. Warszawa, Kraków..." class="inp w-full sm:w-64 bg-white" />
@@ -165,11 +166,10 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════ WYSZUKAJ -->
+<!-- ══════════════════════════════ WYSZUKAJ (Zakresy) -->
 <div id="tab-search" class="tab-panel">
-  <!-- Wyszukiwarka pozostaje bez zmian wizualnych -->
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
-    <h2 class="text-xl font-bold text-brand-navy mb-2">🔎 Wyszukiwarka zakresów</h2>
+    <h2 class="text-xl font-bold text-brand-navy mb-2">🔎 Wyszukiwarka zakresów medycznych</h2>
     <p class="text-sm text-slate-500 mb-6">Sprawdź jacy dostawcy i w jakich pakietach oferują wybraną specjalizację lub badanie.</p>
     <div class="flex gap-3 mb-6">
       <button onclick="setSearchType('spec')" id="stype-spec" class="px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm">Specjalizacja</button>
@@ -191,6 +191,49 @@
       <p class="text-xs text-slate-400 mt-0.5">Dostępne pakiety (kliknij pakiet, aby zobaczyć jego pełne szczegóły)</p>
     </div>
     <div id="searchResultBody" class="p-5"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ WYSZUKAJ (Placówki - NOWOŚĆ) -->
+<div id="tab-clinics" class="tab-panel">
+  <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
+    <h2 class="text-xl font-bold text-brand-navy mb-2">🏥 Wyszukiwarka Placówek</h2>
+    <p class="text-sm text-slate-500 mb-6">Przeszukuj i mapuj placówki fizyczne według miejscowości, nazwy i tagów dostawców.</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div><label class="lbl">Miejscowość</label><input type="text" id="clinCity" class="inp" placeholder="np. Warszawa"></div>
+      <div><label class="lbl">Nazwa oddziału / Adres</label><input type="text" id="clinName" class="inp" placeholder="np. Centrum Medyczne..."></div>
+      <div><label class="lbl">Dostępne dla sieci (Tag)</label>
+        <select id="clinProv" class="inp">
+          <option value="">— Wszyscy Partnerzy —</option>
+          <!-- Zostanie wypełnione dynamicznie z allProviders -->
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button onclick="searchClinics()" class="w-full bg-brand-emerald hover:bg-emerald-600 text-white font-bold py-3 px-7 rounded-xl shadow-md">Znajdź Placówki</button>
+      </div>
+    </div>
+    <div id="clinHint" class="text-xs text-slate-400"></div>
+  </div>
+
+  <div id="clinResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
+    <div class="bg-brand-navy p-5 flex justify-between items-center">
+      <h3 class="text-base font-bold text-white">Wyniki wyszukiwania placówek</h3>
+      <span id="clinCount" class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full"></span>
+    </div>
+    <div class="tbl overflow-x-auto">
+      <table class="w-full text-sm border-collapse min-w-[900px]">
+        <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
+          <tr>
+            <th class="p-4 text-left">Placówka / Nazwa</th>
+            <th class="p-4 text-left">Miasto i Adres</th>
+            <th class="p-4 text-left">Kontakt i Godziny</th>
+            <th class="p-4 text-left">Obsługuje sieci (Tagi)</th>
+          </tr>
+        </thead>
+        <tbody id="clinResultBody" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -244,34 +287,29 @@
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eHotline" class="w-4 h-4 accent-brand-navy">Hotline 24h</label>
     </div>
     <div class="border-t border-slate-200 pt-5 mb-5">
-      <h3 class="text-xs font-bold text-slate-500 uppercase mb-3">💰 Składki (po analizie)</h3>
-      <div class="grid grid-cols-3 gap-4">
-        <div><label class="lbl">Indyw. (zł/mies)</label><input type="number" step="0.01" id="ePriceInd" placeholder="–" class="inp"/></div>
-        <div><label class="lbl">Partnerska (zł/mies)</label><input type="number" step="0.01" id="ePriceGrup" placeholder="–" class="inp"/></div>
-        <div><label class="lbl">Rodzinna (zł/mies)</label><input type="number" step="0.01" id="ePriceRodzina" placeholder="–" class="inp"/></div>
+      <h3 class="text-xs font-bold text-slate-500 uppercase mb-3">💰 Składka pracownicza (zł)</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div><input type="number" step="0.01" id="ePriceGrup" placeholder="0.00" class="inp font-bold text-brand-pink text-lg"/></div>
       </div>
     </div>
     <div class="flex gap-3 items-center">
-      <button onclick="saveEdit()" class="bg-brand-pink text-white font-bold py-3 px-8 rounded-xl shadow-md">💾 Zapisz</button>
+      <button onclick="saveEdit()" class="bg-brand-pink text-white font-bold py-3 px-8 rounded-xl shadow-md">💾 Zapisz do bazy</button>
       <span id="editStatus" class="text-sm font-semibold"></span>
     </div>
     <input type="hidden" id="editPkgId"/>
   </div>
 </div>
 
-<!-- ══════════════════════════════ KALKULATOR, SQL & ADMIN (Pozostawiono bez większych zmian) -->
+<!-- ══════════════════════════════ KALKULATOR, SQL & ADMIN -->
 <div id="tab-calc" class="tab-panel">
-  <!-- Kalkulator code here (skrócono dla czytelności, pozostaje jak w oryginale) -->
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
     <h2 class="text-xl font-bold text-brand-navy mb-2">🧮 Kalkulator składki grupowej</h2>
-    <p class="text-sm text-slate-500 mb-5">Podaj liczbę pracowników, wybierz typ składki i zaznacz pakiety.</p>
+    <p class="text-sm text-slate-500 mb-5">Podaj liczbę pracowników i zaznacz pakiety.</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
       <div><label class="lbl">Liczba pracowników</label><input type="number" id="calcWorkers" min="1" value="50" class="inp text-lg font-bold" oninput="calcUpdate()"/></div>
-      <div><label class="lbl">Typ składki</label>
-        <select id="calcType" class="inp" onchange="calcUpdate()">
-          <option value="cena_ind_mies">Indywidualna</option>
-          <option value="cena_grup_mies" selected>Partnerska</option>
-          <option value="cena_rodzina_mies">Rodzinna</option>
+      <div><label class="lbl">Typ składki (Zablokowany na pracowniczą)</label>
+        <select id="calcType" class="inp bg-slate-100" disabled>
+          <option value="cena_grup_mies" selected>Składka Pracownicza</option>
         </select>
       </div>
       <div><label class="lbl">Filtr dostawca</label><select id="calcProvider" class="inp" onchange="calcLoadPackages()"><option value="">— Wszyscy —</option></select></div>
@@ -285,7 +323,6 @@
 </div>
 
 <div id="tab-learn" class="tab-panel">
-  <!-- SQL Tab -->
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
     <h2 class="text-xl font-bold text-brand-navy mb-2">Dodaj pakiety via SQL (God Prompt)</h2>
     <textarea id="sqlInput" rows="10" class="w-full bg-slate-800 text-green-400 font-mono text-sm p-4 rounded-2xl outline-none focus:ring-2 focus:ring-brand-pink" placeholder="-- INSERT INTO pakiety ..."></textarea>
@@ -298,7 +335,6 @@
 </div>
 
 <div id="tab-admin" class="tab-panel">
-  <!-- Admin Tab -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
       <h2 class="text-base font-bold text-brand-navy mb-5">🔌 Baza Danych (Supabase)</h2>
@@ -317,7 +353,7 @@
 
 </main>
 
-<!-- ══════════════════════════════ MODAL: LOGOWANIE ADMINA -->
+<!-- ══════════════════════════════ MODALE (Zaloguj, Szczegóły Pakietu) -->
 <div id="adminAuthModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
   <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
     <div class="text-center mb-6">
@@ -330,12 +366,10 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════ MODAL: SZCZEGÓŁY PAKIETU (Całkowicie przebudowany) -->
 <div id="pkgDetailsModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
   <div class="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
     <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-start bg-brand-navy text-white relative">
       <div class="w-full">
-        <!-- Zaktualizowany nagłówek z ceną obok nazwy -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 id="pdmTitle" class="font-bold text-xl md:text-2xl tracking-tight flex items-center">Ładowanie...</h3>
@@ -349,10 +383,7 @@
       </div>
       <button onclick="document.getElementById('pkgDetailsModal').classList.add('hidden')" class="w-8 h-8 ml-4 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-xl transition-colors shrink-0">&times;</button>
     </div>
-    
-    <div class="flex-grow overflow-y-auto custom-scroll p-6 md:p-8 bg-slate-50 relative" id="pdmBody">
-      <div class="flex items-center justify-center py-20 text-slate-400"><div class="loader mr-3"></div> Pobieranie szczegółów z bazy...</div>
-    </div>
+    <div class="flex-grow overflow-y-auto custom-scroll p-6 md:p-8 bg-slate-50 relative" id="pdmBody"></div>
   </div>
 </div>
 
@@ -429,7 +460,6 @@ async function fetchEnhancedPackages(params) {
   return data;
 }
 
-// ─── INIT ───────────────────────────────────────────────
 async function init(){
   document.getElementById('cfgUrl').value=SB_URL;
   document.getElementById('cfgKey').value=SB_KEY;
@@ -456,7 +486,87 @@ async function loadProvidersFromDB(){
   populateAllSelects();
 }
 
-// ─── MODAL SZCZEGÓŁÓW (Całkowicie przeprojektowany) ─────
+function populateAllSelects(){
+  ['libProvider','calcProvider','clinProv'].forEach(id=>{
+    const el=document.getElementById(id);if(!el) return;
+    while(el.options.length>1) el.remove(1);
+    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nazwa;el.appendChild(o);});
+  });
+}
+
+// ─── WYSZUKIWARKA PLACÓWEK (Nowość) ─────────────────────
+async function searchClinics(){
+  const city = document.getElementById('clinCity').value.trim();
+  const name = document.getElementById('clinName').value.trim();
+  const provSelect = document.getElementById('clinProv');
+  const provName = provSelect.options[provSelect.selectedIndex].text; // Pobieramy tekst (np. COMPENSA)
+  const provVal = provSelect.value;
+  
+  const hint = document.getElementById('clinHint');
+  const resultDiv = document.getElementById('clinResult');
+  const resultBody = document.getElementById('clinResultBody');
+  const countEl = document.getElementById('clinCount');
+  
+  hint.textContent = 'Szukam placówek...';
+  resultDiv.classList.add('hidden');
+  
+  // Budujemy zapytanie (Limit 200, by nie zawiesić przeglądarki przy pustym polu)
+  let query = 'select=*&limit=200'; 
+  if(city) query += `&miejscowosc=ilike.*${encodeURIComponent(city)}*`;
+  if(name) query += `&nazwa_oddzialu=ilike.*${encodeURIComponent(name)}*`;
+  
+  // Jeśli wybrano dostawcę, szukamy go wewnątrz tablicy TAGÓW (używamy operatora 'cs' - contains)
+  if(provVal && provName !== '— Wszyscy Partnerzy —') {
+    query += `&dostawcy_tagi=cs.{${encodeURIComponent(provName)}}`;
+  }
+
+  const data = await apiGet('placowki_medyczne', query);
+  
+  if(!data || !data.length) {
+    hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów. Spróbuj zmienić miasto lub sieć.';
+    return;
+  }
+  
+  hint.textContent = '';
+  countEl.textContent = `${data.length} znalezionych`;
+  
+  let html = '';
+  data.forEach(p => {
+    // Renderujemy tagi dostawców
+    let tagsHtml = '';
+    if(p.dostawcy_tagi && Array.isArray(p.dostawcy_tagi)){
+      tagsHtml = p.dostawcy_tagi.map(t => `<span class="bg-blue-50 text-brand-navy border border-blue-100 text-[10px] font-bold px-2 py-0.5 rounded mr-1 mb-1 inline-block">${t}</span>`).join('');
+    } else {
+      tagsHtml = '<span class="text-xs text-slate-400">Brak otagowanych sieci</span>';
+    }
+
+    html += `
+      <tr class="hover:bg-slate-50 transition-colors">
+        <td class="p-4">
+          <div class="font-bold text-brand-navy">${p.nazwa_oddzialu || 'Główny Oddział'}</div>
+          <div class="text-[10px] text-slate-500 font-black uppercase tracking-wider mt-0.5">WŁAŚCICIEL: ${p.siec_bazowa || 'Niezależna'}</div>
+        </td>
+        <td class="p-4">
+          <div class="font-bold text-slate-700">${p.miejscowosc}</div>
+          <div class="text-xs text-slate-500 mt-0.5">${p.adres}</div>
+        </td>
+        <td class="p-4">
+          <div class="text-xs font-bold text-slate-700">📞 ${p.telefon || 'Brak telefonu w bazie'}</div>
+          <div class="text-xs text-slate-500 mt-0.5">🗓️ ${p.dni_otwarcia || 'Pn-Pt'} | 🕒 ${p.godziny_otwarcia || 'Brak danych'}</div>
+        </td>
+        <td class="p-4">
+          <div class="flex flex-wrap max-w-[200px]">${tagsHtml}</div>
+        </td>
+      </tr>
+    `;
+  });
+  
+  resultBody.innerHTML = html;
+  resultDiv.classList.remove('hidden');
+}
+
+
+// ─── MODAL SZCZEGÓŁÓW ───────────────────────────────────
 async function showPackageDetails(pkgId) {
   const modal = document.getElementById('pkgDetailsModal');
   const mBody = document.getElementById('pdmBody');
@@ -483,63 +593,50 @@ async function showPackageDetails(pkgId) {
 
     mTitle.innerHTML = `${p.pakiet_nazwa || p.nazwa} <span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded ml-3 align-middle">T${p.tier}</span>`;
     mSub.textContent = p.dostawca_nazwa;
-    mPrice.innerHTML = (p.cena_grup_mies !== null && p.cena_grup_mies !== undefined) ? `${parseFloat(p.cena_grup_mies).toFixed(2)} zł<span class="text-sm font-normal text-slate-300"> / mies.</span>` : '<span class="text-sm">Brak w bazie</span>';
+    mPrice.innerHTML = (p.cena_grup_mies !== null && p.cena_grup_mies !== undefined) ? `${parseFloat(p.cena_grup_mies).toFixed(2)} zł<span class="text-sm font-normal text-slate-300"> / mies.</span>` : '<span class="text-sm">Brak wyceny</span>';
 
     const val = v => (v !== null && v !== undefined && v !== '') ? `<span class="text-xl font-black text-brand-navy">${v}</span>` : '<span class="text-slate-300">–</span>';
     const boolIco = v => v ? '✅' : '❌';
     
-    // Logika opcjonalnej rehabilitacji i wizyt
     const rL = p.rehabilitacja ? '✅ W standardzie' : '🟡 Opcja dodatkowa';
     const wL = p.wizyty_domowe ? '✅ Dostępne' : '❌ Brak';
 
     let html = `
-      <!-- SEKCJA 1: Twarde liczby (Przeniesione na samą górę) -->
       <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Specjalizacje</div>
-          <div>${val(p.liczba_specjalizacji)}</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Specjalizacje</div><div>${val(p.liczba_specjalizacji)}</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Badania Lab.</div>
-          <div>${val(p.liczba_badan_lab)}</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Badania Lab.</div><div>${val(p.liczba_badan_lab)}</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">RTG (Limity)</div>
-          <div>${val(p.liczba_rtg)}</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">RTG (Limity)</div><div>${val(p.liczba_rtg)}</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tomografia TK</div>
-          <div>${val(p.liczba_tk)}</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tomografia TK</div><div>${val(p.liczba_tk)}</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rezonans MRI</div>
-          <div>${val(p.liczba_mri)}</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rezonans MRI</div><div>${val(p.liczba_mri)}</div>
         </div>
       </div>
-
-      <!-- SEKCJA 2: Listy badań (Przeniesione wyżej) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
           <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-4">
-            <h4 class="text-sm font-black text-brand-navy uppercase">Lista Specjalizacji</h4>
-            <span class="bg-brand-navy text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${specs.length} szt.</span>
+            <h4 class="text-sm font-black text-brand-navy uppercase">Lista Specjalizacji</h4><span class="bg-brand-navy text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${specs.length} szt.</span>
           </div>
           <div class="max-h-[250px] overflow-y-auto custom-scroll pr-2">
-            ${specs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1 ml-1">${specs.map(s => `<li>${s.specjalizacja_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm text-center italic py-4">Brak wgranej listy specjalizacji.</p>`}
+            ${specs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1 ml-1">${specs.map(s => `<li>${s.specjalizacja_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm text-center italic py-4">Brak wgranej listy.</p>`}
           </div>
         </div>
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
           <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-4">
-            <h4 class="text-sm font-black text-brand-navy uppercase">Zakres Badań Lab.</h4>
-            <span class="bg-brand-navy text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${labs.length} szt.</span>
+            <h4 class="text-sm font-black text-brand-navy uppercase">Zakres Badań Lab.</h4><span class="bg-brand-navy text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${labs.length} szt.</span>
           </div>
           <div class="max-h-[250px] overflow-y-auto custom-scroll pr-2">
-            ${labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1 ml-1">${labs.map(s => `<li>${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm text-center italic py-4">Brak wgranej listy badań.</p>`}
+            ${labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1 ml-1">${labs.map(s => `<li>${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm text-center italic py-4">Brak wgranej listy.</p>`}
           </div>
         </div>
       </div>
-
-      <!-- SEKCJA 3: Warunki & Zakres (Przeniesione niżej) -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
           <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Warunki dostępu i obsługi</h4>
@@ -552,7 +649,6 @@ async function showPackageDetails(pkgId) {
             <div class="flex justify-between"><span class="text-slate-500">Minimalna liczba pracowników:</span> <strong class="text-brand-navy">${p.min_pracownicy||'–'}</strong></div>
           </div>
         </div>
-
         <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
           <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Usługi Dodatkowe</h4>
           <div class="space-y-3 text-sm font-semibold">
@@ -588,7 +684,6 @@ async function selectProvider(provId, provNazwa){
   document.querySelectorAll('.prov-row').forEach(r=>r.classList.remove('active'));
   document.getElementById('provrow_'+provId).classList.add('active');
   activeProv=provId;
-
   document.getElementById('pkgPanelHint').classList.add('hidden');
   document.getElementById('pkgPanel').classList.remove('hidden');
   document.getElementById('pkgPanelSub').textContent=provNazwa;
@@ -596,7 +691,6 @@ async function selectProvider(provId, provNazwa){
 
   if(!providerPkgs[provId]){
     const d=await apiGet('pakiety',`select=id,nazwa,tier,dostawca_id&dostawca_id=eq.${provId}&aktywna=eq.true`);
-    // Sortowanie: Normalne najpierw (po tier), Pakiety Senior na koniec
     if(d) d.sort((a,b)=>{
       let aS = (a.nazwa||'').toLowerCase().includes('senior');
       let bS = (b.nazwa||'').toLowerCase().includes('senior');
@@ -619,7 +713,6 @@ function renderPkgGrid(){
     const div=document.createElement('div');
     div.className='pkg-chip flex items-center justify-between gap-2' + (sel?' sel':'') + (isSenior?' senior':'');
     div.id='pkgchip_'+pk.id;
-    
     div.innerHTML=`
       <div class="flex items-center gap-2 truncate pr-2">
         <span class="text-[10px] font-black px-1.5 py-0.5 rounded ${isSenior?'bg-amber-200 text-amber-800':'bg-slate-100 text-slate-500'}">T${pk.tier}</span>
@@ -639,8 +732,7 @@ function togglePkg(pkgId, pkgNazwa, tier, provId, isSenior){
     if(Object.keys(selectedPkgs).length>=6){ showNotif('compare','Maksymalnie 6 pakietów do porównania.','border-red-500 bg-red-50 text-red-700');return; }
     selectedPkgs[pkgId]={id:pkgId,nazwa:pkgNazwa,tier,dostawca_id:provId,dostawca_nazwa:prov?prov.nazwa:'', isSenior};
   }
-  renderPkgGrid(); // Przerysowuje całą siatkę (szybkie i bezpieczne dla klas)
-  updateSelCount(); updateSelectedBar(); updateProvCnt(provId);
+  renderPkgGrid(); updateSelCount(); updateSelectedBar(); updateProvCnt(provId);
 }
 
 function updateSelCount(){ document.getElementById('selCount').textContent=Object.keys(selectedPkgs).length+' zaznaczonych'; }
@@ -670,7 +762,6 @@ function clearAll(){ const pids=new Set(Object.values(selectedPkgs).map(p=>p.dos
 // ─── PORÓWNANIE (Logika renderowania ulepszona) ─────────
 const isValid = v => v !== null && v !== undefined && v !== '' && String(v).toLowerCase() !== 'null' && String(v).toLowerCase() !== 'nan';
 const fNum = v => isValid(v) ? `<strong class="text-lg">${v}</strong>` : '<span class="text-slate-300">–</span>';
-const fVal = v => isValid(v) ? v : '<span class="text-slate-300">–</span>';
 
 const ROWS=[
   {label:'Sieć Medyczna',      key:'dostawca_nazwa',        fmt:v=>`<span class="font-black text-brand-navy text-sm">${v||'–'}</span>`},
@@ -706,7 +797,6 @@ async function runComparison(){
   const data=await fetchEnhancedPackages(`select=*&id=in.(${ids.join(',')})`);
   if(!data||!data.length){showNotif('compare','Błąd bazy danych.','border-red-500 bg-red-50 text-red-700');return;}
 
-  // Sortowanie wyjściowe: Senior na koniec
   data.sort((a,b)=>{
     let aS = (a.pakiet_nazwa||a.nazwa||'').toLowerCase().includes('senior');
     let bS = (b.pakiet_nazwa||b.nazwa||'').toLowerCase().includes('senior');
@@ -714,20 +804,11 @@ async function runComparison(){
     return (a.tier||0) - (b.tier||0);
   });
 
-  // Mock placówek na podstawie inputu (Docelowo z bazy)
   const locCity = document.getElementById('locCity').value.trim();
-  if(locCity) {
-    data.forEach(d => {
-      // Losujemy wartość na potrzeby dema jeśli wpisano miasto
-      d._placowki_mock = Math.floor(Math.random() * 15) + 1 + " plac.";
-    });
-  } else {
-    data.forEach(d => d._placowki_mock = null);
-  }
+  if(locCity) { data.forEach(d => d._placowki_mock = Math.floor(Math.random() * 15) + 1 + " plac."); } 
+  else { data.forEach(d => d._placowki_mock = null); }
 
-  lastCompData=data;
-  renderCompTable(lastCompData);
-  renderPriceSection(lastCompData);
+  lastCompData=data; renderCompTable(lastCompData); renderPriceSection(lastCompData);
   showNotif('compare','Zestawienie wygenerowane pomyślnie.','border-emerald-500 bg-emerald-50 text-emerald-700');
 }
 
@@ -740,14 +821,10 @@ function renderCompTable(sorted){
   html+=`</tr></thead><tbody>`;
   
   ROWS.forEach((row,ri)=>{
-    // Ukrywamy wiersz placówek jeśli użytkownik nie wpisał miasta
     if(row.key === '_placowki_mock' && !locCity) return;
     if(row.key === '_placowki_mock' && locCity) row.label = `Placówki: ${locCity}`;
 
-    if(row.sep){
-      html+=`<tr><td colspan="${sorted.length+1}" class="p-3 bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-y border-slate-200">${row.sep}</td></tr>`;
-      return;
-    }
+    if(row.sep){ html+=`<tr><td colspan="${sorted.length+1}" class="p-3 bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-y border-slate-200">${row.sep}</td></tr>`; return; }
     const vals=sorted.map(p=>p[row.key]);
     let bestIdx=-1,worstIdx=-1;
     if(row.num){
@@ -771,8 +848,7 @@ function renderCompTable(sorted){
   });
   html+=`</tbody></table>`;
   document.getElementById('compTableWrap').innerHTML=html;
-  document.getElementById('comparisonResult').classList.remove('hidden');
-  document.getElementById('comparisonResult').scrollIntoView({behavior:'smooth'});
+  document.getElementById('comparisonResult').classList.remove('hidden'); document.getElementById('comparisonResult').scrollIntoView({behavior:'smooth'});
 }
 
 // ─── SEKCJA SKŁADEK ─────────────────────────────────────
@@ -828,7 +904,7 @@ function exportPDF(){
   body+=`</tr></thead><tbody>`;
   
   ROWS.forEach(row=>{
-    if(row.key === '_placowki_mock') return; // Pomijamy mock placówek w PDF
+    if(row.key === '_placowki_mock') return; 
     if(row.sep){body+=`<tr class="sep"><td colspan="${sorted.length+1}">${row.sep}</td></tr>`;return;}
     
     const vals=sorted.map(p=>{
@@ -850,9 +926,7 @@ function exportPDF(){
     body+=`<tr><td class="lbl">${row.label}</td>`;
     vals.forEach((v,ci)=>{
       let disp=v;
-      if(v===true)disp='TAK';else if(v===false){
-        disp=row.key==='rehabilitacja'?'Opcja':'NIE'; // Specjalne obsłużenie opcji
-      }
+      if(v===true)disp='TAK';else if(v===false){ disp=row.key==='rehabilitacja'?'Opcja':'NIE'; }
       else if(isValid(v)&&row.key==='cena_grup_mies')disp=parseFloat(v).toFixed(2)+' zł';
       else if(!isValid(v))disp='–';
       body+=`<td class="${bestIdx===ci?'best':worstIdx===ci?'worst':''}" style="text-align:center">${disp}</td>`;
