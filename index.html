@@ -523,40 +523,32 @@ async function checkDbStatus(){
   const d=await apiGet('dostawcy','select=id&aktywny=eq.true');
   if(d){
     txt.textContent='Połączono'; dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500';
-    document.getElementById('statusProviders').textContent=d.length; // Liczba unikalnych pokaże się po przeliczeniu
+    document.getElementById('statusProviders').textContent=d.length; 
     const p=await apiGet('pakiety','select=id&aktywna=eq.true');
     document.getElementById('statusPackages').textContent=p?p.length:'–';
   }
 }
 
-// 🔥 NOWOŚĆ: Tarcza anty-duplikatowa dla listy dostawców
+// 🔥 Tarcza anty-duplikatowa dla listy dostawców
 async function loadProvidersFromDB(){
   const d=await apiGet('dostawcy','select=id,nazwa,skrot&aktywny=eq.true&order=nazwa');
   let merged = {};
   
   if(d){
     d.forEach(p => {
-      // Standaryzacja nazwy: ucinamy spacje i robimy wielkie litery ("Polmed" -> "POLMED")
       let norm = p.nazwa.trim().toUpperCase();
-      
-      // Wyjątek, aby po odczyszczeniu wyświetlało się tak, jak lubisz
       if(norm === 'TU ZDROWIE!!!' || norm === 'TUZDROWIE') norm = 'TU ZDROWIE';
 
       if(!merged[norm]) {
-        // Zapisujemy nowy elegancki wpis, używając tablicy do zbierania ID
         merged[norm] = { idArr: [p.id], nazwa: norm, idStr: p.id.toString() };
       } else {
-        // Jeśli nazwa się powtórzy, po prostu doklejamy drugie ID do tablicy (np. id: [5, 12])
         merged[norm].idArr.push(p.id);
         merged[norm].idStr = merged[norm].idArr.join('-');
       }
     });
   }
   
-  // Sortujemy alfabetycznie złączoną listę
   allProviders = Object.values(merged).sort((a,b) => a.nazwa.localeCompare(b.nazwa));
-  
-  // Aktualizujemy wyświetlany status na faktyczną, czystą ilość
   document.getElementById('statusProviders').textContent = allProviders.length;
   
   buildProvList();
@@ -567,11 +559,9 @@ function populateAllSelects(){
   ['libProvider','calcProvider'].forEach(id=>{
     const el=document.getElementById(id);if(!el) return;
     while(el.options.length>1) el.remove(1);
-    // Value w selectach to teraz połączone ID rozdzielone przecinkiem (np. "5,12")
     allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.idArr.join(',');o.textContent=p.nazwa;el.appendChild(o);});
   });
   
-  // Wyszukiwarka placówek szuka po TAGACH, więc tu wpisujemy sam tekst nazwy
   const clinEl=document.getElementById('clinProv');
   if(clinEl){
     while(clinEl.options.length>1) clinEl.remove(1);
@@ -680,11 +670,10 @@ async function runSearch() {
 
 // ─── KALKULATOR ─────────────────────────────────────────
 async function calcLoadPackages() {
-  const provId = document.getElementById('calcProvider').value; // tu wpada np. "5,12"
+  const provId = document.getElementById('calcProvider').value; 
   const el = document.getElementById('calcPackageList');
   el.innerHTML = '<div class="col-span-full text-slate-400 text-sm"><div class="loader inline-block align-middle mr-2"></div>Ładowanie pakietów...</div>';
   let q = 'select=*&aktywna=eq.true';
-  // FIX: używamy in.() zamiast eq., dzięki czemu Supabase wyłapie pakiety ze wszystkich zduplikowanych ID!
   if(provId) q += `&dostawca_id=in.(${provId})`;
   const d = await fetchEnhancedPackages(q);
   allCalcPkgs = d || [];
@@ -798,7 +787,8 @@ async function searchClinics(){
   if(name) query += `&or=(nazwa_oddzialu.ilike.*${encodeURIComponent(name)}*,siec_bazowa.ilike.*${encodeURIComponent(name)}*)`;
   
   if(provVal && provName !== '— Wszyscy Partnerzy —') {
-    query += `&dostawcy_tagi=cs.%7B%22${encodeURIComponent(provName)}%22%7D`;
+    // Cofnięcie błędnej zmiany z cudzysłowami - czysty, sprawdzony format:
+    query += `&dostawcy_tagi=cs.%7B${encodeURIComponent(provName)}%7D`;
   }
 
   const data = await apiGet('placowki_medyczne', query);
@@ -968,7 +958,6 @@ function buildProvList(){
   allProviders.forEach(p=>{
     const row=document.createElement('div');
     row.className='prov-box flex flex-row items-center justify-start p-3 border-2 border-slate-100 rounded-xl bg-white relative cursor-pointer min-h-[45px] gap-2';
-    // Używamy stringa z idków np. "2-5"
     row.id='provrow_'+p.idStr;
     row.innerHTML=`
       <div class="chk flex-shrink-0" id="provchk_${p.idStr}"></div>
@@ -979,7 +968,6 @@ function buildProvList(){
   });
 }
 
-// Otrzymuje ujednoliconą nazwę i tablicę wszystkich powiązanych ID
 async function selectProvider(provIdStr, provIdArr, provNazwa){
   document.querySelectorAll('.prov-box').forEach(r=>r.classList.remove('active'));
   document.getElementById('provrow_'+provIdStr).classList.add('active');
@@ -990,7 +978,6 @@ async function selectProvider(provIdStr, provIdArr, provNazwa){
   document.getElementById('pkgGrid').innerHTML='<div class="flex gap-2 items-center text-slate-400 text-sm col-span-2 py-10"><div class="loader"></div>Pobieranie wariantów...</div>';
 
   if(!providerPkgs[provIdStr]){
-    // FIX: Szukamy pakietów ze WSZYSTKICH zduplikowanych ID
     const d=await apiGet('pakiety',`select=id,nazwa,tier,dostawca_id&dostawca_id=in.(${provIdArr.join(',')})&aktywna=eq.true`);
     if(d) d.sort((a,b)=>{
       let aS = (a.nazwa||'').toLowerCase().includes('senior');
