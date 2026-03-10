@@ -200,17 +200,17 @@
     <p class="text-sm text-slate-500 mb-6">Przeszukuj i mapuj placówki fizyczne według miejscowości, powiatu, nazwy i tagów dostawców.</p>
     
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-      <div><label class="lbl">Miejscowość</label><input type="text" id="clinCity" class="inp" placeholder="np. Warszawa"></div>
-      <div><label class="lbl">Powiat</label><input type="text" id="clinPowiat" class="inp" placeholder="np. poznański"></div>
+      <div><label class="lbl">Miejscowość</label><input type="text" id="clinCity" class="inp" placeholder="np. Warszawa" onkeydown="if(event.key==='Enter') searchClinics()"></div>
+      <div><label class="lbl">Powiat</label><input type="text" id="clinPowiat" class="inp" placeholder="np. poznański" onkeydown="if(event.key==='Enter') searchClinics()"></div>
       
       <div class="ac-wrap md:col-span-2">
         <label class="lbl">Nazwa Sieci / Placówki</label>
-        <input type="text" id="clinName" class="inp" placeholder="Zacznij wpisywać np. AL..." autocomplete="off" oninput="acClinic(this.value)" onblur="setTimeout(()=>document.getElementById('acClinList').classList.add('hidden'),200)">
+        <input type="text" id="clinName" class="inp" placeholder="Zacznij wpisywać np. AL..." autocomplete="off" oninput="acClinic(this.value)" onblur="setTimeout(()=>document.getElementById('acClinList').classList.add('hidden'),200)" onkeydown="if(event.key==='Enter') searchClinics()">
         <ul id="acClinList" class="ac-list hidden"></ul>
       </div>
 
       <div><label class="lbl">Dostępne dla sieci</label>
-        <select id="clinProv" class="inp">
+        <select id="clinProv" class="inp" onchange="searchClinics()">
           <option value="">— Wszyscy Partnerzy —</option>
         </select>
       </div>
@@ -762,13 +762,15 @@ async function searchClinics(){
   if(name) query += `&or=(nazwa_oddzialu.ilike.*${encodeURIComponent(name)}*,siec_bazowa.ilike.*${encodeURIComponent(name)}*)`;
   
   if(provVal && provName !== '— Wszyscy Partnerzy —') {
-    query += `&dostawcy_tagi=cs.{${encodeURIComponent(provName)}}`;
+    // FIX: Bezpieczne formatowanie cudzysłowów dla wartości ze spacjami w tablicach PostgREST!
+    // np. zamiast cs.{TU ZDROWIE} będzie cs.{"TU ZDROWIE"}
+    query += `&dostawcy_tagi=cs.%7B%22${encodeURIComponent(provName)}%22%7D`;
   }
 
   const data = await apiGet('placowki_medyczne', query);
   
-  if(!data || !data.length) {
-    hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów.';
+  if(!Array.isArray(data) || !data.length) {
+    hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów lub wystąpił błąd zapytania.';
     return;
   }
   
