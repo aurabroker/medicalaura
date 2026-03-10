@@ -523,25 +523,60 @@ async function checkDbStatus(){
   const d=await apiGet('dostawcy','select=id&aktywny=eq.true');
   if(d){
     txt.textContent='Połączono'; dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500';
-    document.getElementById('statusProviders').textContent=d.length;
+    document.getElementById('statusProviders').textContent=d.length; // Liczba unikalnych pokaże się po przeliczeniu
     const p=await apiGet('pakiety','select=id&aktywna=eq.true');
     document.getElementById('statusPackages').textContent=p?p.length:'–';
   }
 }
 
+// 🔥 NOWOŚĆ: Tarcza anty-duplikatowa dla listy dostawców
 async function loadProvidersFromDB(){
   const d=await apiGet('dostawcy','select=id,nazwa,skrot&aktywny=eq.true&order=nazwa');
-  allProviders=d||[];
+  let merged = {};
+  
+  if(d){
+    d.forEach(p => {
+      // Standaryzacja nazwy: ucinamy spacje i robimy wielkie litery ("Polmed" -> "POLMED")
+      let norm = p.nazwa.trim().toUpperCase();
+      
+      // Wyjątek, aby po odczyszczeniu wyświetlało się tak, jak lubisz
+      if(norm === 'TU ZDROWIE!!!' || norm === 'TUZDROWIE') norm = 'TU ZDROWIE';
+
+      if(!merged[norm]) {
+        // Zapisujemy nowy elegancki wpis, używając tablicy do zbierania ID
+        merged[norm] = { idArr: [p.id], nazwa: norm, idStr: p.id.toString() };
+      } else {
+        // Jeśli nazwa się powtórzy, po prostu doklejamy drugie ID do tablicy (np. id: [5, 12])
+        merged[norm].idArr.push(p.id);
+        merged[norm].idStr = merged[norm].idArr.join('-');
+      }
+    });
+  }
+  
+  // Sortujemy alfabetycznie złączoną listę
+  allProviders = Object.values(merged).sort((a,b) => a.nazwa.localeCompare(b.nazwa));
+  
+  // Aktualizujemy wyświetlany status na faktyczną, czystą ilość
+  document.getElementById('statusProviders').textContent = allProviders.length;
+  
   buildProvList();
   populateAllSelects();
 }
 
 function populateAllSelects(){
-  ['libProvider','calcProvider','clinProv'].forEach(id=>{
+  ['libProvider','calcProvider'].forEach(id=>{
     const el=document.getElementById(id);if(!el) return;
     while(el.options.length>1) el.remove(1);
-    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nazwa;el.appendChild(o);});
+    // Value w selectach to teraz połączone ID rozdzielone przecinkiem (np. "5,12")
+    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.idArr.join(',');o.textContent=p.nazwa;el.appendChild(o);});
   });
+  
+  // Wyszukiwarka placówek szuka po TAGACH, więc tu wpisujemy sam tekst nazwy
+  const clinEl=document.getElementById('clinProv');
+  if(clinEl){
+    while(clinEl.options.length>1) clinEl.remove(1);
+    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.nazwa;o.textContent=p.nazwa;clinEl.appendChild(o);});
+  }
 }
 
 // ─── ADMIN & USTAWIENIA ─────────────────────────────────
@@ -645,11 +680,12 @@ async function runSearch() {
 
 // ─── KALKULATOR ─────────────────────────────────────────
 async function calcLoadPackages() {
-  const provId = document.getElementById('calcProvider').value;
+  const provId = document.getElementById('calcProvider').value; // tu wpada np. "5,12"
   const el = document.getElementById('calcPackageList');
   el.innerHTML = '<div class="col-span-full text-slate-400 text-sm"><div class="loader inline-block align-middle mr-2"></div>Ładowanie pakietów...</div>';
   let q = 'select=*&aktywna=eq.true';
-  if(provId) q += `&dostawca_id=eq.${provId}`;
+  // FIX: używamy in.() zamiast eq., dzięki czemu Supabase wyłapie pakiety ze wszystkich zduplikowanych ID!
+  if(provId) q += `&dostawca_id=in.(${provId})`;
   const d = await fetchEnhancedPackages(q);
   allCalcPkgs = d || [];
   allCalcPkgs.sort((a,b)=>a.dostawca_nazwa.localeCompare(b.dostawca_nazwa) || (a.tier||0)-(b.tier||0));
@@ -762,8 +798,6 @@ async function searchClinics(){
   if(name) query += `&or=(nazwa_oddzialu.ilike.*${encodeURIComponent(name)}*,siec_bazowa.ilike.*${encodeURIComponent(name)}*)`;
   
   if(provVal && provName !== '— Wszyscy Partnerzy —') {
-    // FIX: Bezpieczne formatowanie cudzysłowów dla wartości ze spacjami w tablicach PostgREST!
-    // np. zamiast cs.{TU ZDROWIE} będzie cs.{"TU ZDROWIE"}
     query += `&dostawcy_tagi=cs.%7B%22${encodeURIComponent(provName)}%22%7D`;
   }
 
@@ -934,34 +968,37 @@ function buildProvList(){
   allProviders.forEach(p=>{
     const row=document.createElement('div');
     row.className='prov-box flex flex-row items-center justify-start p-3 border-2 border-slate-100 rounded-xl bg-white relative cursor-pointer min-h-[45px] gap-2';
-    row.id='provrow_'+p.id;
+    // Używamy stringa z idków np. "2-5"
+    row.id='provrow_'+p.idStr;
     row.innerHTML=`
-      <div class="chk flex-shrink-0" id="provchk_${p.id}"></div>
+      <div class="chk flex-shrink-0" id="provchk_${p.idStr}"></div>
       <span class="prov-name text-xs font-black text-brand-navy leading-tight whitespace-nowrap overflow-hidden text-ellipsis">${p.nazwa}</span>
-      <span id="provcnt_${p.id}" class="absolute top-1 right-1 text-[9px] font-bold text-white bg-brand-pink px-1.5 py-0.5 rounded-full hidden shadow-sm"></span>`;
-    row.onclick=()=>selectProvider(p.id, p.nazwa);
+      <span id="provcnt_${p.idStr}" class="absolute top-1 right-1 text-[9px] font-bold text-white bg-brand-pink px-1.5 py-0.5 rounded-full hidden shadow-sm"></span>`;
+    row.onclick=()=>selectProvider(p.idStr, p.idArr, p.nazwa);
     el.appendChild(row);
   });
 }
 
-async function selectProvider(provId, provNazwa){
+// Otrzymuje ujednoliconą nazwę i tablicę wszystkich powiązanych ID
+async function selectProvider(provIdStr, provIdArr, provNazwa){
   document.querySelectorAll('.prov-box').forEach(r=>r.classList.remove('active'));
-  document.getElementById('provrow_'+provId).classList.add('active');
-  activeProv=provId;
+  document.getElementById('provrow_'+provIdStr).classList.add('active');
+  activeProv=provIdStr;
   document.getElementById('pkgPanelHint').classList.add('hidden');
   document.getElementById('pkgPanel').classList.remove('hidden');
   document.getElementById('pkgPanelSub').textContent=provNazwa;
   document.getElementById('pkgGrid').innerHTML='<div class="flex gap-2 items-center text-slate-400 text-sm col-span-2 py-10"><div class="loader"></div>Pobieranie wariantów...</div>';
 
-  if(!providerPkgs[provId]){
-    const d=await apiGet('pakiety',`select=id,nazwa,tier,dostawca_id&dostawca_id=eq.${provId}&aktywna=eq.true`);
+  if(!providerPkgs[provIdStr]){
+    // FIX: Szukamy pakietów ze WSZYSTKICH zduplikowanych ID
+    const d=await apiGet('pakiety',`select=id,nazwa,tier,dostawca_id&dostawca_id=in.(${provIdArr.join(',')})&aktywna=eq.true`);
     if(d) d.sort((a,b)=>{
       let aS = (a.nazwa||'').toLowerCase().includes('senior');
       let bS = (b.nazwa||'').toLowerCase().includes('senior');
       if(aS && !bS) return 1; if(!aS && bS) return -1;
       return (a.tier||0) - (b.tier||0);
     });
-    providerPkgs[provId]=d||[];
+    providerPkgs[provIdStr]=d||[];
   }
   renderPkgGrid();
 }
@@ -989,21 +1026,21 @@ function renderPkgGrid(){
   });
 }
 
-function togglePkg(pkgId, pkgNazwa, tier, provId, isSenior){
-  const prov=allProviders.find(p=>p.id===provId);
+function togglePkg(pkgId, pkgNazwa, tier, provIdStr, isSenior){
+  const prov=allProviders.find(p=>p.idStr===provIdStr);
   if(selectedPkgs[pkgId]){ delete selectedPkgs[pkgId]; }
   else {
     if(Object.keys(selectedPkgs).length>=6){ showNotif('compare','Maksymalnie 6 pakietów do porównania.','border-red-500 bg-red-50 text-red-700');return; }
-    selectedPkgs[pkgId]={id:pkgId,nazwa:pkgNazwa,tier,dostawca_id:provId,dostawca_nazwa:prov?prov.nazwa:'', isSenior};
+    selectedPkgs[pkgId]={id:pkgId,nazwa:pkgNazwa,tier,dostawca_id:provIdStr,dostawca_nazwa:prov?prov.nazwa:'', isSenior};
   }
-  renderPkgGrid(); updateSelCount(); updateSelectedBar(); updateProvCnt(provId);
+  renderPkgGrid(); updateSelCount(); updateSelectedBar(); updateProvCnt(provIdStr);
 }
 
 function updateSelCount(){ document.getElementById('selCount').textContent=Object.keys(selectedPkgs).length+' zaznaczonych'; }
-function updateProvCnt(provId){
-  const el=document.getElementById('provcnt_'+provId), chk=document.getElementById('provchk_'+provId);
+function updateProvCnt(provIdStr){
+  const el=document.getElementById('provcnt_'+provIdStr), chk=document.getElementById('provchk_'+provIdStr);
   if(!el) return;
-  const cnt=Object.values(selectedPkgs).filter(p=>p.dostawca_id===provId).length;
+  const cnt=Object.values(selectedPkgs).filter(p=>p.dostawca_id===provIdStr).length;
   el.textContent=cnt?cnt:''; el.classList.toggle('hidden',!cnt);
   if(chk){chk.className='chk'+(cnt?' on':'');chk.textContent=cnt?'✓':'';}
 }
@@ -1202,9 +1239,13 @@ function exportPDF(){
 async function loadLibrary(){
   const el=document.getElementById('libraryTable'); el.innerHTML='<div class="flex justify-center py-10"><div class="loader"></div></div>';
   document.getElementById('editPanel').classList.add('hidden');
-  const provId=document.getElementById('libProvider').value, tier=document.getElementById('libTier').value;
+  
+  // Wartość to teraz połączone ID np "5,12"
+  const provId=document.getElementById('libProvider').value; 
+  const tier=document.getElementById('libTier').value;
+  
   let params='select=*&aktywna=eq.true';
-  if(provId) params+=`&dostawca_id=eq.${provId}`;
+  if(provId) params+=`&dostawca_id=in.(${provId})`;
   if(tier)   params+=`&tier=eq.${tier}`;
   
   const data=await fetchEnhancedPackages(params);
