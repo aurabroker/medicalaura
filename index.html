@@ -82,10 +82,10 @@
     <span class="text-slate-500">Pakiety: <strong id="statusPackages">–</strong></span>
   </div>
 
-  <!-- GŁÓWNY PANEL WYBORU (Równe panele) -->
+  <!-- GŁÓWNY PANEL WYBORU -->
   <div class="bg-white border border-slate-200 rounded-3xl shadow-sm mb-5 overflow-hidden flex flex-col md:flex-row min-h-[450px]">
     
-    <!-- LEWA: lista dostawców w układzie GRID (boxach) -->
+    <!-- LEWA: lista dostawców w układzie GRID -->
     <div class="w-full md:w-1/2 bg-slate-50 border-r border-slate-200 flex flex-col">
       <div class="p-5 border-b border-slate-200 bg-slate-100 flex justify-between items-center">
         <div>
@@ -135,7 +135,7 @@
   <div class="bg-white border-2 border-brand-navy rounded-3xl p-6 shadow-xl mb-6 flex flex-col md:flex-row gap-6 items-center justify-between">
     <div class="flex-grow w-full md:w-auto">
       <h3 class="text-base font-black text-brand-navy flex items-center gap-2"><span>🗺️</span> Rzeczywista dostępność placówek</h3>
-      <p class="text-xs text-slate-500 mt-1">Podaj miasto, a system zliczy dokładną ilość punktów medycznych na podstawie tagów z bazy danych dla każdego zaznaczonego pakietu.</p>
+      <p class="text-xs text-slate-500 mt-1">Podaj miasto, a system zliczy dokładną ilość punktów medycznych na podstawie tagów z bazy.</p>
       <div class="mt-3 relative w-full md:max-w-md">
         <input type="text" id="locCity" placeholder="np. Warszawa, Kraków..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-pink font-bold" />
       </div>
@@ -242,8 +242,7 @@
             <th class="p-4 text-left">Placówka / Nazwa (Kliknij)</th>
             <th class="p-4 text-left">Miasto i Adres</th>
             <th class="p-4 text-left">Powiat</th>
-            <th class="p-4 text-left">Kontakt i Godziny</th>
-            <th class="p-4 text-left">Partnerzy</th>
+            <th class="p-4 text-left">Partnerzy (Dostawcy)</th>
           </tr>
         </thead>
         <tbody id="clinResultBody" class="divide-y divide-slate-100"></tbody>
@@ -270,7 +269,7 @@
       <div class="flex items-center gap-3 text-slate-400 justify-center py-10"><div class="loader"></div>Ładowanie...</div>
     </div>
   </div>
-  <!-- EDYCJA (Zaktualizowana) -->
+  <!-- EDYCJA -->
   <div id="editPanel" class="hidden bg-white border-2 border-brand-navy rounded-3xl p-8 shadow-xl mt-6">
     <div class="flex justify-between items-center mb-5">
       <h2 class="text-lg font-bold text-brand-navy">✏️ Edycja: <span id="editPkgName" class="text-brand-pink"></span></h2>
@@ -279,7 +278,7 @@
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5">
       <div><label class="lbl">Specjalizacje</label><input type="number" id="eSpecjalizacje" class="inp"/></div>
       <div><label class="lbl">Badania lab.</label><input type="number" id="eBadania" class="inp"/></div>
-      <!-- Poniższe pola są zablokowane (zliczają się same z bazy) -->
+      <!-- Poniższe pola są zablokowane -->
       <div><label class="lbl text-slate-400">RTG (Zliczane z bazy)</label><input type="text" id="eRtg" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
       <div><label class="lbl text-slate-400">Tomografia (TK)</label><input type="text" id="eTk" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
       <div><label class="lbl text-slate-400">Rezonans (MRI)</label><input type="text" id="eMri" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
@@ -340,7 +339,7 @@
 
 <div id="tab-learn" class="tab-panel">
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
-    <h2 class="text-xl font-bold text-brand-navy mb-2">Dodaj pakiety via SQL (God Prompt)</h2>
+    <h2 class="text-xl font-bold text-brand-navy mb-2">Dodaj pakiety via SQL</h2>
     <textarea id="sqlInput" rows="10" class="w-full bg-slate-800 text-green-400 font-mono text-sm p-4 rounded-2xl outline-none focus:ring-2 focus:ring-brand-pink" placeholder="-- INSERT INTO pakiety ..."></textarea>
     <div class="flex gap-3 mt-4">
       <button onclick="validateSQL()" class="bg-brand-emerald text-white font-bold py-3 px-6 rounded-xl">✔ Waliduj SQL</button>
@@ -369,7 +368,7 @@
 
 </main>
 
-<!-- ══════════════════════════════ MODALE (Zaloguj, Szczegóły Pakietu, Szczegóły Placówki) -->
+<!-- ══════════════════════════════ MODALE -->
 <div id="adminAuthModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
   <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
     <div class="text-center mb-6">
@@ -400,7 +399,7 @@
   </div>
 </div>
 
-<!-- Przebudowany Modal Szczegółów Pakietu -->
+<!-- Modal Szczegółów Pakietu -->
 <div id="pkgDetailsModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
   <div class="bg-white rounded-3xl w-full max-w-[1200px] max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
     <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-start bg-brand-navy text-white relative">
@@ -619,12 +618,17 @@ async function searchClinics(){
   
   let html = '';
   data.forEach((p, idx) => {
-    let tagsCount = p.dostawcy_tagi ? p.dostawcy_tagi.length : 0;
+    let tagsInline = '';
+    if(p.dostawcy_tagi && Array.isArray(p.dostawcy_tagi) && p.dostawcy_tagi.length > 0){
+      tagsInline = p.dostawcy_tagi.map(t => `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-[10px] font-black uppercase px-2 py-1 rounded-md mr-1 mb-1">${t}</span>`).join('');
+    } else {
+      tagsInline = '<span class="text-[10px] text-slate-400 italic">Brak partnerów</span>';
+    }
 
     html += `
-      <tr class="hover:bg-slate-50 transition-colors">
+      <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="openClinicModal(${idx})">
         <td class="p-4">
-          <div class="font-bold text-brand-pink hover:underline cursor-pointer text-base" onclick="openClinicModal(${idx})">${p.nazwa_oddzialu || p.siec_bazowa}</div>
+          <div class="font-bold text-brand-pink hover:underline text-base">${p.nazwa_oddzialu || p.siec_bazowa}</div>
           <div class="text-[10px] text-slate-500 font-black uppercase tracking-wider mt-0.5">WŁAŚCICIEL: ${p.siec_bazowa || 'Niezależna'}</div>
         </td>
         <td class="p-4">
@@ -632,14 +636,8 @@ async function searchClinics(){
           <div class="text-xs text-slate-500 mt-0.5">${p.adres}</div>
         </td>
         <td class="p-4 text-xs font-semibold text-slate-600">${p.powiat || '–'}</td>
-        <td class="p-4">
-          <div class="text-xs font-bold text-slate-700">📞 ${p.telefon || 'Brak w bazie'}</div>
-          <div class="text-xs text-slate-500 mt-0.5">🕒 ${p.godziny_otwarcia || 'Brak danych'}</div>
-        </td>
-        <td class="p-4">
-          <button onclick="openClinicModal(${idx})" class="bg-slate-100 border border-slate-200 text-brand-navy text-[10px] font-black uppercase px-3 py-1.5 rounded-lg hover:bg-slate-200">
-            Pokaż partnerów (${tagsCount})
-          </button>
+        <td class="p-4 max-w-[250px] md:max-w-[400px]">
+          ${tagsInline}
         </td>
       </tr>
     `;
@@ -670,7 +668,7 @@ function openClinicModal(idx) {
   document.getElementById('clinicDetailsModal').classList.add('flex');
 }
 
-// ─── MODAL SZCZEGÓŁÓW PAKIETU (Wielokolumnowe laboratoria) ───
+// ─── MODAL SZCZEGÓŁÓW PAKIETU ───
 async function showPackageDetails(pkgId) {
   const modal = document.getElementById('pkgDetailsModal');
   const mBody = document.getElementById('pdmBody');
@@ -730,7 +728,7 @@ async function showPackageDetails(pkgId) {
           <span class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full">${labs.length} wpisów</span>
         </div>
         <div class="list-columns">
-          ${labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-pink">${labs.map(s => `<li class="break-inside-avoid">${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wgranej listy. Edytuj pakiet lub użyj SQL, aby dodać listę badań.</p>`}
+          ${labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-pink">${labs.map(s => `<li class="break-inside-avoid">${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wgranej listy. Użyj SQL, aby dodać listę badań.</p>`}
         </div>
       </div>
 
@@ -908,18 +906,33 @@ async function runComparison(){
     return (a.tier||0) - (b.tier||0);
   });
 
-  // Prawdziwe zapytanie do bazy placówek!
+  // Inteligentne zliczanie placówek odporne na awarie w danych z bazy
   const locCity = document.getElementById('locCity').value.trim();
   if(locCity) {
-    const clinicsData = await apiGet('placowki_medyczne', `select=dostawcy_tagi&miejscowosc=ilike.*${encodeURIComponent(locCity)}*&limit=2000`);
-    const clinics = clinicsData || [];
+    try {
+      const clinicsData = await apiGet('placowki_medyczne', `select=dostawcy_tagi&miejscowosc=ilike.*${encodeURIComponent(locCity)}*&limit=2000`);
+      const clinics = Array.isArray(clinicsData) ? clinicsData : [];
 
-    data.forEach(d => {
-      const provName = (d.dostawca_nazwa || '').toUpperCase();
-      // Szukamy ile placówek ma w swoich tagach nazwę dostawcy
-      const count = clinics.filter(c => c.dostawcy_tagi && c.dostawcy_tagi.some(t => t.toUpperCase() === provName)).length;
-      d._placowki_mock = count > 0 ? `${count} placówek` : "0 placówek";
-    });
+      data.forEach(d => {
+        const provName = (d.dostawca_nazwa || '').toUpperCase();
+        
+        const count = clinics.filter(c => {
+          if (!c || !c.dostawcy_tagi) return false;
+          
+          let tags = Array.isArray(c.dostawcy_tagi) ? c.dostawcy_tagi : String(c.dostawcy_tagi).replace(/[{}]/g, '').split(',');
+              
+          return tags.some(t => {
+             let safeTag = t.trim().toUpperCase();
+             return provName.includes(safeTag) || safeTag.includes(provName);
+          });
+        }).length;
+        
+        d._placowki_mock = count > 0 ? `${count} placówek` : "Brak placówek";
+      });
+    } catch (err) {
+      console.error("Błąd połączenia z bazą placówek:", err);
+      data.forEach(d => d._placowki_mock = "Błąd bazy");
+    }
   } else {
     data.forEach(d => d._placowki_mock = null);
   }
