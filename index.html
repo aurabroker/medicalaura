@@ -131,20 +131,11 @@
     <div id="selectedChips" class="flex flex-wrap gap-2"></div>
   </div>
 
-  <!-- PANEL ZINTEGROWANY: Miejscowość + Generowanie PDF -->
-  <div class="bg-white border-2 border-brand-navy rounded-3xl p-6 shadow-xl mb-6 flex flex-col md:flex-row gap-6 items-center justify-between">
-    <div class="flex-grow w-full md:w-auto">
-      <h3 class="text-base font-black text-brand-navy flex items-center gap-2"><span>🗺️</span> Rzeczywista dostępność placówek</h3>
-      <p class="text-xs text-slate-500 mt-1">Podaj miasto, a system zliczy dokładną ilość punktów medycznych na podstawie tagów z bazy.</p>
-      <div class="mt-3 relative w-full md:max-w-md">
-        <input type="text" id="locCity" placeholder="np. Warszawa, Kraków..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-pink font-bold" />
-      </div>
-    </div>
-    <div class="shrink-0 w-full md:w-auto">
-      <button onclick="runComparison()" class="w-full md:w-auto bg-brand-pink hover:bg-rose-700 text-white font-black py-4 px-10 rounded-xl shadow-lg text-lg transition-transform active:scale-95 flex items-center justify-center gap-3">
-        <span>▶</span> Generuj Zestawienie
-      </button>
-    </div>
+  <!-- GENERUJ -->
+  <div class="flex items-center gap-4 mb-6">
+    <button onclick="runComparison()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-4 px-10 rounded-xl shadow-lg text-lg transition-transform active:scale-95 flex items-center justify-center gap-3">
+      <span>▶</span> Generuj Zestawienie
+    </button>
   </div>
 
   <!-- WYNIKI -->
@@ -474,7 +465,7 @@ async function apiPatch(table,params,body){
   try{ const r=await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(body)}); return r.ok; }catch(e){return false}
 }
 
-// ─── INTELIGENTNE ZLICZANIE (Nowość: Regex dla TK/MR) ───
+// ─── INTELIGENTNE ZLICZANIE (Regex dla TK/MR) ───
 async function fetchEnhancedPackages(params) {
   let data = await apiGet('pakiety_pelne', params);
   if (!data || !data.length) return data;
@@ -886,7 +877,6 @@ const ROWS=[
   {sep:'Warunki'},
   {label:'Dostęp POZ',         key:'czas_oczekiwania_poz',  fmt:v=>isValid(v)?`≤${v} dni`:'–', num:true, low:true},
   {label:'Dostęp Specjalista', key:'czas_oczekiwania_spec', fmt:v=>isValid(v)?`≤${v} dni`:'–', num:true, low:true},
-  {label:'Ilość Placówek',     key:'_placowki_mock',        fmt:v=>v?'<strong class="text-brand-navy">'+v+'</strong>':'–'},
   {sep:'Składka z oferty'},
   {label:'Składka pracownicza',key:'cena_grup_mies',        fmt:v=>isValid(v)?`<strong class="text-brand-pink text-xl">${parseFloat(v).toFixed(2)} zł</strong>`:'<em class="text-slate-300 text-[10px] uppercase">brak wyceny</em>',num:true,low:true},
 ];
@@ -906,43 +896,11 @@ async function runComparison(){
     return (a.tier||0) - (b.tier||0);
   });
 
-  // Inteligentne zliczanie placówek odporne na awarie w danych z bazy
-  const locCity = document.getElementById('locCity').value.trim();
-  if(locCity) {
-    try {
-      const clinicsData = await apiGet('placowki_medyczne', `select=dostawcy_tagi&miejscowosc=ilike.*${encodeURIComponent(locCity)}*&limit=2000`);
-      const clinics = Array.isArray(clinicsData) ? clinicsData : [];
-
-      data.forEach(d => {
-        const provName = (d.dostawca_nazwa || '').toUpperCase();
-        
-        const count = clinics.filter(c => {
-          if (!c || !c.dostawcy_tagi) return false;
-          
-          let tags = Array.isArray(c.dostawcy_tagi) ? c.dostawcy_tagi : String(c.dostawcy_tagi).replace(/[{}]/g, '').split(',');
-              
-          return tags.some(t => {
-             let safeTag = t.trim().toUpperCase();
-             return provName.includes(safeTag) || safeTag.includes(provName);
-          });
-        }).length;
-        
-        d._placowki_mock = count > 0 ? `${count} placówek` : "Brak placówek";
-      });
-    } catch (err) {
-      console.error("Błąd połączenia z bazą placówek:", err);
-      data.forEach(d => d._placowki_mock = "Błąd bazy");
-    }
-  } else {
-    data.forEach(d => d._placowki_mock = null);
-  }
-
   lastCompData=data; renderCompTable(lastCompData); renderPriceSection(lastCompData);
   showNotif('compare','Zestawienie wygenerowane pomyślnie.','border-emerald-500 bg-emerald-50 text-emerald-700');
 }
 
 function renderCompTable(sorted){
-  const locCity = document.getElementById('locCity').value.trim();
   let html=`<table class="w-full text-sm border-collapse min-w-[700px]">
     <thead><tr class="bg-slate-100 text-slate-500 text-[10px] uppercase tracking-wider">
       <th class="p-4 text-left w-52 border-r border-slate-200 sticky left-0 bg-slate-100 z-10 shadow-[1px_0_0_#e2e8f0]">Porównywany Element</th>`;
@@ -950,9 +908,6 @@ function renderCompTable(sorted){
   html+=`</tr></thead><tbody>`;
   
   ROWS.forEach((row,ri)=>{
-    if(row.key === '_placowki_mock' && !locCity) return;
-    if(row.key === '_placowki_mock' && locCity) row.label = `Placówki: ${locCity}`;
-
     if(row.sep){ html+=`<tr><td colspan="${sorted.length+1}" class="p-3 bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-y border-slate-200">${row.sep}</td></tr>`; return; }
     const vals=sorted.map(p=>p[row.key]);
     let bestIdx=-1,worstIdx=-1;
@@ -1027,16 +982,12 @@ async function savePrices(){
 
 function exportPDF(){
   const sorted=lastCompData;
-  const locCity = document.getElementById('locCity').value.trim();
   const fmap=(id,p)=>({cena_grup_mies:'pi_par_'+p.id}[id]);
   let body=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:10px;color:#1e293b;padding:20px}h1{font-size:16px;color:#1e294a;margin-bottom:2px}.sub{font-size:9px;color:#64748b;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#1e294a;color:#fff;padding:7px 9px;font-size:9px;text-transform:uppercase;text-align:center}th.first{text-align:left}td{padding:6px 9px;border-bottom:1px solid #e2e8f0;font-size:9px}td.lbl{font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.04em}.sep td{background:#f1f5f9;font-weight:800;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#1e294a;padding:7px 9px}tr:nth-child(even):not(.sep) td{background:#f8fafc}.best{background:#ecfdf5;color:#065f46;font-weight:800}.worst{background:#fef2f2;color:#b91c1c;font-weight:700}.foot{font-size:8px;color:#94a3b8;text-align:right;margin-top:16px}</style></head><body><h1>MEDICALAURA — Zestawienie Porównawcze</h1><div class="sub">Data: ${new Date().toLocaleString('pl-PL')}</div><table><thead><tr><th class="first">Parametr</th>`;
   sorted.forEach(p=>body+=`<th>${p.dostawca_nazwa}<br/><span style="font-weight:400;opacity:.8">${p.pakiet_nazwa || p.nazwa}</span></th>`);
   body+=`</tr></thead><tbody>`;
   
   ROWS.forEach(row=>{
-    if(row.key === '_placowki_mock' && !locCity) return;
-    let label = row.key === '_placowki_mock' && locCity ? `Placówki: ${locCity}` : row.label;
-
     if(row.sep){body+=`<tr class="sep"><td colspan="${sorted.length+1}">${row.sep}</td></tr>`;return;}
     
     const vals=sorted.map(p=>{
@@ -1055,7 +1006,7 @@ function exportPDF(){
         if(bi!==wi){bestIdx=bi;worstIdx=wi;}
       }
     }
-    body+=`<tr><td class="lbl">${label}</td>`;
+    body+=`<tr><td class="lbl">${row.label}</td>`;
     vals.forEach((v,ci)=>{
       let disp=v;
       if(v===true)disp='TAK';else if(v===false){ disp=row.key==='rehabilitacja'?'Opcja':'NIE'; }
