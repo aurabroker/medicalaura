@@ -55,7 +55,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.9</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.10</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -423,6 +423,9 @@
 </div>
 
 <script>
+// ─── BEZPIECZNE KODOWANIE ZNAKÓW DLA AUTOCOMPLETE ───────
+const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // ─── STATE ──────────────────────────────────────────────
 let SB_URL = localStorage.getItem('ma_url')||'';
 let SB_KEY = localStorage.getItem('ma_key')||'';
@@ -635,7 +638,7 @@ async function acInput(val) {
     const d = await apiGet(table, `select=${col}&${col}=ilike.*${encodeURIComponent(val)}*&limit=10`);
     if(d && d.length) {
       const unique = [...new Set(d.map(x => x[col]))];
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${u}';acHide();runSearch()">${u.replace(new RegExp(val,'gi'),'<strong>$&</strong>')}</li>`).join('');
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}';acHide();runSearch()">${u.replace(new RegExp(escRx(val),'gi'),'<strong>$&</strong>')}</li>`).join('');
       list.classList.remove('hidden');
     } else {
       list.classList.add('hidden');
@@ -705,6 +708,7 @@ async function runSearch() {
     grouped[norm].push(p);
   });
 
+  // W tej wersji ujednolicone zostały ramki pakietów dla czystszego widoku
   let html = '';
   for(const [prov, items] of Object.entries(grouped)) {
     html += `
@@ -808,7 +812,8 @@ async function acCity(q) {
     const data = await apiGet('placowki_medyczne', `select=miejscowosc&miejscowosc=ilike.*${encodeURIComponent(q)}*&limit=20`);
     if(data && data.length) {
       const unique = [...new Set(data.map(d => d.miejscowosc))].slice(0, 10);
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinCity').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acCityList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(q,'gi'),'<strong>$&</strong>')}</li>`).join('');
+      if(!unique.length) { list.classList.add('hidden'); return; }
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinCity').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acCityList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(escRx(q),'gi'),'<strong>$&</strong>')}</li>`).join('');
       list.classList.remove('hidden');
     } else {
       list.classList.add('hidden');
@@ -832,7 +837,7 @@ async function acClinic(q) {
       });
       const unique = [...new Set(matches)].slice(0, 10);
       if(!unique.length) { list.classList.add('hidden'); return; }
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinName').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acClinList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(q,'gi'),'<strong>$&</strong>')}</li>`).join('');
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinName').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acClinList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(escRx(q),'gi'),'<strong>$&</strong>')}</li>`).join('');
       list.classList.remove('hidden');
     } else {
       list.classList.add('hidden');
@@ -840,6 +845,7 @@ async function acClinic(q) {
   }, 300);
 }
 
+// Główna funkcja szukająca placówek (oczyszczona do apiGet)
 async function searchClinics(){
   const city = document.getElementById('clinCity').value.trim();
   const powiat = document.getElementById('clinPowiat').value.trim();
@@ -871,24 +877,15 @@ async function searchClinics(){
       query += `&or=(nazwa_oddzialu.ilike.*${encName}*,siec_bazowa.ilike.*${encName}*)`;
   }
 
-  let data;
-  try {
-    const response = await fetch(`${SB_URL}/rest/v1/placowki_medyczne?${query}`, {
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}
-    });
-    if (!response.ok) {
-        hint.textContent = 'Błąd pobierania danych z bazy. Spróbuj zmienić parametry wyszukiwania.';
-        hint.className = 'text-xs text-red-600 font-bold mt-2';
-        return;
-    }
-    data = await response.json();
-  } catch(e) {
-    hint.textContent = 'Błąd sieci. Brak odpowiedzi serwera.';
-    hint.className = 'text-xs text-red-600 font-bold mt-2';
-    return;
+  const data = await apiGet('placowki_medyczne', query);
+  
+  if(data === null) {
+      hint.textContent = 'Błąd pobierania danych z bazy. Spróbuj zmienić parametry wyszukiwania.';
+      hint.className = 'text-xs text-red-600 font-bold mt-2';
+      return;
   }
   
-  if(!Array.isArray(data) || !data.length) {
+  if(!Array.isArray(data) || data.length === 0) {
     hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów.';
     hint.className = 'text-xs text-slate-500 font-bold mt-2';
     return;
@@ -910,7 +907,7 @@ async function searchClinics(){
   }
 
   if(!filteredData.length) {
-    hint.textContent = 'Znaleziono placówki, ale żadna nie obsługuje wybranej sieci ubezpieczeniowej.';
+    hint.textContent = 'Znaleziono placówki w tej lokalizacji, ale żadna nie jest powiązana z wybraną siecią.';
     hint.className = 'text-xs text-slate-500 font-bold mt-2';
     return;
   }
