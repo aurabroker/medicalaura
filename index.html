@@ -55,7 +55,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.7</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.9</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -187,7 +187,7 @@
   <div id="searchResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
     <div class="bg-brand-navy p-5">
       <h3 id="searchResultTitle" class="text-base font-bold text-white"></h3>
-      <p class="text-xs text-slate-400 mt-0.5">Automatyczne dziedziczenie (pakiety wyższego szczebla również zawierają to badanie)</p>
+      <p class="text-xs text-slate-400 mt-0.5">Wykaz pakietów zawierających to świadczenie (w tym dziedziczenie dla wariantów wyższego szczebla)</p>
     </div>
     <div id="searchResultBody" class="p-5"></div>
   </div>
@@ -200,16 +200,24 @@
     <p class="text-sm text-slate-500 mb-6">Przeszukuj i mapuj placówki fizyczne według miejscowości, powiatu, nazwy i tagów dostawców.</p>
     
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-      <div><label class="lbl">Miejscowość</label><input type="text" id="clinCity" class="inp" placeholder="np. Warszawa" onkeydown="if(event.key==='Enter') searchClinics()"></div>
-      <div><label class="lbl">Powiat</label><input type="text" id="clinPowiat" class="inp" placeholder="np. poznański" onkeydown="if(event.key==='Enter') searchClinics()"></div>
+      <div class="relative">
+        <label class="lbl">Miejscowość</label>
+        <input type="text" id="clinCity" class="inp" placeholder="np. Warszawa" autocomplete="off" oninput="acCity(this.value)" onblur="setTimeout(()=>document.getElementById('acCityList').classList.add('hidden'),200)" onkeydown="if(event.key==='Enter') { document.getElementById('acCityList').classList.add('hidden'); searchClinics(); }">
+        <ul id="acCityList" class="ac-list hidden"></ul>
+      </div>
+      <div>
+        <label class="lbl">Powiat</label>
+        <input type="text" id="clinPowiat" class="inp" placeholder="np. poznański" onkeydown="if(event.key==='Enter') searchClinics()">
+      </div>
       
-      <div class="ac-wrap md:col-span-2">
+      <div class="ac-wrap md:col-span-2 relative">
         <label class="lbl">Nazwa Sieci / Placówki</label>
-        <input type="text" id="clinName" class="inp" placeholder="Zacznij wpisywać np. AL..." autocomplete="off" oninput="acClinic(this.value)" onblur="setTimeout(()=>document.getElementById('acClinList').classList.add('hidden'),200)" onkeydown="if(event.key==='Enter') searchClinics()">
+        <input type="text" id="clinName" class="inp" placeholder="Zacznij wpisywać np. AL..." autocomplete="off" oninput="acClinic(this.value)" onblur="setTimeout(()=>document.getElementById('acClinList').classList.add('hidden'),200)" onkeydown="if(event.key==='Enter') { document.getElementById('acClinList').classList.add('hidden'); searchClinics(); }">
         <ul id="acClinList" class="ac-list hidden"></ul>
       </div>
 
-      <div><label class="lbl">Dostępne dla sieci</label>
+      <div>
+        <label class="lbl">Dostępne dla sieci</label>
         <select id="clinProv" class="inp" onchange="searchClinics()">
           <option value="">— Wszyscy Partnerzy —</option>
         </select>
@@ -269,7 +277,6 @@
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5">
       <div><label class="lbl">Specjalizacje</label><input type="number" id="eSpecjalizacje" class="inp"/></div>
       <div><label class="lbl">Badania lab.</label><input type="number" id="eBadania" class="inp"/></div>
-      <!-- Poniższe pola są zablokowane -->
       <div><label class="lbl text-slate-400">RTG (Zliczane z bazy)</label><input type="text" id="eRtg" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
       <div><label class="lbl text-slate-400">Tomografia (TK)</label><input type="text" id="eTk" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
       <div><label class="lbl text-slate-400">Rezonans (MRI)</label><input type="text" id="eMri" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
@@ -280,17 +287,18 @@
       <div><label class="lbl">Dzieci do (lat)</label><input type="number" id="eDzieci" class="inp"/></div>
       <div><label class="lbl">Karencja (dni)</label><input type="number" id="eKarencja" class="inp"/></div>
     </div>
-    <div class="mb-5"><label class="lbl">Zasięg terytorialny</label><input type="text" id="eZasieg" class="inp"/></div>
     
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 p-4 bg-slate-50 rounded-xl border border-slate-200">
-      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none text-slate-400"><input type="checkbox" id="eTele" checked disabled class="w-4 h-4 accent-slate-400">Telemedycyna (Standard)</label>
-      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none text-slate-400"><input type="checkbox" id="eCiaza" checked disabled class="w-4 h-4 accent-slate-400">Ciąża (Standard)</label>
-      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRehab" class="w-4 h-4 accent-brand-navy">Rehabilitacja (Zaznacz jeśli w standardzie)</label>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5 p-4 bg-slate-50 rounded-xl border border-slate-200">
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eTele" class="w-4 h-4 accent-brand-navy">Telemedycyna</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eCiaza" class="w-4 h-4 accent-brand-navy">Prowadzenie Ciąży</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRehab" class="w-4 h-4 accent-brand-navy">Rehabilitacja</label>
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eStom" class="w-4 h-4 accent-brand-navy">Stomatologia</label>
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="ePsych" class="w-4 h-4 accent-brand-navy">Psychiatria</label>
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eWizyty" class="w-4 h-4 accent-brand-navy">Wizyty domowe</label>
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eSzpital" class="w-4 h-4 accent-brand-navy">Szpital 1-dniowy</label>
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eHotline" class="w-4 h-4 accent-brand-navy">Hotline 24h</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRefundacja" class="w-4 h-4 accent-brand-navy">Refundacja</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eSwoboda" class="w-4 h-4 accent-brand-navy">Swoboda leczenia</label>
     </div>
     <div class="border-t border-slate-200 pt-5 mb-5">
       <h3 class="text-xs font-bold text-slate-500 uppercase mb-3">💰 Składka pracownicza (zł)</h3>
@@ -474,7 +482,7 @@ async function fetchEnhancedPackages(params) {
   
   const ids = data.map(d => d.id).join(',');
   if (ids) {
-    const raw = await apiGet('pakiety', `select=id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do&id=in.(${ids})`);
+    const raw = await apiGet('pakiety', `select=id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do,telemedycyna,ciaza,rehabilitacja,stomatologia,opieka_psychiatryczna,wizyty_domowe,leczenie_szpitalne,hotline_24h,refundacja,swoboda_leczenia&id=in.(${ids})`);
     
     const labsData = await apiGet('pakiety_badania', `select=pakiet_id,badanie_nazwa&pakiet_id=in.(${ids})`);
     const labC={}, rtgC={}, tkC={}, mriC={};
@@ -494,7 +502,10 @@ async function fetchEnhancedPackages(params) {
       data.forEach(d => {
         const r = raw.find(x => x.id === d.id);
         if (r) {
-          ['czas_oczekiwania_poz','czas_oczekiwania_spec','karencja_dni','min_pracownicy','wiek_dzieci_do'].forEach(k => {
+          // Kopiowanie nadpisanych i nowo dodanych pól boolowskich
+          ['czas_oczekiwania_poz','czas_oczekiwania_spec','karencja_dni','min_pracownicy','wiek_dzieci_do',
+           'telemedycyna','ciaza','rehabilitacja','stomatologia','opieka_psychiatryczna','wizyty_domowe',
+           'leczenie_szpitalne','hotline_24h','refundacja','swoboda_leczenia'].forEach(k => {
             if(r[k] !== null && r[k] !== undefined) d[k] = r[k];
           });
           d.liczba_specjalizacji = r.liczba_specjalizacji; 
@@ -648,7 +659,6 @@ async function runSearch() {
   const table = searchType === 'spec' ? 'pakiety_specjalizacje' : 'pakiety_badania';
   const col = searchType === 'spec' ? 'specjalizacja_nazwa' : 'badanie_nazwa';
   
-  // 1. Zlokalizuj wszystkie pakiety, w których usługa jest wgrana WPROST
   const d = await apiGet(table, `select=pakiet_id,${col}&${col}=ilike.*${encodeURIComponent(q)}*`);
   if(!d || !d.length) { hint.textContent = 'Brak wyników w bazie.'; return; }
   
@@ -657,10 +667,8 @@ async function runSearch() {
   
   if(!directPkgs || !directPkgs.length) { hint.textContent = 'Błąd pobierania danych bazowych.'; return; }
 
-  // Normalizator nazw, żeby powiązać "TU ZDROWIE" z "TU ZDROWIE!!!" itp.
   const getNorm = (raw) => { let n = (raw||'').trim().toUpperCase(); if(n==='TU ZDROWIE!!!'||n==='TUZDROWIE') return 'TU ZDROWIE'; return n; };
 
-  // 2. Znajdź MINIMALNY tier (poziom) na którym badanie jest dostępne u każdego z ubezpieczycieli
   const minTierMap = {};
   directPkgs.forEach(p => {
     const norm = getNorm(p.dostawca_nazwa);
@@ -670,7 +678,6 @@ async function runSearch() {
     }
   });
 
-  // 3. Pobierz WSZYSTKIE pakiety z bazy dla tych ubezpieczycieli, by móc przypisać im to badanie "z góry"
   const targetIds = [];
   Object.keys(minTierMap).forEach(norm => {
     const prov = allProviders.find(ap => ap.nazwa === norm);
@@ -680,15 +687,13 @@ async function runSearch() {
   let finalPkgs = [];
   if(targetIds.length > 0) {
     const cascadePkgs = await fetchEnhancedPackages(`select=*&dostawca_id=in.(${targetIds.join(',')})&aktywna=eq.true`);
-    // Filtrujemy tylko pakiety, które są RÓWNE lub WYŻSZE (>=) w hierarchii niż pakiet bazowy
     finalPkgs = cascadePkgs.filter(p => {
       const norm = getNorm(p.dostawca_nazwa);
       return minTierMap[norm] !== undefined && (p.tier || 0) >= minTierMap[norm];
     });
   }
 
-  // 4. Budowanie eleganckiego widoku
-  hint.textContent = `Analiza zakończona. Znaleziono ${directPkgs.length} pakietów bazowych. Dziedziczenie aktywowało dodatkowe ${finalPkgs.length - directPkgs.length} wariantów wyższego rzędu.`;
+  hint.textContent = `Poniżej znajdziesz pakiety zawierające wybrane świadczenie (w tym warianty wyższego szczebla)`;
   document.getElementById('searchResultTitle').textContent = `Wyniki dla: ${q}`;
   
   finalPkgs.sort((a,b)=>getNorm(a.dostawca_nazwa).localeCompare(getNorm(b.dostawca_nazwa)) || (a.tier||0)-(b.tier||0));
@@ -707,19 +712,12 @@ async function runSearch() {
         <div class="absolute top-0 left-0 w-1 h-full bg-brand-navy"></div>
         <h4 class="font-black text-brand-navy text-sm uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">${prov}</h4>
         <div class="flex flex-wrap gap-2.5">
-          ${items.map(p => {
-            const isDirect = pids.includes(p.id);
-            // Pakiety "wpisane wprost" mają zieloną ramkę, a "z dziedziczenia" mają ramkę szarą
-            return `
-            <button onclick="showPackageDetails(${p.id})" class="text-xs bg-white border-2 ${isDirect ? 'border-brand-emerald text-brand-navy' : 'border-slate-200 text-slate-500'} hover:border-brand-pink hover:text-brand-pink transition-colors px-4 py-2.5 rounded-xl shadow-sm font-bold flex items-center gap-2" title="${isDirect ? 'Badanie wpisane wprost w wykaz' : 'Pakiet posiada to badanie, ponieważ dziedziczy usługi z niższych pakietów'}">
+          ${items.map(p => `
+            <button onclick="showPackageDetails(${p.id})" class="text-xs bg-white border-2 border-slate-200 hover:border-brand-pink hover:text-brand-pink transition-colors px-4 py-2.5 rounded-xl shadow-sm font-bold flex items-center gap-2 text-slate-700">
               ${p.pakiet_nazwa||p.nazwa}
-              <span class="${isDirect ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'} px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black">T${p.tier}</span>
+              <span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black">T${p.tier}</span>
             </button>
-          `}).join('')}
-        </div>
-        <div class="mt-4 pt-3 border-t border-slate-50 text-[10px] text-slate-400 font-semibold flex flex-wrap gap-4">
-           <span class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-brand-emerald"></div> Wpisane wprost z bazy</span>
-           <span class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-slate-200"></div> Automatyczne przypisanie (wyższy wariant)</span>
+          `).join('')}
         </div>
       </div>
     `;
@@ -798,31 +796,48 @@ function calcUpdate() {
 }
 
 
-// ─── WYSZUKIWARKA PLACÓWEK Z AUTOCOMPLETE ────────────────
+// ─── WYSZUKIWARKA PLACÓWEK Z AUTOCOMPLETE I OCHRONĄ BŁĘDÓW ───
+
+// Autocomplete dla Miasta
+let acCityTimer;
+async function acCity(q) {
+  clearTimeout(acCityTimer);
+  const list = document.getElementById('acCityList');
+  if(!q || q.length < 2) { list.classList.add('hidden'); return; }
+  acCityTimer = setTimeout(async () => {
+    const data = await apiGet('placowki_medyczne', `select=miejscowosc&miejscowosc=ilike.*${encodeURIComponent(q)}*&limit=20`);
+    if(data && data.length) {
+      const unique = [...new Set(data.map(d => d.miejscowosc))].slice(0, 10);
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinCity').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acCityList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(q,'gi'),'<strong>$&</strong>')}</li>`).join('');
+      list.classList.remove('hidden');
+    } else {
+      list.classList.add('hidden');
+    }
+  }, 300);
+}
+
+// Autocomplete dla Nazwy Sieci/Placówki
 let acClinTimer;
 async function acClinic(q) {
   clearTimeout(acClinTimer);
   const list = document.getElementById('acClinList');
   if(!q || q.length < 2) { list.classList.add('hidden'); return; }
-  
   acClinTimer = setTimeout(async () => {
-    const data = await apiGet('placowki_medyczne', `select=siec_bazowa&siec_bazowa=ilike.*${encodeURIComponent(q)}*&limit=15`);
-    if(!data || !data.length) { list.classList.add('hidden'); return; }
-    
-    const unique = [...new Set(data.map(d => d.siec_bazowa))];
-    
-    list.innerHTML = unique.map(s => {
-      const hi = s.replace(new RegExp(`(${q})`, 'gi'), '<strong>$1</strong>');
-      return `<li class="ac-item" onmousedown="selectAcClin('${s.replace(/'/g,"\\'").replace(/"/g, "&quot;")}')">Szukaj sieci: ${hi}</li>`;
-    }).join('');
-    list.classList.remove('hidden');
+    const data = await apiGet('placowki_medyczne', `select=siec_bazowa,nazwa_oddzialu&or=(siec_bazowa.ilike.*${encodeURIComponent(q)}*,nazwa_oddzialu.ilike.*${encodeURIComponent(q)}*)&limit=30`);
+    if(data && data.length) {
+      let matches = [];
+      data.forEach(d => {
+         if(d.siec_bazowa && d.siec_bazowa.toLowerCase().includes(q.toLowerCase())) matches.push(d.siec_bazowa);
+         if(d.nazwa_oddzialu && d.nazwa_oddzialu.toLowerCase().includes(q.toLowerCase())) matches.push(d.nazwa_oddzialu);
+      });
+      const unique = [...new Set(matches)].slice(0, 10);
+      if(!unique.length) { list.classList.add('hidden'); return; }
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinName').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acClinList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(q,'gi'),'<strong>$&</strong>')}</li>`).join('');
+      list.classList.remove('hidden');
+    } else {
+      list.classList.add('hidden');
+    }
   }, 300);
-}
-
-function selectAcClin(val) {
-  document.getElementById('clinName').value = val;
-  document.getElementById('acClinList').classList.add('hidden');
-  searchClinics(); 
 }
 
 async function searchClinics(){
@@ -851,7 +866,10 @@ async function searchClinics(){
   let query = 'select=*&limit=1000'; 
   if(city) query += `&miejscowosc=ilike.*${encodeURIComponent(city)}*`;
   if(powiat) query += `&powiat=ilike.*${encodeURIComponent(powiat)}*`;
-  if(name) query += `&or=(nazwa_oddzialu.ilike.*${encodeURIComponent(name)}*,siec_bazowa.ilike.*${encodeURIComponent(name)}*)`;
+  if(name) {
+      const encName = encodeURIComponent(name);
+      query += `&or=(nazwa_oddzialu.ilike.*${encName}*,siec_bazowa.ilike.*${encName}*)`;
+  }
 
   let data;
   try {
@@ -859,7 +877,7 @@ async function searchClinics(){
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}
     });
     if (!response.ok) {
-        hint.textContent = 'Błąd pobierania danych z bazy. Spróbuj zmodyfikować kryteria.';
+        hint.textContent = 'Błąd pobierania danych z bazy. Spróbuj zmienić parametry wyszukiwania.';
         hint.className = 'text-xs text-red-600 font-bold mt-2';
         return;
     }
@@ -892,7 +910,7 @@ async function searchClinics(){
   }
 
   if(!filteredData.length) {
-    hint.textContent = 'Znaleziono placówki w tej lokalizacji, ale żadna nie jest powiązana z wybraną siecią.';
+    hint.textContent = 'Znaleziono placówki, ale żadna nie obsługuje wybranej sieci ubezpieczeniowej.';
     hint.className = 'text-xs text-slate-500 font-bold mt-2';
     return;
   }
@@ -995,9 +1013,6 @@ async function showPackageDetails(pkgId) {
 
     const val = v => (v !== null && v !== undefined && v !== '' && v > 0) ? `<span class="text-2xl font-black text-brand-navy">${v}</span>` : '<span class="text-xs text-red-500 font-bold mt-1 block">Brak wpisu</span>';
     const boolIco = v => v ? '✅' : '❌';
-    
-    const rL = p.rehabilitacja ? '✅ W standardzie' : '🟡 Opcja dodatkowa';
-    const wL = p.wizyty_domowe ? '✅ Dostępne' : '❌ Brak';
 
     let html = `
       <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -1028,29 +1043,19 @@ async function showPackageDetails(pkgId) {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-          <h4 class="text-sm font-black text-brand-navy uppercase tracking-wide mb-4 border-b border-slate-100 pb-2">Warunki dostępu i obsługi</h4>
-          <div class="space-y-4 text-sm">
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Zasięg terytorialny:</span> <strong class="text-brand-navy text-right">${p.zasieg_placowek||'–'}</strong></div>
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Oczekiwany czas do POZ:</span> <strong class="text-brand-navy">${p.czas_oczekiwania_poz != null ? 'do '+p.czas_oczekiwania_poz+' dni' : '–'}</strong></div>
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Oczekiwany czas do Specjalisty:</span> <strong class="text-brand-navy">${p.czas_oczekiwania_spec != null ? 'do '+p.czas_oczekiwania_spec+' dni' : '–'}</strong></div>
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Karencja (w dniach):</span> <strong class="${p.karencja_dni === 0 ? 'text-emerald-600' : 'text-brand-navy'}">${p.karencja_dni === 0 ? 'Brak' : (p.karencja_dni != null ? p.karencja_dni+' dni' : '–')}</strong></div>
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500">Obejmuje dzieci w wieku do:</span> <strong class="text-brand-navy">${p.wiek_dzieci_do != null ? p.wiek_dzieci_do+' lat' : '–'}</strong></div>
-            <div class="flex justify-between"><span class="text-slate-500">Minimalna liczba pracowników:</span> <strong class="text-brand-navy">${p.min_pracownicy||'–'}</strong></div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-          <h4 class="text-sm font-black text-brand-navy uppercase tracking-wide mb-4 border-b border-slate-100 pb-2">Usługi Dodatkowe</h4>
-          <div class="space-y-4 text-sm font-semibold">
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Telemedycyna:</span> <span>✅ Standard</span></div>
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Prowadzenie Ciąży:</span> <span>✅ Standard</span></div>
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Rehabilitacja:</span> <span>${rL}</span></div>
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Wizyty domowe:</span> <span>${wL}</span></div>
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Szpital 1-dniowy:</span> <span>${boolIco(p.leczenie_szpitalne)}</span></div>
-            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Stomatologia / Psychiatria:</span> <span>${boolIco(p.stomatologia)} / ${boolIco(p.opieka_psychiatryczna)}</span></div>
-            <div class="flex justify-between"><span class="text-slate-500 font-normal">Infolinia medyczna 24h:</span> <span>${boolIco(p.hotline_24h)}</span></div>
-          </div>
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-8">
+        <h4 class="text-sm font-black text-brand-navy uppercase tracking-wide mb-4 border-b border-slate-100 pb-2">Usługi Dodatkowe i Standard Pakietu</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm font-semibold">
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Telemedycyna:</span> <span>${boolIco(p.telemedycyna)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Prowadzenie Ciąży:</span> <span>${boolIco(p.ciaza)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Rehabilitacja:</span> <span>${boolIco(p.rehabilitacja)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Wizyty domowe:</span> <span>${boolIco(p.wizyty_domowe)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Szpital 1-dniowy:</span> <span>${boolIco(p.leczenie_szpitalne)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Stomatologia:</span> <span>${boolIco(p.stomatologia)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Psychiatria:</span> <span>${boolIco(p.opieka_psychiatryczna)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Infolinia medyczna 24h:</span> <span>${boolIco(p.hotline_24h)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Refundacja kosztów leczenia:</span> <span>${boolIco(p.refundacja)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Swoboda leczenia:</span> <span>${boolIco(p.swoboda_leczenia)}</span></div>
         </div>
       </div>
     `;
@@ -1171,17 +1176,17 @@ const ROWS=[
   {label:'RTG',                key:'liczba_rtg',            fmt:fNum, num:true},
   {label:'Tomografia (TK)',    key:'liczba_tk',             fmt:fNum, num:true},
   {label:'Rezonans (MRI)',     key:'liczba_mri',            fmt:fNum, num:true},
-  {sep:'Zakres standardowy i opcje'},
-  {label:'Telemedycyna',       key:'telemedycyna',          fmt:v=>'✅ <span class="text-[10px] text-slate-400">Standard</span>'},
-  {label:'Prowadzenie ciąży',  key:'ciaza',                 fmt:v=>'✅ <span class="text-[10px] text-slate-400">Standard</span>'},
-  {label:'Rehabilitacja',      key:'rehabilitacja',         fmt:v=>v?'✅ <span class="font-bold text-emerald-600 text-xs">Tak</span>':'🟡 <span class="text-amber-600 text-xs font-bold">Opcja</span>'},
+  {sep:'Usługi Dodatkowe'},
+  {label:'Telemedycyna',       key:'telemedycyna',          fmt:v=>v?'✅':'❌'},
+  {label:'Prowadzenie ciąży',  key:'ciaza',                 fmt:v=>v?'✅':'❌'},
+  {label:'Rehabilitacja',      key:'rehabilitacja',         fmt:v=>v?'✅':'❌'},
   {label:'Wizyty domowe',      key:'wizyty_domowe',         fmt:v=>v?'✅':'❌'},
   {label:'Szpital 1-dniowy',   key:'leczenie_szpitalne',    fmt:v=>v?'✅':'❌'},
   {label:'Stomatologia',       key:'stomatologia',          fmt:v=>v?'✅':'❌'},
   {label:'Psychiatria',        key:'opieka_psychiatryczna', fmt:v=>v?'✅':'❌'},
-  {sep:'Warunki'},
-  {label:'Dostęp POZ',         key:'czas_oczekiwania_poz',  fmt:v=>isValid(v)?`≤${v} dni`:'–', num:true, low:true},
-  {label:'Dostęp Specjalista', key:'czas_oczekiwania_spec', fmt:v=>isValid(v)?`≤${v} dni`:'–', num:true, low:true},
+  {label:'Infolinia 24h',      key:'hotline_24h',           fmt:v=>v?'✅':'❌'},
+  {label:'Refundacja',         key:'refundacja',            fmt:v=>v?'✅':'❌'},
+  {label:'Swoboda leczenia',   key:'swoboda_leczenia',      fmt:v=>v?'✅':'❌'},
   {sep:'Składka z oferty'},
   {label:'Składka pracownicza',key:'cena_grup_mies',        fmt:v=>isValid(v)?`<strong class="text-brand-pink text-xl">${parseFloat(v).toFixed(2)} zł</strong>`:'<em class="text-slate-300 text-[10px] uppercase">brak wyceny</em>',num:true,low:true},
 ];
@@ -1337,7 +1342,6 @@ async function loadLibrary(){
   const el=document.getElementById('libraryTable'); el.innerHTML='<div class="flex justify-center py-10"><div class="loader"></div></div>';
   document.getElementById('editPanel').classList.add('hidden');
   
-  // Wartość to teraz połączone ID np "5,12"
   const provId=document.getElementById('libProvider').value; 
   const tier=document.getElementById('libTier').value;
   
@@ -1373,7 +1377,7 @@ async function loadLibrary(){
       <td class="p-3 text-center font-bold">${isValid(p.liczba_specjalizacji)?p.liczba_specjalizacji:'–'}</td>
       <td class="p-3 text-center font-bold">${isValid(p.liczba_badan_lab)?p.liczba_badan_lab:'–'}</td>
       <td class="p-3 text-center text-xs text-slate-500">${isValid(p.liczba_rtg)?p.liczba_rtg:'-'} / ${isValid(p.liczba_tk)?p.liczba_tk:'-'} / ${isValid(p.liczba_mri)?p.liczba_mri:'-'}</td>
-      <td class="p-3 text-center text-[10px]">Standard / Standard / ${p.wizyty_domowe?'✅':'❌'}</td>
+      <td class="p-3 text-center text-[10px]">${p.telemedycyna?'✅':'❌'} / ${p.ciaza?'✅':'❌'} / ${p.wizyty_domowe?'✅':'❌'}</td>
       <td class="p-3 text-center text-xs font-bold ${p.rehabilitacja?'text-emerald-600':'text-amber-600'}">${p.rehabilitacja?'Standard':'Opcja'}</td>
       <td class="p-3 font-black text-center ${p.cena_grup_mies?'text-brand-pink':'text-slate-300'}">${p.cena_grup_mies?parseFloat(p.cena_grup_mies).toFixed(2)+' zł':'Brak'}</td>
       <td class="p-3 text-right"><button onclick="openEdit(${p.id})" class="bg-brand-navy hover:bg-slate-700 text-white text-[10px] uppercase font-bold px-3 py-2 rounded-lg">Edytuj</button></td>
@@ -1394,7 +1398,7 @@ async function openEdit(pkgId){
   document.getElementById('eMri').value = p.liczba_mri || 0;
 
   document.getElementById('eZasieg').value=p.zasieg_placowek||'';
-  const bools={eRehab:'rehabilitacja',eStom:'stomatologia',ePsych:'opieka_psychiatryczna',eWizyty:'wizyty_domowe',eSzpital:'leczenie_szpitalne',eHotline:'hotline_24h'};
+  const bools={eTele:'telemedycyna', eCiaza:'ciaza', eRehab:'rehabilitacja',eStom:'stomatologia',ePsych:'opieka_psychiatryczna',eWizyty:'wizyty_domowe',eSzpital:'leczenie_szpitalne',eHotline:'hotline_24h', eRefundacja:'refundacja', eSwoboda:'swoboda_leczenia'};
   Object.entries(bools).forEach(([id,key])=>document.getElementById(id).checked=!!p[key]);
   document.getElementById('ePriceGrup').value=p.cena_grup_mies||'';
   document.getElementById('editStatus').textContent=''; document.getElementById('editPanel').classList.remove('hidden'); document.getElementById('editPanel').scrollIntoView({behavior:'smooth'});
@@ -1408,14 +1412,21 @@ async function saveEdit(){
     czas_oczekiwania_poz:n('ePoz'),czas_oczekiwania_spec:n('eSpec'),
     min_pracownicy:n('eMinPrac'),wiek_dzieci_do:n('eDzieci'),karencja_dni:n('eKarencja'),
     zasieg_placowek:document.getElementById('eZasieg').value||null,
-    rehabilitacja:document.getElementById('eRehab').checked,stomatologia:document.getElementById('eStom').checked,
-    opieka_psychiatryczna:document.getElementById('ePsych').checked,wizyty_domowe:document.getElementById('eWizyty').checked,
-    leczenie_szpitalne:document.getElementById('eSzpital').checked,hotline_24h:document.getElementById('eHotline').checked,
+    telemedycyna:document.getElementById('eTele').checked,
+    ciaza:document.getElementById('eCiaza').checked,
+    rehabilitacja:document.getElementById('eRehab').checked,
+    stomatologia:document.getElementById('eStom').checked,
+    opieka_psychiatryczna:document.getElementById('ePsych').checked,
+    wizyty_domowe:document.getElementById('eWizyty').checked,
+    leczenie_szpitalne:document.getElementById('eSzpital').checked,
+    hotline_24h:document.getElementById('eHotline').checked,
+    refundacja:document.getElementById('eRefundacja').checked,
+    swoboda_leczenia:document.getElementById('eSwoboda').checked,
     cena_grup_mies:n('ePriceGrup'),
   };
   const ok=await apiPatch('pakiety',`id=eq.${pkgId}`,body);
   const st=document.getElementById('editStatus');
-  st.textContent=ok?'✓ Zapisano.':'✗ Błąd zapisu.'; st.className=`text-sm font-bold ${ok?'text-emerald-600':'text-red-600'}`;
+  st.textContent=ok?'✓ Zapisano do bazy.':'✗ Błąd zapisu.'; st.className=`text-sm font-bold ${ok?'text-emerald-600':'text-red-600'}`;
   if(ok) loadLibrary();
 }
 
