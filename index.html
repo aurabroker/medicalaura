@@ -55,11 +55,11 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.19</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.10</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
-      <button onclick="switchTab('search',this)"  id="btn-search"  class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🤖 Smart Konsultant</button>
+      <button onclick="switchTab('search',this)"  id="btn-search"  class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🔎 Wyszukaj Pakiety</button>
       <button onclick="switchTab('clinics',this)" id="btn-clinics" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🏥 Baza Placówek</button>
       <button onclick="switchTab('library',this)" id="btn-library" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">📚 Biblioteka</button>
       <button onclick="switchTab('calc',this)"    id="btn-calc"    class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧮 Kalkulator</button>
@@ -165,36 +165,31 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════ SMART KONSULTANT (ZAKRESY) -->
+<!-- ══════════════════════════════ WYSZUKAJ (Zakresy) -->
 <div id="tab-search" class="tab-panel">
-  <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6 bg-gradient-to-br from-white to-pink-50/30 relative overflow-hidden">
-    <div class="absolute top-0 right-0 w-32 h-32 bg-brand-pink rounded-bl-full opacity-5 pointer-events-none"></div>
-    
-    <h2 class="text-2xl font-black text-brand-navy mb-2 flex items-center gap-3">
-      🤖 Smart Konsultant Medyczny
-      <span class="text-[10px] bg-brand-pink text-white px-2 py-1 rounded-full uppercase tracking-widest">Wyszukiwarka Usług</span>
-    </h2>
-    <p class="text-sm text-slate-500 mb-8 max-w-3xl">Zapomnij o medycznym żargonie. Opisz problem własnymi słowami (np. <strong class="text-brand-pink">serce, ból głowy, tarczyca, wątroba, mocz</strong>), a system sam sprawdzi dedykowanych specjalistów, badania krwi i diagnostykę w pakietach ubezpieczeniowych!</p>
-    
-    <div class="flex flex-col md:flex-row gap-4 items-center">
-      <div class="ac-wrap w-full md:flex-grow shadow-md rounded-xl">
-        <input type="text" id="searchQuery" placeholder="Co dolega Pacjentowi? (np. serce, cukier, skóra)..." class="w-full text-lg font-black text-brand-navy border-2 border-brand-pink/30 rounded-xl p-5 outline-none focus:border-brand-pink transition-colors h-16" autocomplete="off"
-          oninput="acInput(this.value)" onkeydown="acKeydown(event)" onblur="setTimeout(()=>acHide(),200)"/>
-        <ul id="acList" class="ac-list hidden mt-1 border-brand-pink/20 shadow-xl rounded-xl"></ul>
-      </div>
-      <button onclick="runSearch()" class="w-full md:w-auto bg-brand-navy hover:bg-slate-800 text-white font-black py-5 px-10 rounded-xl shadow-lg transition-transform active:scale-95 text-lg h-16 shrink-0 flex items-center justify-center gap-2">
-        <span>🔎</span> Znajdź Pakiety
-      </button>
+  <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
+    <h2 class="text-xl font-bold text-brand-navy mb-2">🔎 Wyszukiwarka zakresów medycznych</h2>
+    <p class="text-sm text-slate-500 mb-6">Sprawdź jacy dostawcy i w jakich pakietach oferują wybraną specjalizację lub badanie.</p>
+    <div class="flex gap-3 mb-6">
+      <button onclick="setSearchType('spec')" id="stype-spec" class="px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm">Specjalizacja</button>
+      <button onclick="setSearchType('bad')"  id="stype-bad"  class="px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200">Badanie laboratoryjne</button>
     </div>
-    <div id="searchHint" class="mt-4 text-sm text-slate-500 font-semibold h-6"></div>
+    <div class="flex gap-3 items-center">
+      <div class="ac-wrap flex-grow">
+        <input type="text" id="searchQuery" placeholder="np. kardiolog, USG brzucha, morfologia..." class="inp w-full text-base font-bold" autocomplete="off"
+          oninput="acInput(this.value)" onkeydown="acKeydown(event)" onblur="setTimeout(()=>acHide(),200)"/>
+        <ul id="acList" class="ac-list hidden"></ul>
+      </div>
+      <button onclick="runSearch()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-7 rounded-xl shadow-md">Szukaj</button>
+    </div>
+    <div id="searchHint" class="mt-3 text-xs text-slate-400"></div>
   </div>
-  
   <div id="searchResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
     <div class="bg-brand-navy p-5">
       <h3 id="searchResultTitle" class="text-base font-bold text-white"></h3>
-      <p class="text-xs text-slate-400 mt-0.5">Automatyczne powiązania i dziedziczenie dla wariantów wyższego szczebla</p>
+      <p class="text-xs text-slate-400 mt-0.5">Wykaz pakietów zawierających to świadczenie (w tym dziedziczenie dla wariantów wyższego szczebla)</p>
     </div>
-    <div id="searchResultBody" class="p-6 bg-slate-50"></div>
+    <div id="searchResultBody" class="p-5"></div>
   </div>
 </div>
 
@@ -428,47 +423,8 @@
 </div>
 
 <script>
-// ─── BEZPIECZNE KODOWANIE ZNAKÓW DLA AUTOCOMPLETE I WYSZUKIWARKI ───────
+// ─── BEZPIECZNE KODOWANIE ZNAKÓW DLA AUTOCOMPLETE ───────
 const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const pgSafe = (val) => {
-  const cleanVal = val.replace(/"/g, ''); 
-  return encodeURIComponent(`"*${cleanVal}*"`);
-};
-
-// 🔥 SŁOWNIK MEDYCZNY (SMART KONSULTANT) 🔥
-const getMedicalSynonyms = (val) => {
-  const qLower = val.toLowerCase().trim();
-  const dictionary = [
-    { triggers: ['serc', 'zawał', 'kardiolog', 'ciśnien', 'kłuci', 'ekg'], terms: ['kardiolog', 'ekg', 'echo', 'holter', 'próba wysiłkowa', 'lipidogram', 'troponina', 'potas', 'sód', 'ck-mb'] },
-    { triggers: ['głow', 'migren', 'mózg', 'neurolog', 'zawrot'], terms: ['neurolog', 'eeg', 'tomografia głowy', 'rezonans głowy', 'tk głowy', 'mri głowy', 'doppler tętnic'] },
-    { triggers: ['brzuch', 'żołądk', 'żołądek', 'jelit', 'zgag', 'trawien', 'wzdęci'], terms: ['gastrolog', 'jamy brzusznej', 'gastroskopia', 'kolonoskopia', 'helicobacter', 'krew utajona', 'lipaza', 'amylaza'] },
-    { triggers: ['wątrob'], terms: ['hepatolog', 'alat', 'aspat', 'alt', 'ast', 'ggtp', 'bilirubina', 'hcv', 'hbs'] },
-    { triggers: ['tarczyc', 'hashimoto'], terms: ['endokrynolog', 'usg tarczycy', 'tsh', 'ft3', 'ft4', 'anty-tpo', 'anty-tg', 'biopsja tarczycy'] },
-    { triggers: ['cukier', 'cukrzyc', 'insulin'], terms: ['diabetolog', 'glukoza', 'krzywa cukrowa', 'ogtt', 'hemoglobina glikowana', 'insulina', 'peptyd'] },
-    { triggers: ['nerk', 'mocz', 'pęcherz'], terms: ['nefrolog', 'urolog', 'badanie ogólne moczu', 'posiew moczu', 'urokultura', 'kreatynina', 'mocznik', 'kwas moczowy', 'układu moczowego'] },
-    { triggers: ['płuc', 'oddech', 'dusznoś', 'kasz'], terms: ['pulmonolog', 'rtg klatki', 'spirometria'] },
-    { triggers: ['kobiet', 'ciąż', 'miesiączk', 'antykoncepc'], terms: ['ginekolog', 'cytologia', 'piersi', 'mammografia', 'transwaginalne', 'ciąży', 'prolaktyna', 'progesteron', 'estradiol'] },
-    { triggers: ['mężczyzn', 'prostat'], terms: ['urolog', 'psa', 'prostaty', 'testosteron'] },
-    { triggers: ['skór', 'włos', 'paznokc', 'pieprzyk', 'znam', 'trądzik'], terms: ['dermatolog', 'dermatoskopia', 'znamienia'] },
-    { triggers: ['oko', 'ocz', 'wzrok', 'widzen'], terms: ['okulist', 'dna oka', 'pole widzenia', 'ciśnienie wewnątrzgałkowe', 'oct'] },
-    { triggers: ['uch', 'uszy', 'słuch', 'gardł', 'nos', 'zatok', 'chrap'], terms: ['laryngolog', 'audiogram', 'audiolog', 'wymaz z gardła', 'wymaz z nosa', 'zatok'] },
-    { triggers: ['kośc', 'staw', 'kręgosłup', 'kolan', 'plec', 'reumat', 'zwyrodn'], terms: ['ortopeda', 'reumatolog', 'rtg kręgosłupa', 'stawu', 'kwas moczowy', 'ob', 'czynnik reumatoidalny', 'crp'] },
-    { triggers: ['krew', 'anemi', 'żelaz', 'osłabien', 'zmęczen'], terms: ['hematolog', 'morfologia', 'żelazo', 'ferrytyna', 'witamina b12', 'kwas foliowy', 'ob', 'crp', 'd3'] },
-    { triggers: ['alergi', 'uczul', 'wysypk'], terms: ['alergolog', 'ige', 'panel alergologiczny', 'testy skórne', 'odczulanie'] }
-  ];
-  
-  // Zawsze dodajemy to, co wpisał użytkownik, by wyszukało to precyzyjnie niezależnie od powiązań
-  let matchedTerms = [qLower]; 
-  
-  dictionary.forEach(entry => {
-    if (entry.triggers.some(trigger => qLower.includes(trigger))) {
-       matchedTerms = [...matchedTerms, ...entry.terms];
-    }
-  });
-  
-  return [...new Set(matchedTerms)];
-};
 
 // ─── STATE ──────────────────────────────────────────────
 let SB_URL = localStorage.getItem('ma_url')||'';
@@ -480,7 +436,9 @@ let activeProv     = null;
 let lastCompData   = [];
 let allCalcPkgs    = [];
 let selectedCalc   = new Set();
-let currentClinicData = []; 
+let searchType     = 'spec';
+let currentClinicData = [];
+let allClinicsCache = null; 
 
 function switchTab(id,btn){
   if(id === 'admin' && sessionStorage.getItem('adminUnlocked') !== 'true') {
@@ -498,6 +456,7 @@ function switchTab(id,btn){
   btn.classList.remove('text-slate-300');
   if(id==='library') loadLibrary();
   if(id==='calc') calcLoadPackages();
+  if(id==='clinics') loadClinicsCache();
 }
 
 function unlockAdmin() {
@@ -530,12 +489,8 @@ async function fetchEnhancedPackages(params) {
   if (ids) {
     const raw = await apiGet('pakiety', `select=id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do,telemedycyna,ciaza,rehabilitacja,stomatologia,opieka_psychiatryczna,wizyty_domowe,leczenie_szpitalne,hotline_24h,refundacja,swoboda_leczenia&id=in.(${ids})`);
     
-    const [labsData, specData] = await Promise.all([
-      apiGet('pakiety_badania', `select=pakiet_id,badanie_nazwa&pakiet_id=in.(${ids})`),
-      apiGet('pakiety_specjalizacje', `select=pakiet_id,specjalizacja_nazwa&pakiet_id=in.(${ids})`)
-    ]);
-    
-    const labC={}, rtgC={}, tkC={}, mriC={}, specC={};
+    const labsData = await apiGet('pakiety_badania', `select=pakiet_id,badanie_nazwa&pakiet_id=in.(${ids})`);
+    const labC={}, rtgC={}, tkC={}, mriC={};
     
     if (labsData) {
       labsData.forEach(r => {
@@ -548,22 +503,17 @@ async function fetchEnhancedPackages(params) {
       });
     }
 
-    if (specData) {
-      specData.forEach(r => {
-        specC[r.pakiet_id] = (specC[r.pakiet_id] || 0) + 1;
-      });
-    }
-
     if (raw && raw.length) {
       data.forEach(d => {
         const r = raw.find(x => x.id === d.id);
         if (r) {
+          // Kopiowanie nadpisanych i nowo dodanych pól boolowskich
           ['czas_oczekiwania_poz','czas_oczekiwania_spec','karencja_dni','min_pracownicy','wiek_dzieci_do',
            'telemedycyna','ciaza','rehabilitacja','stomatologia','opieka_psychiatryczna','wizyty_domowe',
            'leczenie_szpitalne','hotline_24h','refundacja','swoboda_leczenia'].forEach(k => {
             if(r[k] !== null && r[k] !== undefined) d[k] = r[k];
           });
-          d.liczba_specjalizacji = specC[d.id] !== undefined ? specC[d.id] : r.liczba_specjalizacji; 
+          d.liczba_specjalizacji = r.liczba_specjalizacji; 
           d.liczba_badan_lab = labC[d.id] !== undefined ? labC[d.id] : r.liczba_badan_lab;
         }
         d.liczba_rtg = rtgC[d.id] || 0;
@@ -594,6 +544,7 @@ async function checkDbStatus(){
   }
 }
 
+// 🔥 Tarcza anty-duplikatowa V2
 async function loadProvidersFromDB(){
   const d=await apiGet('dostawcy','select=id,nazwa,skrot,aktywny&order=nazwa');
   let merged = {};
@@ -670,7 +621,13 @@ function validateSQL(){
   out.className = 'mt-5 p-4 rounded-xl text-sm font-semibold border border-blue-500 bg-blue-50 text-blue-700';
 }
 
-// ─── SMART KONSULTANT (Wyszukiwarka Usług) ────────────────────
+// ─── WYSZUKIWARKA PAKIETÓW (ZAKRESY) ────────────────────
+function setSearchType(type) {
+  searchType = type;
+  document.getElementById('stype-spec').className = type==='spec'?'px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm':'px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200';
+  document.getElementById('stype-bad').className = type==='bad'?'px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm':'px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200';
+  document.getElementById('searchQuery').placeholder = type==='spec'?'np. kardiolog, urolog...':'np. morfologia, USG brzucha...';
+}
 
 let acTimer;
 async function acInput(val) {
@@ -678,23 +635,12 @@ async function acInput(val) {
   const list = document.getElementById('acList');
   if(!val || val.length < 2) { list.classList.add('hidden'); return; }
   acTimer = setTimeout(async () => {
-    // Szukamy inteligentnie w obu tabelach naraz
-    const terms = getMedicalSynonyms(val);
-    const specQuery = terms.map(term => `specjalizacja_nazwa.ilike.${pgSafe(term)}`).join(',');
-    const badQuery = terms.map(term => `badanie_nazwa.ilike.${pgSafe(term)}`).join(',');
-
-    const [dSpec, dBad] = await Promise.all([
-      apiGet('pakiety_specjalizacje', `select=specjalizacja_nazwa&or=(${specQuery})&limit=5`),
-      apiGet('pakiety_badania', `select=badanie_nazwa&or=(${badQuery})&limit=5`)
-    ]);
-    
-    let combined = [];
-    if(dSpec && dSpec.length) combined = [...combined, ...dSpec.map(x => x.specjalizacja_nazwa)];
-    if(dBad && dBad.length) combined = [...combined, ...dBad.map(x => x.badanie_nazwa)];
-    
-    if(combined.length) {
-      const unique = [...new Set(combined)];
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}';acHide();runSearch()">${u}</li>`).join('');
+    const table = searchType === 'spec' ? 'pakiety_specjalizacje' : 'pakiety_badania';
+    const col = searchType === 'spec' ? 'specjalizacja_nazwa' : 'badanie_nazwa';
+    const d = await apiGet(table, `select=${col}&${col}=ilike.*${encodeURIComponent(val)}*&limit=10`);
+    if(d && d.length) {
+      const unique = [...new Set(d.map(x => x[col]))];
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}';acHide();runSearch()">${u.replace(new RegExp(escRx(val),'gi'),'<strong>$&</strong>')}</li>`).join('');
       list.classList.remove('hidden');
     } else {
       list.classList.add('hidden');
@@ -704,6 +650,7 @@ async function acInput(val) {
 function acHide() { document.getElementById('acList').classList.add('hidden'); }
 function acKeydown(e) { if(e.key==='Enter') runSearch(); }
 
+// 🔥 WODOPSADOWA LOGIKA DZIEDZICZENIA ZAKRESÓW 🔥
 async function runSearch() {
   const q = document.getElementById('searchQuery').value.trim();
   const hint = document.getElementById('searchHint');
@@ -711,27 +658,18 @@ async function runSearch() {
   const body = document.getElementById('searchResultBody');
   if(!q) return;
   
-  hint.textContent = 'Trwa inteligentne skanowanie bazy usług medycznych...'; 
+  hint.textContent = 'Szukam i przeliczam logikę dziedziczenia pakietów...'; 
   res.classList.add('hidden');
   
-  const terms = getMedicalSynonyms(q);
-  const specQuery = terms.map(term => `specjalizacja_nazwa.ilike.${pgSafe(term)}`).join(',');
-  const badQuery = terms.map(term => `badanie_nazwa.ilike.${pgSafe(term)}`).join(',');
-
-  const [dSpec, dBad] = await Promise.all([
-     apiGet('pakiety_specjalizacje', `select=pakiet_id&or=(${specQuery})`),
-     apiGet('pakiety_badania', `select=pakiet_id&or=(${badQuery})`)
-  ]);
+  const table = searchType === 'spec' ? 'pakiety_specjalizacje' : 'pakiety_badania';
+  const col = searchType === 'spec' ? 'specjalizacja_nazwa' : 'badanie_nazwa';
   
-  let pids = [];
-  if(dSpec && dSpec.length) pids = [...pids, ...dSpec.map(x => x.pakiet_id)];
-  if(dBad && dBad.length) pids = [...pids, ...dBad.map(x => x.pakiet_id)];
+  const d = await apiGet(table, `select=pakiet_id,${col}&${col}=ilike.*${encodeURIComponent(q)}*`);
+  if(!d || !d.length) { hint.textContent = 'Brak wyników w bazie.'; return; }
   
-  pids = [...new Set(pids)];
-
-  if(!pids.length) { hint.textContent = 'Brak wyników. Spróbuj uogólnić zapytanie.'; return; }
-  
+  const pids = [...new Set(d.map(x => x.pakiet_id))];
   const directPkgs = await fetchEnhancedPackages(`select=*&id=in.(${pids.join(',')})`);
+  
   if(!directPkgs || !directPkgs.length) { hint.textContent = 'Błąd pobierania danych bazowych.'; return; }
 
   const getNorm = (raw) => { let n = (raw||'').trim().toUpperCase(); if(n==='TU ZDROWIE!!!'||n==='TUZDROWIE') return 'TU ZDROWIE'; return n; };
@@ -760,8 +698,8 @@ async function runSearch() {
     });
   }
 
-  hint.textContent = `✅ Znaleziono ${finalPkgs.length} pakietów. Warianty o równej lub wyższej cenie automatycznie dziedziczą tę usługę.`;
-  document.getElementById('searchResultTitle').textContent = `Pakiety dla: ${q.toUpperCase()}`;
+  hint.textContent = `Poniżej znajdziesz pakiety zawierające wybrane świadczenie (w tym warianty wyższego szczebla)`;
+  document.getElementById('searchResultTitle').textContent = `Wyniki dla: ${q}`;
   
   finalPkgs.sort((a,b)=>getNorm(a.dostawca_nazwa).localeCompare(getNorm(b.dostawca_nazwa)) || (a.tier||0)-(b.tier||0));
   
@@ -772,6 +710,7 @@ async function runSearch() {
     grouped[norm].push(p);
   });
 
+  // W tej wersji ujednolicone zostały ramki pakietów dla czystszego widoku
   let html = '';
   for(const [prov, items] of Object.entries(grouped)) {
     html += `
@@ -793,155 +732,221 @@ async function runSearch() {
   res.classList.remove('hidden');
 }
 
+// ─── KALKULATOR ─────────────────────────────────────────
+async function calcLoadPackages() {
+  const provId = document.getElementById('calcProvider').value; 
+  const el = document.getElementById('calcPackageList');
+  el.innerHTML = '<div class="col-span-full text-slate-400 text-sm"><div class="loader inline-block align-middle mr-2"></div>Ładowanie pakietów...</div>';
+  let q = 'select=*&aktywna=eq.true';
+  if(provId) q += `&dostawca_id=in.(${provId})`;
+  const d = await fetchEnhancedPackages(q);
+  allCalcPkgs = d || [];
+  allCalcPkgs.sort((a,b)=>a.dostawca_nazwa.localeCompare(b.dostawca_nazwa) || (a.tier||0)-(b.tier||0));
+  
+  el.innerHTML = allCalcPkgs.map(p => {
+    const sel = selectedCalc.has(p.id);
+    const isS = (p.pakiet_nazwa||p.nazwa||'').toLowerCase().includes('senior');
+    return `<div class="pkg-chip flex items-center justify-between gap-2 ${sel?'sel':''} ${isS?'senior':''}" onclick="toggleCalc(${p.id}, this)">
+      <div class="truncate pr-2">
+        <div class="text-[10px] ${isS?'text-amber-600':'text-slate-400'} font-bold uppercase truncate">${p.dostawca_nazwa}</div>
+        <div class="font-bold text-xs truncate">${p.pakiet_nazwa||p.nazwa}</div>
+      </div>
+      <div class="chk ${sel?'on':''}">${sel?'✓':''}</div>
+    </div>`;
+  }).join('');
+  calcUpdate();
+}
 
-// ─── WYSZUKIWARKA PLACÓWEK Z AUTOCOMPLETE I OCHRONĄ BŁĘDÓW ───
+function toggleCalc(id, el) {
+  if(selectedCalc.has(id)) { 
+    selectedCalc.delete(id); el.classList.remove('sel'); el.querySelector('.chk').classList.remove('on'); el.querySelector('.chk').textContent=''; 
+  } else { 
+    selectedCalc.add(id); el.classList.add('sel'); el.querySelector('.chk').classList.add('on'); el.querySelector('.chk').textContent='✓'; 
+  }
+  calcUpdate();
+}
+
+function calcUpdate() {
+  const w = parseInt(document.getElementById('calcWorkers').value)||1;
+  const type = document.getElementById('calcType').value;
+  const res = document.getElementById('calcResult');
+  const tb = document.getElementById('calcTable');
+  
+  if(!selectedCalc.size) { res.classList.add('hidden'); return; }
+  
+  const selPkgs = allCalcPkgs.filter(p => selectedCalc.has(p.id));
+  document.getElementById('calcSubtitle').textContent = `Wyliczenie dla ${w} pracowników`;
+  
+  let html = `<table class="w-full text-sm border-collapse min-w-[600px]">
+    <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
+      <tr><th class="p-3 text-left">Dostawca i Pakiet</th><th class="p-3 text-right">Składka jednostkowa</th><th class="p-3 text-right">Łącznie (Miesięcznie)</th><th class="p-3 text-right">Łącznie (Rocznie)</th></tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">`;
+    
+  selPkgs.forEach(p => {
+    const price = parseFloat(p[type]) || 0;
+    const sum = price * w;
+    const year = sum * 12;
+    html += `<tr class="hover:bg-slate-50 transition-colors">
+    <td class="p-4">
+      <div class="font-bold text-brand-navy">${p.dostawca_nazwa}</div>
+      <div class="text-brand-pink text-xs font-semibold">${p.pakiet_nazwa||p.nazwa} <span class="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 font-black">T${p.tier}</span></div>
+    </td>
+    <td class="p-4 text-right font-semibold">${price>0 ? price.toFixed(2)+' zł' : '<span class="text-red-500 text-xs">Brak wyceny</span>'}</td>
+    <td class="p-4 text-right font-black text-brand-navy text-lg">${price>0 ? sum.toFixed(2)+' zł' : '–'}</td>
+    <td class="p-4 text-right font-bold text-slate-500">${price>0 ? year.toFixed(2)+' zł' : '–'}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  tb.innerHTML = html;
+  res.classList.remove('hidden');
+}
+
+
+// ─── WYSZUKIWARKA PLACÓWEK — CACHE-BASED (V1.0.19) ───────────
+
+async function loadClinicsCache() {
+  if (allClinicsCache !== null) return;
+  const hint = document.getElementById('clinHint');
+  if(hint) { hint.textContent = 'Ładowanie bazy placówek...'; hint.className = 'text-xs text-slate-400 font-bold mt-2'; }
+  const data = await apiGet('placowki_medyczne', 'select=*&limit=5000&order=miejscowosc');
+  allClinicsCache = Array.isArray(data) ? data : [];
+  if(hint) { hint.textContent = '\u2705 Załadowano ' + allClinicsCache.length + ' placówek. Użyj filtrów powyżej.'; hint.className = 'text-xs text-emerald-600 font-bold mt-2'; }
+}
 
 let acCityTimer;
 async function acCity(q) {
   clearTimeout(acCityTimer);
   const list = document.getElementById('acCityList');
-  if(!q || q.length < 2) { list.classList.add('hidden'); return; }
-  acCityTimer = setTimeout(async () => {
-    const data = await apiGet('placowki_medyczne', `select=miejscowosc&miejscowosc=ilike.${pgSafe(q)}&limit=20`);
-    if(data && data.length) {
-      const unique = [...new Set(data.map(d => d.miejscowosc))].slice(0, 10);
-      if(!unique.length) { list.classList.add('hidden'); return; }
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinCity').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acCityList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(escRx(q),'gi'),'<strong>$&</strong>')}</li>`).join('');
-      list.classList.remove('hidden');
-    } else {
-      list.classList.add('hidden');
-    }
-  }, 300);
+  if (!q || q.length < 2) { list.classList.add('hidden'); return; }
+  await loadClinicsCache();
+  acCityTimer = setTimeout(() => {
+    const ql = q.toLowerCase();
+    const unique = [...new Set(
+      allClinicsCache.map(d => d.miejscowosc).filter(m => m && m.toLowerCase().includes(ql))
+    )].slice(0, 10);
+    if (!unique.length) { list.classList.add('hidden'); return; }
+    list.innerHTML = unique.map(u =>
+      '<li class="ac-item" onmousedown="document.getElementById(\'clinCity\').value=\'' + u.replace(/'/g,"\\'") + '\'; document.getElementById(\'acCityList\').classList.add(\'hidden\'); searchClinics();">' + u + '</li>'
+    ).join('');
+    list.classList.remove('hidden');
+  }, 200);
 }
 
 let acClinTimer;
 async function acClinic(q) {
   clearTimeout(acClinTimer);
   const list = document.getElementById('acClinList');
-  if(!q || q.length < 2) { list.classList.add('hidden'); return; }
-  acClinTimer = setTimeout(async () => {
-    const data = await apiGet('placowki_medyczne', `select=siec_bazowa,nazwa_oddzialu&or=(siec_bazowa.ilike.${pgSafe(q)},nazwa_oddzialu.ilike.${pgSafe(q)})&limit=30`);
-    if(data && data.length) {
-      let matches = [];
-      data.forEach(d => {
-         if(d.siec_bazowa && d.siec_bazowa.toLowerCase().includes(q.toLowerCase())) matches.push(d.siec_bazowa);
-         if(d.nazwa_oddzialu && d.nazwa_oddzialu.toLowerCase().includes(q.toLowerCase())) matches.push(d.nazwa_oddzialu);
-      });
-      const unique = [...new Set(matches)].slice(0, 10);
-      if(!unique.length) { list.classList.add('hidden'); return; }
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinName').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acClinList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(escRx(q),'gi'),'<strong>$&</strong>')}</li>`).join('');
-      list.classList.remove('hidden');
-    } else {
-      list.classList.add('hidden');
-    }
-  }, 300);
+  if (!q || q.length < 2) { list.classList.add('hidden'); return; }
+  await loadClinicsCache();
+  acClinTimer = setTimeout(() => {
+    const ql = q.toLowerCase();
+    let matches = [];
+    allClinicsCache.forEach(d => {
+      if (d.siec_bazowa    && d.siec_bazowa.toLowerCase().includes(ql))    matches.push(d.siec_bazowa);
+      if (d.nazwa_oddzialu && d.nazwa_oddzialu.toLowerCase().includes(ql)) matches.push(d.nazwa_oddzialu);
+    });
+    const unique = [...new Set(matches)].slice(0, 10);
+    if (!unique.length) { list.classList.add('hidden'); return; }
+    list.innerHTML = unique.map(u =>
+      '<li class="ac-item" onmousedown="document.getElementById(\'clinName\').value=\'' + u.replace(/'/g,"\\'") + '\'; document.getElementById(\'acClinList\').classList.add(\'hidden\'); searchClinics();">' + u + '</li>'
+    ).join('');
+    list.classList.remove('hidden');
+  }, 200);
 }
 
 async function searchClinics() {
-  const city       = document.getElementById('clinCity').value.trim();
-  const powiat     = document.getElementById('clinPowiat').value.trim();
-  const name       = document.getElementById('clinName').value.trim();
+  const city     = document.getElementById('clinCity').value.trim().toLowerCase();
+  const powiat   = document.getElementById('clinPowiat').value.trim().toLowerCase();
+  const name     = document.getElementById('clinName').value.trim().toLowerCase();
   const provSelect = document.getElementById('clinProv');
   const provName   = provSelect.options[provSelect.selectedIndex].text;
   const provVal    = provSelect.value;
-  
+
   const hint       = document.getElementById('clinHint');
   const resultDiv  = document.getElementById('clinResult');
   const resultBody = document.getElementById('clinResultBody');
   const countEl    = document.getElementById('clinCount');
 
+  if (!SB_URL || !SB_KEY) {
+    hint.textContent = '\u26a0\ufe0f Brak połączenia z bazą – sprawdź klucze w zakładce Admin.';
+    hint.className   = 'text-xs text-red-600 font-bold mt-2';
+    return;
+  }
+
+  if (!city && !powiat && !name && !provVal) {
+    hint.textContent = 'Wpisz co najmniej jedno kryterium wyszukiwania.';
+    hint.className   = 'text-xs text-slate-500 font-bold mt-2';
+    resultDiv.classList.add('hidden');
+    return;
+  }
+
   hint.textContent = 'Szukam placówek...';
   hint.className   = 'text-xs text-brand-navy font-bold mt-2';
   resultDiv.classList.add('hidden');
 
-  if (!SB_URL || !SB_KEY) {
-    hint.textContent = '⚠️ Brak połączenia z bazą – sprawdź klucze w zakładce Admin.';
-    hint.className   = 'text-xs text-red-600 font-bold mt-2';
+  await loadClinicsCache();
+
+  if (!allClinicsCache.length) {
+    hint.textContent = 'Baza placówek jest pusta lub niedostępna.';
+    hint.className   = 'text-xs text-red-500 font-bold mt-2';
     return;
   }
 
-  // Tarcza koduje wartości, ale NIE dodaje własnych gwiazdek. Gwiazdki doklejamy przy query.
-  const safe = (v) => encodeURIComponent(v.replace(/"/g, ''));
+  let results = allClinicsCache.filter(p => {
+    if (city   && !(p.miejscowosc   || '').toLowerCase().includes(city))   return false;
+    if (powiat && !(p.powiat        || '').toLowerCase().includes(powiat)) return false;
+    if (name) {
+      const inName = (p.nazwa_oddzialu || '').toLowerCase().includes(name);
+      const inSiec = (p.siec_bazowa   || '').toLowerCase().includes(name);
+      if (!inName && !inSiec) return false;
+    }
+    if (provVal && provName !== '\u2014 Wszyscy Partnerzy \u2014') {
+      const searchProv = provName.trim().toUpperCase();
+      if (!p.dostawcy_tagi) return false;
+      const tags = Array.isArray(p.dostawcy_tagi)
+        ? p.dostawcy_tagi
+        : String(p.dostawcy_tagi).replace(/[{}"]/g, '').split(',');
+      if (!tags.some(t => t.trim().toUpperCase() === searchProv)) return false;
+    }
+    return true;
+  });
 
-  // UX: Blokada wyszukiwania, jeśli wszystkie pola tekstowe są puste
-  if (!city && !powiat && !name) {
-    hint.textContent = 'Wpisz co najmniej miejscowość, powiat lub nazwę placówki.';
-    hint.className   = 'text-xs text-slate-500 font-bold mt-2';
-    return;
-  }
+  hint.textContent = '';
 
-  // PostgREST domyślnie łączy parametry znakiem '&' jako logiczne AND.
-  let queryParams = ['select=*', 'limit=1000'];
-  if (city)   queryParams.push(`miejscowosc=ilike.*${safe(city)}*`);
-  if (powiat) queryParams.push(`powiat=ilike.*${safe(powiat)}*`);
-  if (name)   queryParams.push(`or=(nazwa_oddzialu.ilike.*${safe(name)}*,siec_bazowa.ilike.*${safe(name)}*)`);
-
-  let query = queryParams.join('&');
-
-  const data = await apiGet('placowki_medyczne', query);
-
-  if (data === null) {
-    hint.textContent = '❌ Błąd pobierania danych z bazy. Spróbuj zmienić parametry wyszukiwania.';
-    hint.className   = 'text-xs text-red-600 font-bold mt-2';
-    return;
-  }
-  
-  if (!Array.isArray(data) || data.length === 0) {
+  if (!results.length) {
     hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów.';
     hint.className   = 'text-xs text-slate-500 font-bold mt-2';
     return;
   }
 
-  // Filtr po dostawcy - działający lokalnie
-  let filteredData = data;
-  if (provVal && provName !== '— Wszyscy Partnerzy —') {
-    const searchProv = provName.trim().toUpperCase();
-    filteredData = data.filter(p => {
-      if (!p.dostawcy_tagi) return false;
-      let tags = Array.isArray(p.dostawcy_tagi)
-        ? p.dostawcy_tagi
-        : String(p.dostawcy_tagi).replace(/[{}"]/g, '').split(',');
-      return tags.some(t => t.trim().toUpperCase() === searchProv);
-    });
-    
-    if (!filteredData.length) {
-      hint.textContent = 'Znaleziono placówki w tej lokalizacji, ale żadna nie jest powiązana z wybraną siecią.';
-      hint.className   = 'text-xs text-slate-500 font-bold mt-2';
-      return;
-    }
-  }
-
-  currentClinicData = filteredData;
-  hint.textContent  = '';
-  countEl.textContent = filteredData.length + ' znalezionych';
+  currentClinicData = results;
+  countEl.textContent = results.length + ' znalezionych';
 
   let html = '';
-  filteredData.forEach((p, idx) => {
+  results.forEach((p, idx) => {
     let tagsInline = '';
     if (p.dostawcy_tagi) {
       const pTags = Array.isArray(p.dostawcy_tagi)
         ? p.dostawcy_tagi
         : String(p.dostawcy_tagi).replace(/[{}"]/g, '').split(',');
-      if (pTags.length > 0) {
-        tagsInline = pTags.map(t =>
-          `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-[10px] font-black uppercase px-2 py-1 rounded-md mr-1 mb-1">${t.trim()}</span>`
-        ).join('');
-      }
+      tagsInline = pTags.map(t =>
+        '<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-[10px] font-black uppercase px-2 py-1 rounded-md mr-1 mb-1">' + t.trim() + '</span>'
+      ).join('');
     }
-    if (!tagsInline) tagsInline = `<span class="text-[10px] text-slate-400 italic">Brak partnerów</span>`;
+    if (!tagsInline) tagsInline = '<span class="text-[10px] text-slate-400 italic">Brak partnerów</span>';
 
-    html += `<tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="openClinicModal(${idx})">
-      <td class="p-4">
-        <div class="font-bold text-brand-pink hover:underline text-base">${p.nazwa_oddzialu || p.siec_bazowa}</div>
-        <div class="text-[10px] text-slate-500 font-black uppercase tracking-wider mt-0.5">WŁAŚCICIEL: ${p.siec_bazowa || 'Niezależna'}</div>
-      </td>
-      <td class="p-4">
-        <div class="font-bold text-slate-700">${p.miejscowosc || ''}</div>
-        <div class="text-xs text-slate-500 mt-0.5">${p.adres || ''}</div>
-      </td>
-      <td class="p-4 text-xs font-semibold text-slate-600">${p.powiat || ''}</td>
-      <td class="p-4 max-w-[250px] md:max-w-[400px]">${tagsInline}</td>
-    </tr>`;
+    html += '<tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="openClinicModal(' + idx + ')">'
+      + '<td class="p-4">'
+      + '<div class="font-bold text-brand-pink text-base">' + (p.nazwa_oddzialu || p.siec_bazowa || '\u2013') + '</div>'
+      + '<div class="text-[10px] text-slate-500 font-black uppercase tracking-wider mt-0.5">' + (p.siec_bazowa || '') + '</div>'
+      + '</td>'
+      + '<td class="p-4">'
+      + '<div class="font-bold text-slate-700">' + (p.miejscowosc || '') + '</div>'
+      + '<div class="text-xs text-slate-500 mt-0.5">' + (p.adres || '') + '</div>'
+      + '</td>'
+      + '<td class="p-4 text-xs font-semibold text-slate-600">' + (p.powiat || '') + '</td>'
+      + '<td class="p-4 max-w-[250px] md:max-w-[400px]">' + tagsInline + '</td>'
+      + '</tr>';
   });
 
   resultBody.innerHTML = html;
@@ -973,6 +978,456 @@ function openClinicModal(idx) {
   document.getElementById('clinicDetailsModal').classList.remove('hidden');
   document.getElementById('clinicDetailsModal').classList.add('flex');
 }
+
+// ─── MODAL SZCZEGÓŁÓW PAKIETU ───
+async function showPackageDetails(pkgId) {
+  const modal = document.getElementById('pkgDetailsModal');
+  const mBody = document.getElementById('pdmBody');
+  const mTitle = document.getElementById('pdmTitle');
+  const mSub = document.getElementById('pdmSub');
+  const mPrice = document.getElementById('pdmPrice');
+  
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  mTitle.textContent = 'Pobieranie danych...'; mSub.textContent = ''; mPrice.innerHTML = '-- zł';
+  mBody.innerHTML = '<div class="flex items-center justify-center py-20 text-slate-400"><div class="loader mr-3"></div> Ładowanie...</div>';
+
+  try {
+    const [pkgDataRes, specRes, labRes] = await Promise.all([
+      fetchEnhancedPackages(`select=*&id=eq.${pkgId}`),
+      apiGet('pakiety_specjalizacje', `select=specjalizacja_nazwa&pakiet_id=eq.${pkgId}&order=specjalizacja_nazwa`),
+      apiGet('pakiety_badania', `select=badanie_nazwa&pakiet_id=eq.${pkgId}&order=badanie_nazwa`)
+    ]);
+
+    if(!pkgDataRes || !pkgDataRes.length) { mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Błąd pobierania danych.</div>'; return; }
+
+    const p = pkgDataRes[0];
+    const specs = specRes || [];
+    const labs = labRes || [];
+
+    mTitle.innerHTML = `${p.pakiet_nazwa || p.nazwa} <span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded ml-3 align-middle">T${p.tier}</span>`;
+    mSub.textContent = p.dostawca_nazwa;
+    mPrice.innerHTML = (p.cena_grup_mies !== null && p.cena_grup_mies !== undefined) ? `${parseFloat(p.cena_grup_mies).toFixed(2)} zł<span class="text-sm font-normal text-slate-300"> / mies.</span>` : '<span class="text-sm">Brak wyceny</span>';
+
+    const val = v => (v !== null && v !== undefined && v !== '' && v > 0) ? `<span class="text-2xl font-black text-brand-navy">${v}</span>` : '<span class="text-xs text-red-500 font-bold mt-1 block">Brak wpisu</span>';
+    const boolIco = v => v ? '✅' : '❌';
+
+    let html = `
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Specjalizacje</div><div>${val(p.liczba_specjalizacji)}</div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Badania Lab.</div><div>${val(p.liczba_badan_lab)}</div>
+        </div>
+        <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">RTG (Limity)</div><div>${val(p.liczba_rtg)}</div>
+        </div>
+        <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Tomografia TK</div><div>${val(p.liczba_tk)}</div>
+        </div>
+        <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Rezonans MRI</div><div>${val(p.liczba_mri)}</div>
+        </div>
+      </div>
+      
+      <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm mb-8">
+        <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+          <h4 class="text-base font-black text-brand-pink uppercase tracking-wide">Szczegółowy Zakres Badań Laboratoryjnych i Diagnostyki</h4>
+          <span class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full">${labs.length} wpisów</span>
+        </div>
+        <div class="list-columns">
+          ${labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-pink">${labs.map(s => `<li class="break-inside-avoid">${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wgranej listy. Użyj SQL, aby dodać listę badań.</p>`}
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-8">
+        <h4 class="text-sm font-black text-brand-navy uppercase tracking-wide mb-4 border-b border-slate-100 pb-2">Usługi Dodatkowe i Standard Pakietu</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm font-semibold">
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Telemedycyna:</span> <span>${boolIco(p.telemedycyna)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Prowadzenie Ciąży:</span> <span>${boolIco(p.ciaza)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Rehabilitacja:</span> <span>${boolIco(p.rehabilitacja)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Wizyty domowe:</span> <span>${boolIco(p.wizyty_domowe)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Szpital 1-dniowy:</span> <span>${boolIco(p.leczenie_szpitalne)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Stomatologia:</span> <span>${boolIco(p.stomatologia)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Psychiatria:</span> <span>${boolIco(p.opieka_psychiatryczna)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Infolinia medyczna 24h:</span> <span>${boolIco(p.hotline_24h)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Refundacja kosztów leczenia:</span> <span>${boolIco(p.refundacja)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Swoboda leczenia:</span> <span>${boolIco(p.swoboda_leczenia)}</span></div>
+        </div>
+      </div>
+    `;
+    mBody.innerHTML = html;
+  } catch (error) { mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Błąd połączenia z bazą danych.</div>'; }
+}
+
+// ─── LEWY PANEL DOSTAWCÓW ───────────────────────────────
+function buildProvList(){
+  const el=document.getElementById('provList'); el.innerHTML='';
+  if(!allProviders.length){el.innerHTML='<p class="text-xs text-slate-400">Brak w bazie</p>';return;}
+  
+  el.className = 'grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 p-1';
+
+  allProviders.forEach(p=>{
+    const row=document.createElement('div');
+    row.className='prov-box flex flex-row items-center justify-start p-3 border-2 border-slate-100 rounded-xl bg-white relative cursor-pointer min-h-[45px] gap-2';
+    row.id='provrow_'+p.idStr;
+    row.innerHTML=`
+      <div class="chk flex-shrink-0" id="provchk_${p.idStr}"></div>
+      <span class="prov-name text-xs font-black text-brand-navy leading-tight whitespace-nowrap overflow-hidden text-ellipsis">${p.nazwa}</span>
+      <span id="provcnt_${p.idStr}" class="absolute top-1 right-1 text-[9px] font-bold text-white bg-brand-pink px-1.5 py-0.5 rounded-full hidden shadow-sm"></span>`;
+    row.onclick=()=>selectProvider(p.idStr, p.idArr, p.nazwa);
+    el.appendChild(row);
+  });
+}
+
+async function selectProvider(provIdStr, provIdArr, provNazwa){
+  document.querySelectorAll('.prov-box').forEach(r=>r.classList.remove('active'));
+  document.getElementById('provrow_'+provIdStr).classList.add('active');
+  activeProv=provIdStr;
+  document.getElementById('pkgPanelHint').classList.add('hidden');
+  document.getElementById('pkgPanel').classList.remove('hidden');
+  document.getElementById('pkgPanelSub').textContent=provNazwa;
+  document.getElementById('pkgGrid').innerHTML='<div class="flex gap-2 items-center text-slate-400 text-sm col-span-2 py-10"><div class="loader"></div>Pobieranie wariantów...</div>';
+
+  if(!providerPkgs[provIdStr]){
+    const d=await apiGet('pakiety',`select=id,nazwa,tier,dostawca_id&dostawca_id=in.(${provIdArr.join(',')})&aktywna=eq.true`);
+    if(d) d.sort((a,b)=>{
+      let aS = (a.nazwa||'').toLowerCase().includes('senior');
+      let bS = (b.nazwa||'').toLowerCase().includes('senior');
+      if(aS && !bS) return 1; if(!aS && bS) return -1;
+      return (a.tier||0) - (b.tier||0);
+    });
+    providerPkgs[provIdStr]=d||[];
+  }
+  renderPkgGrid();
+}
+
+function renderPkgGrid(){
+  const pkts=providerPkgs[activeProv]||[];
+  const grid=document.getElementById('pkgGrid');
+  if(!pkts.length){grid.innerHTML='<p class="text-slate-400 text-sm">Brak pakietów.</p>';return;}
+  grid.innerHTML='';
+  pkts.forEach(pk=>{
+    const sel=!!selectedPkgs[pk.id];
+    const isSenior = (pk.nazwa||'').toLowerCase().includes('senior');
+    const div=document.createElement('div');
+    div.className='pkg-chip flex items-center justify-between gap-2' + (sel?' sel':'') + (isSenior?' senior':'');
+    div.id='pkgchip_'+pk.id;
+    div.innerHTML=`
+      <div class="flex items-center gap-2 truncate pr-2">
+        <span class="text-[10px] font-black px-1.5 py-0.5 rounded ${isSenior?'bg-amber-200 text-amber-800':'bg-slate-100 text-slate-500'}">T${pk.tier}</span>
+        <span class="font-bold text-xs truncate hover:underline" onclick="event.stopPropagation(); showPackageDetails(${pk.id})">${pk.nazwa}</span>
+      </div>
+      <div id="pkgck_${pk.id}" class="chk ${sel?'on':''}">${sel?'✓':''}</div>
+    `;
+    div.onclick=()=>togglePkg(pk.id, pk.nazwa, pk.tier, activeProv, isSenior);
+    grid.appendChild(div);
+  });
+}
+
+function togglePkg(pkgId, pkgNazwa, tier, provIdStr, isSenior){
+  const prov=allProviders.find(p=>p.idStr===provIdStr);
+  if(selectedPkgs[pkgId]){ delete selectedPkgs[pkgId]; }
+  else {
+    if(Object.keys(selectedPkgs).length>=6){ showNotif('compare','Maksymalnie 6 pakietów do porównania.','border-red-500 bg-red-50 text-red-700');return; }
+    selectedPkgs[pkgId]={id:pkgId,nazwa:pkgNazwa,tier,dostawca_id:provIdStr,dostawca_nazwa:prov?prov.nazwa:'', isSenior};
+  }
+  renderPkgGrid(); updateSelCount(); updateSelectedBar(); updateProvCnt(provIdStr);
+}
+
+function updateSelCount(){ document.getElementById('selCount').textContent=Object.keys(selectedPkgs).length+' zaznaczonych'; }
+function updateProvCnt(provIdStr){
+  const el=document.getElementById('provcnt_'+provIdStr), chk=document.getElementById('provchk_'+provIdStr);
+  if(!el) return;
+  const cnt=Object.values(selectedPkgs).filter(p=>p.dostawca_id===provIdStr).length;
+  el.textContent=cnt?cnt:''; el.classList.toggle('hidden',!cnt);
+  if(chk){chk.className='chk'+(cnt?' on':'');chk.textContent=cnt?'✓':'';}
+}
+
+function updateSelectedBar(){
+  const items=Object.values(selectedPkgs);
+  const bar=document.getElementById('selectedBar'), chips=document.getElementById('selectedChips');
+  if(!items.length){bar.classList.add('hidden');return;}
+  bar.classList.remove('hidden'); chips.innerHTML='';
+  items.forEach(p=>{
+    const sp=document.createElement('span');
+    sp.className=`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border ${p.isSenior?'bg-amber-100 text-amber-800 border-amber-200':'bg-slate-100 text-brand-navy border-slate-200'}`;
+    sp.innerHTML=`<button onclick="showPackageDetails(${p.id})" class="hover:underline truncate max-w-[150px]">${p.dostawca_nazwa} — ${p.nazwa}</button> <button onclick="removePkg(${p.id})" class="hover:text-red-500 ml-1 font-bold">✕</button>`;
+    chips.appendChild(sp);
+  });
+}
+function removePkg(pkgId){ const p=selectedPkgs[pkgId]; if(p){const pid=p.dostawca_id;delete selectedPkgs[pkgId];updateProvCnt(pid);} renderPkgGrid(); updateSelCount(); updateSelectedBar(); }
+function clearAll(){ const pids=new Set(Object.values(selectedPkgs).map(p=>p.dostawca_id)); selectedPkgs={}; pids.forEach(pid=>updateProvCnt(pid)); renderPkgGrid(); updateSelCount(); updateSelectedBar(); document.getElementById('comparisonResult').classList.add('hidden'); document.getElementById('priceSection').classList.add('hidden'); }
+
+// ─── PORÓWNANIE ─────────────────────────────────────────
+const isValid = v => v !== null && v !== undefined && v !== '' && v !== 0 && String(v).toLowerCase() !== 'null' && String(v).toLowerCase() !== 'nan';
+const fNum = v => isValid(v) ? `<strong class="text-lg">${v}</strong>` : '<span class="text-slate-300">–</span>';
+
+const ROWS=[
+  {label:'Sieć Medyczna',      key:'dostawca_nazwa',        fmt:v=>`<span class="font-black text-brand-navy text-sm">${v||'–'}</span>`},
+  {label:'Pakiet',             key:'pakiet_nazwa',          fmt:(v,p)=>`<button onclick="showPackageDetails(${p.id})" class="${(v||p.nazwa).toLowerCase().includes('senior')?'text-brand-senior':'text-brand-pink'} hover:underline font-bold text-base whitespace-nowrap">${v||p.nazwa||'–'}</button>`},
+  {label:'Tier / Poziom',      key:'tier',                  fmt:v=>v?`<span class="bg-slate-200 text-slate-700 text-[10px] font-black px-2 py-0.5 rounded uppercase">T${v}</span>`:'–'},
+  {sep:'Główne Limity (Wariant)'},
+  {label:'Specjalizacje',      key:'liczba_specjalizacji',  fmt:fNum, num:true},
+  {label:'Badania laboratoryjne',key:'liczba_badan_lab',    fmt:fNum, num:true},
+  {label:'RTG',                key:'liczba_rtg',            fmt:fNum, num:true},
+  {label:'Tomografia (TK)',    key:'liczba_tk',             fmt:fNum, num:true},
+  {label:'Rezonans (MRI)',     key:'liczba_mri',            fmt:fNum, num:true},
+  {sep:'Usługi Dodatkowe'},
+  {label:'Telemedycyna',       key:'telemedycyna',          fmt:v=>v?'✅':'❌'},
+  {label:'Prowadzenie ciąży',  key:'ciaza',                 fmt:v=>v?'✅':'❌'},
+  {label:'Rehabilitacja',      key:'rehabilitacja',         fmt:v=>v?'✅':'❌'},
+  {label:'Wizyty domowe',      key:'wizyty_domowe',         fmt:v=>v?'✅':'❌'},
+  {label:'Szpital 1-dniowy',   key:'leczenie_szpitalne',    fmt:v=>v?'✅':'❌'},
+  {label:'Stomatologia',       key:'stomatologia',          fmt:v=>v?'✅':'❌'},
+  {label:'Psychiatria',        key:'opieka_psychiatryczna', fmt:v=>v?'✅':'❌'},
+  {label:'Infolinia 24h',      key:'hotline_24h',           fmt:v=>v?'✅':'❌'},
+  {label:'Refundacja',         key:'refundacja',            fmt:v=>v?'✅':'❌'},
+  {label:'Swoboda leczenia',   key:'swoboda_leczenia',      fmt:v=>v?'✅':'❌'},
+  {sep:'Składka z oferty'},
+  {label:'Składka pracownicza',key:'cena_grup_mies',        fmt:v=>isValid(v)?`<strong class="text-brand-pink text-xl">${parseFloat(v).toFixed(2)} zł</strong>`:'<em class="text-slate-300 text-[10px] uppercase">brak wyceny</em>',num:true,low:true},
+];
+
+async function runComparison(){
+  const ids=Object.keys(selectedPkgs);
+  if(ids.length<2){showNotif('compare','Wybierz minimum 2 pakiety z paneli powyżej.','border-amber-500 bg-amber-50 text-amber-700');return;}
+  
+  const data=await fetchEnhancedPackages(`select=*&id=in.(${ids.join(',')})`);
+  if(!data||!data.length){showNotif('compare','Błąd bazy danych.','border-red-500 bg-red-50 text-red-700');return;}
+
+  data.sort((a,b)=>{
+    let aS = (a.pakiet_nazwa||a.nazwa||'').toLowerCase().includes('senior');
+    let bS = (b.pakiet_nazwa||b.nazwa||'').toLowerCase().includes('senior');
+    if(aS && !bS) return 1; if(!aS && bS) return -1;
+    return (a.tier||0) - (b.tier||0);
+  });
+
+  lastCompData=data; renderCompTable(lastCompData); renderPriceSection(lastCompData);
+}
+
+function showNotif(tab, msg, classes) {
+  const el = document.getElementById('notif-'+tab);
+  if(!el) return;
+  el.textContent = msg;
+  el.className = 'mb-4 p-4 rounded-xl text-sm font-semibold border ' + classes;
+  el.classList.remove('hidden');
+  setTimeout(()=>el.classList.add('hidden'), 4000);
+}
+
+function renderCompTable(sorted){
+  let html=`<table class="w-full text-sm border-collapse min-w-[700px]">
+    <thead><tr class="bg-slate-100 text-slate-500 text-[10px] uppercase tracking-wider">
+      <th class="p-4 text-left w-52 border-r border-slate-200 sticky left-0 bg-slate-100 z-10 shadow-[1px_0_0_#e2e8f0]">Porównywany Element</th>`;
+  sorted.forEach((p,i)=>html+=`<th class="p-4 text-center border-r border-slate-200 min-w-[150px] ${p.nazwa?.toLowerCase().includes('senior')?'bg-amber-50':''}">${p.dostawca_nazwa}<br/><span class="text-brand-pink font-bold text-xs capitalize">${p.nazwa}</span></th>`);
+  html+=`</tr></thead><tbody>`;
+  
+  ROWS.forEach((row,ri)=>{
+    if(row.sep){ html+=`<tr><td colspan="${sorted.length+1}" class="p-3 bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-y border-slate-200">${row.sep}</td></tr>`; return; }
+    const vals=sorted.map(p=>p[row.key]);
+    let bestIdx=-1,worstIdx=-1;
+    if(row.num){
+      const nums=vals.filter(v=>isValid(v)).map(v=>parseFloat(v)).filter(v=>!isNaN(v));
+      if(nums.length>1){
+        const best=row.low?Math.min(...nums):Math.max(...nums);
+        const worst=row.low?Math.max(...nums):Math.min(...nums);
+        const bi=vals.findIndex(v=>isValid(v) && parseFloat(v)===best);
+        const wi=vals.findIndex(v=>isValid(v) && parseFloat(v)===worst);
+        if(bi!==wi){bestIdx=bi;worstIdx=wi;}
+      }
+    }
+    html+=`<tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+      <td class="p-3 text-xs font-semibold text-slate-600 border-r border-slate-100 sticky left-0 bg-white shadow-[1px_0_0_#f1f5f9] z-10">${row.label}</td>`;
+    sorted.forEach((p,ci)=>{
+      const iB=bestIdx===ci,iW=worstIdx===ci;
+      const isSenior = (p.nazwa||'').toLowerCase().includes('senior');
+      html+=`<td class="p-3 text-center border-r border-slate-100 ${isSenior?'bg-amber-50/30':''} ${iB?' diff-best':iW?' diff-worst':''}">${row.fmt(p[row.key], p)}${iB?' 🟢':''}${iW?' 🔴':''}</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('compTableWrap').innerHTML=html;
+  document.getElementById('comparisonResult').classList.remove('hidden'); document.getElementById('comparisonResult').scrollIntoView({behavior:'smooth'});
+}
+
+// ─── SEKCJA SKŁADEK I EKSPORT ───────────────────────────
+function renderPriceSection(sorted){
+  const grid=document.getElementById('priceInputGrid'); grid.innerHTML='';
+  sorted.forEach(p=>{
+    const div=document.createElement('div');
+    div.className='bg-slate-50 border border-slate-200 rounded-2xl p-5 relative overflow-hidden';
+    if((p.nazwa||'').toLowerCase().includes('senior')) div.classList.add('border-amber-300', 'bg-amber-50/50');
+    div.innerHTML=`
+      <div class="font-bold text-brand-navy text-sm">${p.dostawca_nazwa}</div>
+      <div class="text-xs text-brand-pink font-bold mb-4">${p.pakiet_nazwa || p.nazwa}</div>
+      <div>
+        <label class="lbl">Składka pracownicza (zł/mies)</label>
+        <input type="number" step="0.01" class="price-inp border-2 focus:border-brand-navy font-bold text-lg h-12" id="pi_par_${p.id}" value="${p.cena_grup_mies||''}" placeholder="0.00" oninput="checkPricesComplete()"/>
+      </div>`;
+    grid.appendChild(div);
+  });
+  document.getElementById('priceSection').classList.remove('hidden'); checkPricesComplete();
+}
+
+function checkPricesComplete(){
+  const ok=lastCompData.length>0&&lastCompData.every(p=> { const v=document.getElementById('pi_par_'+p.id)?.value; return v&&parseFloat(v)>0; });
+  const bCSV=document.getElementById('btnCSV'), bPDF=document.getElementById('btnPDF'), hint=document.getElementById('exportHint');
+  if(ok){
+    bCSV.disabled=false; bCSV.className='bg-brand-emerald hover:bg-emerald-600 text-white font-bold py-3 px-7 rounded-xl shadow-md';
+    bPDF.disabled=false; bPDF.className='bg-brand-navy hover:bg-slate-800 text-white font-bold py-3 px-7 rounded-xl shadow-md';
+    hint.textContent='';
+  } else {
+    bCSV.disabled=true; bCSV.className='bg-slate-200 text-slate-400 font-bold py-3 px-7 rounded-xl cursor-not-allowed';
+    bPDF.disabled=true; bPDF.className='bg-slate-200 text-slate-400 font-bold py-3 px-7 rounded-xl cursor-not-allowed';
+    hint.textContent='Uzupełnij składki dla wszystkich pakietów, aby odblokować eksport';
+  }
+}
+
+async function savePrices(){
+  let ok=true;
+  for(const p of lastCompData){
+    const par=document.getElementById('pi_par_'+p.id)?.value;
+    if(par) { const r=await apiPatch('pakiety',`id=eq.${p.id}`,{cena_grup_mies:parseFloat(par)}); if(!r)ok=false; }
+  }
+  const st=document.getElementById('priceStatus'); st.classList.remove('hidden');
+  st.className=ok?'mt-4 p-3 rounded-xl text-sm font-semibold border border-emerald-500 bg-emerald-50 text-emerald-700':'mt-4 p-3 rounded-xl text-sm font-semibold border border-red-500 bg-red-50 text-red-700';
+  st.textContent=ok?'✓ Składki zaktualizowane.':'✗ Błąd zapisu bazy.';
+  if(ok){checkPricesComplete();runComparison();}
+}
+
+function exportPDF(){
+  const sorted=lastCompData;
+  const fmap=(id,p)=>({cena_grup_mies:'pi_par_'+p.id}[id]);
+  let body=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:10px;color:#1e293b;padding:20px}h1{font-size:16px;color:#1e294a;margin-bottom:2px}.sub{font-size:9px;color:#64748b;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#1e294a;color:#fff;padding:7px 9px;font-size:9px;text-transform:uppercase;text-align:center}th.first{text-align:left}td{padding:6px 9px;border-bottom:1px solid #e2e8f0;font-size:9px}td.lbl{font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.04em}.sep td{background:#f1f5f9;font-weight:800;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:#1e294a;padding:7px 9px}tr:nth-child(even):not(.sep) td{background:#f8fafc}.best{background:#ecfdf5;color:#065f46;font-weight:800}.worst{background:#fef2f2;color:#b91c1c;font-weight:700}.foot{font-size:8px;color:#94a3b8;text-align:right;margin-top:16px}</style></head><body><h1>MEDICALAURA — Zestawienie Porównawcze</h1><div class="sub">Data: ${new Date().toLocaleString('pl-PL')}</div><table><thead><tr><th class="first">Parametr</th>`;
+  sorted.forEach(p=>body+=`<th>${p.dostawca_nazwa}<br/><span style="font-weight:400;opacity:.8">${p.pakiet_nazwa || p.nazwa}</span></th>`);
+  body+=`</tr></thead><tbody>`;
+  
+  ROWS.forEach(row=>{
+    if(row.sep){body+=`<tr class="sep"><td colspan="${sorted.length+1}">${row.sep}</td></tr>`;return;}
+    
+    const vals=sorted.map(p=>{
+      if(row.key === 'cena_grup_mies'){const v=document.getElementById(fmap(row.key,p))?.value;return isValid(v)?parseFloat(v):null;}
+      return p[row.key];
+    });
+    
+    let bestIdx=-1,worstIdx=-1;
+    if(row.num){
+      const nums=vals.filter(v=>isValid(v)).map(v=>parseFloat(v)).filter(v=>!isNaN(v));
+      if(nums.length>1){
+        const best=row.low?Math.min(...nums):Math.max(...nums);
+        const worst=row.low?Math.max(...nums):Math.min(...nums);
+        const bi=vals.findIndex(v=>isValid(v)&&parseFloat(v)===best);
+        const wi=vals.findIndex(v=>isValid(v)&&parseFloat(v)===worst);
+        if(bi!==wi){bestIdx=bi;worstIdx=wi;}
+      }
+    }
+    body+=`<tr><td class="lbl">${row.label}</td>`;
+    vals.forEach((v,ci)=>{
+      let disp=v;
+      if(v===true)disp='TAK';else if(v===false){ disp=row.key==='rehabilitacja'?'Opcja':'NIE'; }
+      else if(isValid(v)&&row.key==='cena_grup_mies')disp=parseFloat(v).toFixed(2)+' zł';
+      else if(!isValid(v))disp='–';
+      body+=`<td class="${bestIdx===ci?'best':worstIdx===ci?'worst':''}" style="text-align:center">${disp}</td>`;
+    });
+    body+=`</tr>`;
+  });
+  body+=`</tbody></table><div class="foot">Zestawienie wygenerowane przez system MEDICALAURA</div></body></html>`;
+  const w=window.open('','_blank'); w.document.write(body); w.document.close(); setTimeout(()=>{w.focus();w.print();},600);
+}
+
+// ─── BIBLIOTEKA ─────────────────────────────────────────
+async function loadLibrary(){
+  const el=document.getElementById('libraryTable'); el.innerHTML='<div class="flex justify-center py-10"><div class="loader"></div></div>';
+  document.getElementById('editPanel').classList.add('hidden');
+  
+  const provId=document.getElementById('libProvider').value; 
+  const tier=document.getElementById('libTier').value;
+  
+  let params='select=*&aktywna=eq.true';
+  if(provId) params+=`&dostawca_id=in.(${provId})`;
+  if(tier)   params+=`&tier=eq.${tier}`;
+  
+  const data=await fetchEnhancedPackages(params);
+  if(!data||!data.length){el.innerHTML='<div class="text-center py-10 text-slate-400">Brak w bazie.</div>';return;}
+  
+  data.sort((a,b)=>{
+    let aS = (a.pakiet_nazwa||a.nazwa||'').toLowerCase().includes('senior');
+    let bS = (b.pakiet_nazwa||b.nazwa||'').toLowerCase().includes('senior');
+    if(aS && !bS) return 1; if(!aS && bS) return -1;
+    if(a.dostawca_nazwa < b.dostawca_nazwa) return -1; if(a.dostawca_nazwa > b.dostawca_nazwa) return 1;
+    return (a.tier||0) - (b.tier||0);
+  });
+
+  let html=`<table class="w-full text-sm border-collapse min-w-[1000px]">
+    <thead class="bg-slate-100 text-slate-500 text-[10px] uppercase sticky top-0 z-10">
+      <tr><th class="p-3 text-left">Dostawca</th><th class="p-3 text-left">Wariant Pakietu</th><th class="p-3">Tier</th>
+      <th class="p-3 text-center">Spec.</th><th class="p-3 text-center">Badania</th>
+      <th class="p-3 text-center">RTG/TK/MRI</th>
+      <th class="p-3 text-center">Tele / Ciąża / Wizyty</th><th class="p-3 text-center">Rehabilitacja</th>
+      <th class="p-3">Składka Prac.</th><th class="p-3"></th></tr>
+    </thead><tbody class="divide-y divide-slate-100">`;
+  data.forEach(p=>{
+    const isS = (p.pakiet_nazwa||p.nazwa||'').toLowerCase().includes('senior');
+    html+=`<tr class="${isS?'bg-amber-50/40':'hover:bg-slate-50'} transition-colors">
+      <td class="p-3 font-bold text-brand-navy">${p.dostawca_nazwa||'–'}</td>
+      <td class="p-3 font-bold text-brand-pink hover:underline cursor-pointer" onclick="showPackageDetails(${p.id})">${p.pakiet_nazwa || p.nazwa ||'–'} ${isS?'<span class="ml-2 text-[9px] bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Opcja</span>':''}</td>
+      <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-xs font-bold bg-slate-200 text-slate-700">T${p.tier||'?'}</span></td>
+      <td class="p-3 text-center font-bold">${isValid(p.liczba_specjalizacji)?p.liczba_specjalizacji:'–'}</td>
+      <td class="p-3 text-center font-bold">${isValid(p.liczba_badan_lab)?p.liczba_badan_lab:'–'}</td>
+      <td class="p-3 text-center text-xs text-slate-500">${isValid(p.liczba_rtg)?p.liczba_rtg:'-'} / ${isValid(p.liczba_tk)?p.liczba_tk:'-'} / ${isValid(p.liczba_mri)?p.liczba_mri:'-'}</td>
+      <td class="p-3 text-center text-[10px]">${p.telemedycyna?'✅':'❌'} / ${p.ciaza?'✅':'❌'} / ${p.wizyty_domowe?'✅':'❌'}</td>
+      <td class="p-3 text-center text-xs font-bold ${p.rehabilitacja?'text-emerald-600':'text-amber-600'}">${p.rehabilitacja?'Standard':'Opcja'}</td>
+      <td class="p-3 font-black text-center ${p.cena_grup_mies?'text-brand-pink':'text-slate-300'}">${p.cena_grup_mies?parseFloat(p.cena_grup_mies).toFixed(2)+' zł':'Brak'}</td>
+      <td class="p-3 text-right"><button onclick="openEdit(${p.id})" class="bg-brand-navy hover:bg-slate-700 text-white text-[10px] uppercase font-bold px-3 py-2 rounded-lg">Edytuj</button></td>
+    </tr>`;
+  });
+  html+=`</tbody></table><div class="text-xs text-slate-400 p-4 text-right">Rekordów: ${data.length}</div>`;
+  el.innerHTML=html;
+}
+
+async function openEdit(pkgId){
+  const data=await fetchEnhancedPackages(`select=*&id=eq.${pkgId}`); if(!data||!data[0]) return; const p=data[0];
+  document.getElementById('editPkgId').value=pkgId; document.getElementById('editPkgName').textContent=`${p.dostawca_nazwa} — ${p.pakiet_nazwa || p.nazwa}`;
+  const map={eSpecjalizacje:'liczba_specjalizacji',eBadania:'liczba_badan_lab',ePoz:'czas_oczekiwania_poz',eSpec:'czas_oczekiwania_spec',eMinPrac:'min_pracownicy',eDzieci:'wiek_dzieci_do',eKarencja:'karencja_dni'};
+  Object.entries(map).forEach(([id,key])=>document.getElementById(id).value=isValid(p[key])?p[key]:'');
+  
+  document.getElementById('eRtg').value = p.liczba_rtg || 0;
+  document.getElementById('eTk').value = p.liczba_tk || 0;
+  document.getElementById('eMri').value = p.liczba_mri || 0;
+
+  document.getElementById('eZasieg').value=p.zasieg_placowek||'';
+  const bools={eTele:'telemedycyna', eCiaza:'ciaza', eRehab:'rehabilitacja',eStom:'stomatologia',ePsych:'opieka_psychiatryczna',eWizyty:'wizyty_domowe',eSzpital:'leczenie_szpitalne',eHotline:'hotline_24h', eRefundacja:'refundacja', eSwoboda:'swoboda_leczenia'};
+  Object.entries(bools).forEach(([id,key])=>document.getElementById(id).checked=!!p[key]);
+  document.getElementById('ePriceGrup').value=p.cena_grup_mies||'';
+  document.getElementById('editStatus').textContent=''; document.getElementById('editPanel').classList.remove('hidden'); document.getElementById('editPanel').scrollIntoView({behavior:'smooth'});
+}
+
+async function saveEdit(){
+  const pkgId=document.getElementById('editPkgId').value;
+  const n=id=>{const v=document.getElementById(id).value;return v===''?null:parseFloat(v)};
+  const body={
+    liczba_specjalizacji:n('eSpecjalizacje'),liczba_badan_lab:n('eBadania'),
+    czas_oczekiwania_poz:n('ePoz'),czas_oczekiwania_spec:n('eSpec'),
+    min_pracownicy:n('eMinPrac'),wiek_dzieci_do:n('eDzieci'),karencja_dni:n('eKarencja'),
+    zasieg_placowek:document.getElementById('eZasieg').value||null,
+    telemedycyna:document.getElementById('eTele').checked,
+    ciaza:document.getElementById('eCiaza').checked,
+    rehabilitacja:document.getElementById('eRehab').checked,
+    stomatologia:document.getElementById('eStom').checked,
+    opieka_psychiatryczna:document.getElementById('ePsych').checked,
+    wizyty_domowe:document.getElementById('eWizyty').checked,
+    leczenie_szpitalne:document.getElementById('eSzpital').checked,
+    hotline_24h:document.getElementById('eHotline').checked,
+    refundacja:document.getElementById('eRefundacja').checked,
+    swoboda_leczenia:document.getElementById('eSwoboda').checked,
+    cena_grup_mies:n('ePriceGrup'),
+  };
+  const ok=await apiPatch('pakiety',`id=eq.${pkgId}`,body);
+  const st=document.getElementById('editStatus');
+  st.textContent=ok?'✓ Zapisano do bazy.':'✗ Błąd zapisu.'; st.className=`text-sm font-bold ${ok?'text-emerald-600':'text-red-600'}`;
+  if(ok) loadLibrary();
+}
+
+window.onload=init;
 </script>
 </body>
 </html>
