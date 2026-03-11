@@ -55,7 +55,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.11</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.12</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -487,8 +487,12 @@ async function fetchEnhancedPackages(params) {
   if (ids) {
     const raw = await apiGet('pakiety', `select=id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do,telemedycyna,ciaza,rehabilitacja,stomatologia,opieka_psychiatryczna,wizyty_domowe,leczenie_szpitalne,hotline_24h,refundacja,swoboda_leczenia&id=in.(${ids})`);
     
-    const labsData = await apiGet('pakiety_badania', `select=pakiet_id,badanie_nazwa&pakiet_id=in.(${ids})`);
-    const labC={}, rtgC={}, tkC={}, mriC={};
+    const [labsData, specData] = await Promise.all([
+      apiGet('pakiety_badania', `select=pakiet_id,badanie_nazwa&pakiet_id=in.(${ids})`),
+      apiGet('pakiety_specjalizacje', `select=pakiet_id,specjalizacja_nazwa&pakiet_id=in.(${ids})`)
+    ]);
+    
+    const labC={}, rtgC={}, tkC={}, mriC={}, specC={};
     
     if (labsData) {
       labsData.forEach(r => {
@@ -501,17 +505,23 @@ async function fetchEnhancedPackages(params) {
       });
     }
 
+    if (specData) {
+      specData.forEach(r => {
+        specC[r.pakiet_id] = (specC[r.pakiet_id] || 0) + 1;
+      });
+    }
+
     if (raw && raw.length) {
       data.forEach(d => {
         const r = raw.find(x => x.id === d.id);
         if (r) {
-          // Kopiowanie nadpisanych i nowo dodanych pól boolowskich
           ['czas_oczekiwania_poz','czas_oczekiwania_spec','karencja_dni','min_pracownicy','wiek_dzieci_do',
            'telemedycyna','ciaza','rehabilitacja','stomatologia','opieka_psychiatryczna','wizyty_domowe',
            'leczenie_szpitalne','hotline_24h','refundacja','swoboda_leczenia'].forEach(k => {
             if(r[k] !== null && r[k] !== undefined) d[k] = r[k];
           });
-          d.liczba_specjalizacji = r.liczba_specjalizacji; 
+          // Dynamiczne nadpisywanie zerowych wartości faktycznymi sumami z bazy
+          d.liczba_specjalizacji = specC[d.id] !== undefined ? specC[d.id] : r.liczba_specjalizacji; 
           d.liczba_badan_lab = labC[d.id] !== undefined ? labC[d.id] : r.liczba_badan_lab;
         }
         d.liczba_rtg = rtgC[d.id] || 0;
@@ -987,7 +997,7 @@ function openClinicModal(idx) {
   document.getElementById('clinicDetailsModal').classList.add('flex');
 }
 
-// ─── MODAL SZCZEGÓŁÓW PAKIETU ───
+// ─── MODAL SZCZEGÓŁÓW PAKIETU Z WIDOKIEM LEKARZY I BADAŃ ───
 async function showPackageDetails(pkgId) {
   const modal = document.getElementById('pkgDetailsModal');
   const mBody = document.getElementById('pdmBody');
@@ -1038,14 +1048,26 @@ async function showPackageDetails(pkgId) {
         </div>
       </div>
       
-      <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm mb-8">
-        <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
-          <h4 class="text-base font-black text-brand-pink uppercase tracking-wide">Szczegółowy Zakres Badań Laboratoryjnych i Diagnostyki</h4>
-          <span class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full">${labs.length} wpisów</span>
-        </div>
-        <div class="list-columns">
-          ${labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-pink">${labs.map(s => `<li class="break-inside-avoid">${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wgranej listy. Użyj SQL, aby dodać listę badań.</p>`}
-        </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+              <h4 class="text-base font-black text-brand-navy uppercase tracking-wide">Specjalizacje Lekarskie</h4>
+              <span class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full">${specs.length} wpisów</span>
+            </div>
+            <div class="list-columns" style="columns: 1;">
+              ${specs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-navy">${specs.map(s => `<li class="break-inside-avoid">${s.specjalizacja_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
+            </div>
+          </div>
+          
+          <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+              <h4 class="text-base font-black text-brand-pink uppercase tracking-wide">Badania i Zabiegi</h4>
+              <span class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full">${labs.length} wpisów</span>
+            </div>
+            <div class="list-columns" style="columns: 1;">
+              ${labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-pink">${labs.map(s => `<li class="break-inside-avoid">${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
+            </div>
+          </div>
       </div>
 
       <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-8">
