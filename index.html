@@ -55,7 +55,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.18</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.19</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -838,9 +838,9 @@ async function acClinic(q) {
 }
 
 async function searchClinics() {
-  const city    = document.getElementById('clinCity').value.trim();
-  const powiat  = document.getElementById('clinPowiat').value.trim();
-  const name    = document.getElementById('clinName').value.trim();
+  const city       = document.getElementById('clinCity').value.trim();
+  const powiat     = document.getElementById('clinPowiat').value.trim();
+  const name       = document.getElementById('clinName').value.trim();
   const provSelect = document.getElementById('clinProv');
   const provName   = provSelect.options[provSelect.selectedIndex].text;
   const provVal    = provSelect.value;
@@ -848,7 +848,7 @@ async function searchClinics() {
   const hint       = document.getElementById('clinHint');
   const resultDiv  = document.getElementById('clinResult');
   const resultBody = document.getElementById('clinResultBody');
-  const countEl   = document.getElementById('clinCount');
+  const countEl    = document.getElementById('clinCount');
 
   hint.textContent = 'Szukam placówek...';
   hint.className   = 'text-xs text-brand-navy font-bold mt-2';
@@ -860,22 +860,23 @@ async function searchClinics() {
     return;
   }
 
-  let filters = [];
-  if (city)   filters.push(`miejscowosc.ilike.${pgSafe(city)}`);
-  if (powiat) filters.push(`powiat.ilike.${pgSafe(powiat)}`);
-  if (name) {
-    filters.push(`or(nazwa_oddzialu.ilike.${pgSafe(name)},siec_bazowa.ilike.${pgSafe(name)})`);
+  // Tarcza koduje wartości, ale NIE dodaje własnych gwiazdek. Gwiazdki doklejamy przy query.
+  const safe = (v) => encodeURIComponent(v.replace(/"/g, ''));
+
+  // UX: Blokada wyszukiwania, jeśli wszystkie pola tekstowe są puste
+  if (!city && !powiat && !name) {
+    hint.textContent = 'Wpisz co najmniej miejscowość, powiat lub nazwę placówki.';
+    hint.className   = 'text-xs text-slate-500 font-bold mt-2';
+    return;
   }
 
-  let query = 'select=*&limit=1000';
-  if (filters.length === 1 && !name) {
-    if (city)   query += `&miejscowosc=ilike.${pgSafe(city)}`;
-    if (powiat) query += `&powiat=ilike.${pgSafe(powiat)}`;
-  } else if (filters.length === 1 && name && !city && !powiat) {
-    query += `&or=(nazwa_oddzialu.ilike.${pgSafe(name)},siec_bazowa.ilike.${pgSafe(name)})`;
-  } else if (filters.length > 1) {
-    query += `&and=(${filters.join(',')})`;
-  }
+  // PostgREST domyślnie łączy parametry znakiem '&' jako logiczne AND.
+  let queryParams = ['select=*', 'limit=1000'];
+  if (city)   queryParams.push(`miejscowosc=ilike.*${safe(city)}*`);
+  if (powiat) queryParams.push(`powiat=ilike.*${safe(powiat)}*`);
+  if (name)   queryParams.push(`or=(nazwa_oddzialu.ilike.*${safe(name)}*,siec_bazowa.ilike.*${safe(name)}*)`);
+
+  let query = queryParams.join('&');
 
   const data = await apiGet('placowki_medyczne', query);
 
@@ -891,6 +892,7 @@ async function searchClinics() {
     return;
   }
 
+  // Filtr po dostawcy - działający lokalnie
   let filteredData = data;
   if (provVal && provName !== '— Wszyscy Partnerzy —') {
     const searchProv = provName.trim().toUpperCase();
