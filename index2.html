@@ -56,7 +56,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.10</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.21</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -65,8 +65,9 @@
       <button onclick="switchTab('library',this)" id="btn-library" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">📚 Biblioteka</button>
       <button onclick="switchTab('calc',this)"    id="btn-calc"    class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧮 Kalkulator</button>
       <button onclick="switchTab('learn',this)"   id="btn-learn"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧠 SQL</button>
-      <button onclick="switchTab('admin',this)"   id="btn-admin"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white flex items-center gap-1">🔒 Admin</button>
+      <button onclick="switchTab('account',this)" id="btn-account" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white hidden">👤 Konto</button>
       <button onclick="doLogout()" id="btn-logout" class="hidden tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">👤 Wyloguj</button>
+      <button onclick="switchTab('admin',this)"   id="btn-admin"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white flex items-center gap-1">🔒 Admin</button>
     </nav>
   </div>
 </header>
@@ -351,6 +352,60 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════ MOJE KONTO -->
+<div id="tab-account" class="tab-panel">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+    <!-- Profil -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+      <h2 class="text-base font-bold text-brand-navy mb-5">👤 Mój Profil</h2>
+      <div class="space-y-4 mb-5">
+        <div><label class="lbl">Imię i nazwisko</label><input type="text" id="accName" class="inp" placeholder="Jan Kowalski"/></div>
+        <div><label class="lbl">Firma / Kancelaria</label><input type="text" id="accFirma" class="inp" placeholder="Nazwa firmy"/></div>
+        <div><label class="lbl">Telefon</label><input type="text" id="accTel" class="inp" placeholder="+48 000 000 000"/></div>
+        <div><label class="lbl">NIP</label><input type="text" id="accNip" class="inp" placeholder="0000000000"/></div>
+      </div>
+      <button onclick="saveProfile()" class="bg-brand-navy text-white font-bold py-2.5 px-6 rounded-xl shadow-md">💾 Zapisz profil</button>
+      <p id="accStatus" class="mt-3 text-sm font-semibold"></p>
+    </div>
+
+    <!-- Logo + Plan -->
+    <div class="space-y-6">
+      <!-- Logo -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <h2 class="text-base font-bold text-brand-navy mb-4">🖼 Logo do PDF</h2>
+        <div id="accLogoPreview" class="mb-4 hidden"><img id="accLogoImg" src="" class="max-h-16 rounded-lg border border-slate-200 p-2" alt="Logo"/></div>
+        <input type="file" id="accLogoFile" accept="image/*" class="inp mb-3" onchange="previewLogo(this)"/>
+        <button onclick="uploadLogo()" class="bg-brand-pink text-white font-bold py-2.5 px-6 rounded-xl shadow-md">⬆ Wgraj logo</button>
+        <p id="logoStatus" class="mt-3 text-sm font-semibold"></p>
+      </div>
+
+      <!-- Plan -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <h2 class="text-base font-bold text-brand-navy mb-4">📋 Plan subskrypcji</h2>
+        <div id="accPlanBox" class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Aktywny plan</span>
+            <span id="accPlanBadge" class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full uppercase">–</span>
+          </div>
+          <div class="text-sm text-slate-500">Ważny do: <strong id="accPlanDo" class="text-brand-navy">–</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historia wyszukiwań -->
+  <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mt-8">
+    <div class="flex justify-between items-center mb-5">
+      <h2 class="text-base font-bold text-brand-navy">📋 Historia wyszukiwań</h2>
+      <button onclick="loadHistory()" class="text-xs bg-slate-100 hover:bg-slate-200 font-bold px-4 py-2 rounded-xl border">🔄 Odśwież</button>
+    </div>
+    <div id="historyTable" class="tbl overflow-x-auto">
+      <div class="text-slate-400 text-sm text-center py-8">Kliknij Odśwież aby załadować historię</div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════ ADMIN -->
 <div id="tab-admin" class="tab-panel">
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -366,6 +421,18 @@
       </div>
       <p id="connStatus" class="mt-4 text-sm font-semibold"></p>
     </div>
+  
+    <!-- Users table (admin only) -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm lg:col-span-2 mt-4">
+      <div class="flex justify-between items-center mb-5">
+        <h2 class="text-base font-bold text-brand-navy">👥 Zarządzanie Użytkownikami</h2>
+        <button onclick="loadAdminUsers()" class="text-xs bg-slate-100 hover:bg-slate-200 font-bold px-4 py-2 rounded-xl border">🔄 Odśwież</button>
+      </div>
+      <div id="adminUsersTable" class="tbl overflow-x-auto">
+        <div class="text-slate-400 text-sm text-center py-8">Kliknij Odśwież aby załadować użytkowników</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -432,117 +499,19 @@ const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 let SB_URL = localStorage.getItem('ma_url')||'';
 let SB_KEY = localStorage.getItem('ma_key')||'';
 let allProviders   = [];
-let providerPkgs   = {};
-let selectedPkgs   = {};
-let activeProv     = null;
+let providerPkgs   = {};    
+let selectedPkgs   = {};    
+let activeProv     = null;  
 let lastCompData   = [];
 let allCalcPkgs    = [];
 let selectedCalc   = new Set();
 let searchType     = 'spec';
-let currentClinicData = [];
-let allClinicsCache   = null;
-
-// ─── SUPABASE AUTH ───────────────────────────────────────
-let SB_CLIENT = null;
-let currentUser = null;
-let currentRole = 'viewer';
-
-function initSBClient() {
-  if (SB_URL && SB_KEY && window.supabase)
-    SB_CLIENT = supabase.createClient(SB_URL, SB_KEY);
-}
-
-async function getAuthHeaders() {
-  const base = {'apikey':SB_KEY,'Content-Type':'application/json','Accept':'application/json'};
-  if (SB_CLIENT) {
-    try {
-      const { data:{session} } = await SB_CLIENT.auth.getSession();
-      if (session) { base['Authorization']='Bearer '+session.access_token; return base; }
-    } catch(e) {}
-  }
-  base['Authorization'] = 'Bearer '+SB_KEY;
-  return base;
-}
-
-async function initAuth() {
-  initSBClient();
-  if (!SB_CLIENT) { showLoginModal('Skonfiguruj URL i Key w zakładce Admin, następnie odśwież stronę.'); return; }
-  const { data:{session} } = await SB_CLIENT.auth.getSession();
-  if (!session) { showLoginModal(); return; }
-  currentUser = session.user;
-  await loadUserRole();
-  hideLoginModal();
-  await init();
-}
-
-async function loadUserRole() {
-  if (!SB_CLIENT || !currentUser) return;
-  try {
-    const { data } = await SB_CLIENT.from('profiles').select('rola,full_name').eq('id',currentUser.id).single();
-    currentRole = data?.rola || 'admin';
-    const name  = data?.full_name || currentUser.email;
-    document.getElementById('userBar').classList.replace('hidden','flex') ||
-    document.getElementById('userBar').classList.remove('hidden');
-    document.getElementById('userBar').classList.add('flex');
-    document.getElementById('userBarName').textContent = name;
-    document.getElementById('userBarRole').textContent = currentRole;
-  } catch(e) { currentRole = 'admin'; }
-  document.getElementById('btn-logout').classList.remove('hidden');
-  if (currentRole === 'admin') document.getElementById('btn-admin').classList.remove('hidden');
-  else document.getElementById('btn-admin').classList.add('hidden');
-}
-
-function showLoginModal(msg) {
-  const m = document.getElementById('loginModal');
-  m.classList.remove('hidden'); m.classList.add('flex');
-  if (msg) { const e=document.getElementById('loginError'); e.textContent=msg; e.classList.remove('hidden'); }
-}
-function hideLoginModal() {
-  const m = document.getElementById('loginModal');
-  m.classList.add('hidden'); m.classList.remove('flex');
-}
-
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPass').value;
-  const err   = document.getElementById('loginError');
-  const btn   = document.getElementById('loginBtnTxt');
-  err.classList.add('hidden');
-  if (!email||!pass) { err.textContent='Podaj email i hasło.'; err.classList.remove('hidden'); return; }
-  if (!SB_CLIENT) initSBClient();
-  if (!SB_CLIENT) { err.textContent='Brak konfiguracji bazy.'; err.classList.remove('hidden'); return; }
-  btn.textContent = 'Logowanie...';
-  const { data, error } = await SB_CLIENT.auth.signInWithPassword({email,password:pass});
-  btn.textContent = 'Zaloguj się';
-  if (error) { err.textContent='Błędny email lub hasło.'; err.classList.remove('hidden'); }
-  else { currentUser=data.user; await loadUserRole(); hideLoginModal(); await init(); }
-}
-
-async function doMagicLink() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const msg   = document.getElementById('magicMsg');
-  const err   = document.getElementById('loginError');
-  if (!email) { err.textContent='Wpisz email powyżej.'; err.classList.remove('hidden'); return; }
-  if (!SB_CLIENT) initSBClient();
-  if (SB_CLIENT) {
-    await SB_CLIENT.auth.signInWithOtp({email});
-    msg.textContent = '✅ Link wysłany na '+email;
-    msg.classList.remove('hidden');
-  }
-}
-
-async function doLogout() {
-  if (SB_CLIENT) await SB_CLIENT.auth.signOut();
-  currentUser=null; currentRole='viewer';
-  document.getElementById('userBar').classList.add('hidden');
-  document.getElementById('userBar').classList.remove('flex');
-  showLoginModal();
-}
+let currentClinicData = []; 
 
 function switchTab(id,btn){
   if(id === 'admin') {
-    if(currentRole === 'admin') { /* zalogowany admin — OK */ }
-    else if(sessionStorage.getItem('adminUnlocked') === 'true') { /* PIN — OK */ }
+    if(currentRole === 'admin') { /* OK */ }
+    else if(sessionStorage.getItem('adminUnlocked') === 'true') { /* PIN OK */ }
     else {
       document.getElementById('adminAuthModal').classList.remove('hidden');
       document.getElementById('adminAuthModal').classList.add('flex');
@@ -559,6 +528,10 @@ function switchTab(id,btn){
   btn.classList.remove('text-slate-300');
   if(id==='library') loadLibrary();
   if(id==='calc') calcLoadPackages();
+  if(id==='account') loadAccountData();
+  if(id==='admin') loadAdminUsers();
+  if(id==='account') loadAccountData();
+  if(id==='admin') loadAdminUsers();
 }
 
 function unlockAdmin() {
@@ -800,6 +773,8 @@ async function runSearch() {
     });
   }
 
+  saveSearchHistory('wyszukiwanie', {query: q, typ: searchType}, finalPkgs.length);
+  saveSearchHistory('wyszukiwanie', {query: q, typ: searchType}, finalPkgs.length);
   hint.textContent = `Poniżej znajdziesz pakiety zawierające wybrane świadczenie (w tym warianty wyższego szczebla)`;
   document.getElementById('searchResultTitle').textContent = `Wyniki dla: ${q}`;
   
@@ -1307,6 +1282,8 @@ async function runComparison(){
   });
 
   lastCompData=data; renderCompTable(lastCompData); renderPriceSection(lastCompData);
+  saveSearchHistory('porownanie', {pakiety: ids.length}, data.length);
+  saveSearchHistory('porownanie', {pakiety: ids.length}, data.length);
 }
 
 function showNotif(tab, msg, classes) {
@@ -1531,10 +1508,251 @@ async function saveEdit(){
   if(ok) loadLibrary();
 }
 
+
+// ─── SUPABASE AUTH ───────────────────────────────────────
+let SB_CLIENT = null;
+let currentUser = null;
+let currentRole = 'viewer';
+
+function initSBClient() {
+  if (SB_URL && SB_KEY && window.supabase)
+    SB_CLIENT = supabase.createClient(SB_URL, SB_KEY);
+}
+
+async function getAuthHeaders() {
+  const base = {'apikey':SB_KEY,'Content-Type':'application/json','Accept':'application/json'};
+  if (SB_CLIENT) {
+    try {
+      const { data:{session} } = await SB_CLIENT.auth.getSession();
+      if (session) { base['Authorization']='Bearer '+session.access_token; return base; }
+    } catch(e) {}
+  }
+  base['Authorization'] = 'Bearer '+SB_KEY;
+  return base;
+}
+
+async function initAuth() {
+  initSBClient();
+  if (!SB_CLIENT) { showLoginModal('Skonfiguruj URL i Key w zakładce Admin, następnie odśwież stronę.'); return; }
+  const { data:{session} } = await SB_CLIENT.auth.getSession();
+  if (!session) { showLoginModal(); return; }
+  currentUser = session.user;
+  await loadUserRole();
+  hideLoginModal();
+  await init();
+}
+
+async function loadUserRole() {
+  if (!SB_CLIENT || !currentUser) return;
+  try {
+    const { data } = await SB_CLIENT.from('profiles').select('rola,full_name').eq('id',currentUser.id).single();
+    currentRole = data?.rola || 'admin';
+    const name  = data?.full_name || currentUser.email;
+    document.getElementById('userBar').classList.remove('hidden');
+    document.getElementById('userBar').classList.add('flex');
+    document.getElementById('userBarName').textContent = name;
+    document.getElementById('userBarRole').textContent = currentRole;
+  } catch(e) { currentRole = 'admin'; }
+  document.getElementById('btn-logout').classList.remove('hidden');
+  document.getElementById('btn-account').classList.remove('hidden');
+  if (currentRole === 'admin') document.getElementById('btn-admin').classList.remove('hidden');
+  else document.getElementById('btn-admin').classList.add('hidden');
+}
+
+function showLoginModal(msg) {
+  const m = document.getElementById('loginModal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+  if (msg) { const e=document.getElementById('loginError'); e.textContent=msg; e.classList.remove('hidden'); }
+}
+function hideLoginModal() {
+  const m = document.getElementById('loginModal');
+  m.classList.add('hidden'); m.classList.remove('flex');
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginError');
+  const btn   = document.getElementById('loginBtnTxt');
+  err.classList.add('hidden');
+  if (!email||!pass) { err.textContent='Podaj email i hasło.'; err.classList.remove('hidden'); return; }
+  if (!SB_CLIENT) initSBClient();
+  if (!SB_CLIENT) { err.textContent='Brak konfiguracji bazy.'; err.classList.remove('hidden'); return; }
+  btn.textContent = 'Logowanie...';
+  const { data, error } = await SB_CLIENT.auth.signInWithPassword({email,password:pass});
+  btn.textContent = 'Zaloguj się';
+  if (error) { err.textContent='Błędny email lub hasło.'; err.classList.remove('hidden'); }
+  else { currentUser=data.user; await loadUserRole(); hideLoginModal(); await init(); }
+}
+
+async function doMagicLink() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const msg   = document.getElementById('magicMsg');
+  const err   = document.getElementById('loginError');
+  if (!email) { err.textContent='Wpisz email powyżej.'; err.classList.remove('hidden'); return; }
+  if (!SB_CLIENT) initSBClient();
+  if (SB_CLIENT) {
+    await SB_CLIENT.auth.signInWithOtp({email});
+    msg.textContent = '✅ Link wysłany na '+email;
+    msg.classList.remove('hidden');
+  }
+}
+
+async function doLogout() {
+  if (SB_CLIENT) await SB_CLIENT.auth.signOut();
+  currentUser=null; currentRole='viewer';
+  document.getElementById('userBar').classList.add('hidden');
+  document.getElementById('userBar').classList.remove('flex');
+  showLoginModal();
+}
+
+// ─── MOJE KONTO ────────────────────────────────────────
+async function loadAccountData() {
+  if (!SB_CLIENT || !currentUser) return;
+  const { data } = await SB_CLIENT.from('profiles')
+    .select('full_name,firma,telefon,nip,logo_url,plan,plan_do')
+    .eq('id', currentUser.id).single();
+  if (!data) return;
+  const s = (id, v) => { const el = document.getElementById(id); if(el && v) el.value = v; };
+  s('accName', data.full_name); s('accFirma', data.firma);
+  s('accTel', data.telefon);   s('accNip', data.nip);
+  if (data.logo_url) {
+    document.getElementById('accLogoImg').src = data.logo_url;
+    document.getElementById('accLogoPreview').classList.remove('hidden');
+  }
+  document.getElementById('accPlanBadge').textContent = (data.plan || 'trial').toUpperCase();
+  document.getElementById('accPlanDo').textContent = data.plan_do ? new Date(data.plan_do).toLocaleDateString('pl-PL') : 'Brak limitu';
+}
+
+async function saveProfile() {
+  if (!SB_CLIENT || !currentUser) return;
+  const body = {
+    full_name: document.getElementById('accName').value.trim(),
+    firma:     document.getElementById('accFirma').value.trim(),
+    telefon:   document.getElementById('accTel').value.trim(),
+    nip:       document.getElementById('accNip').value.trim(),
+  };
+  const { error } = await SB_CLIENT.from('profiles').update(body).eq('id', currentUser.id);
+  const st = document.getElementById('accStatus');
+  st.textContent = error ? '✗ Błąd zapisu: ' + error.message : '✓ Profil zapisany.';
+  st.className = 'mt-3 text-sm font-bold ' + (error ? 'text-red-600' : 'text-emerald-600');
+}
+
+function previewLogo(input) {
+  if (!input.files || !input.files[0]) return;
+  const url = URL.createObjectURL(input.files[0]);
+  document.getElementById('accLogoImg').src = url;
+  document.getElementById('accLogoPreview').classList.remove('hidden');
+}
+
+async function uploadLogo() {
+  const file = document.getElementById('accLogoFile').files[0];
+  const st   = document.getElementById('logoStatus');
+  if (!file) { st.textContent = 'Wybierz plik.'; st.className = 'mt-3 text-sm font-bold text-red-600'; return; }
+  if (!SB_CLIENT || !currentUser) return;
+  st.textContent = 'Wgrywanie...'; st.className = 'mt-3 text-sm font-bold text-slate-500';
+  const ext  = file.name.split('.').pop();
+  const path = `${currentUser.id}/logo.${ext}`;
+  const { error: upErr } = await SB_CLIENT.storage.from('logos').upload(path, file, { upsert: true });
+  if (upErr) { st.textContent = '✗ Błąd uploadu: ' + upErr.message; st.className = 'mt-3 text-sm font-bold text-red-600'; return; }
+  const { data: { publicUrl } } = SB_CLIENT.storage.from('logos').getPublicUrl(path);
+  await SB_CLIENT.from('profiles').update({ logo_url: publicUrl }).eq('id', currentUser.id);
+  document.getElementById('accLogoImg').src = publicUrl + '?t=' + Date.now();
+  document.getElementById('accLogoPreview').classList.remove('hidden');
+  st.textContent = '✓ Logo wgrane i zapisane.'; st.className = 'mt-3 text-sm font-bold text-emerald-600';
+}
+
+async function loadHistory() {
+  if (!SB_CLIENT || !currentUser) return;
+  const { data } = await SB_CLIENT.from('historia_wyszukiwan')
+    .select('*').eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false }).limit(20);
+  const el = document.getElementById('historyTable');
+  if (!data || !data.length) { el.innerHTML = '<div class="text-slate-400 text-sm text-center py-8">Brak historii wyszukiwań.</div>'; return; }
+  let html = `<table class="w-full text-sm border-collapse min-w-[600px]">
+    <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
+      <tr><th class="p-3 text-left">Data</th><th class="p-3 text-left">Typ</th><th class="p-3 text-left">Parametry</th><th class="p-3 text-center">Wyniki</th></tr>
+    </thead><tbody class="divide-y divide-slate-100">`;
+  data.forEach(h => {
+    const d = new Date(h.created_at).toLocaleString('pl-PL');
+    const params = h.parametry ? JSON.stringify(h.parametry).substring(0, 80) : '–';
+    html += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-500">${d}</td>
+      <td class="p-3"><span class="bg-slate-100 text-brand-navy text-xs font-bold px-2 py-1 rounded-lg">${h.typ || '–'}</span></td>
+      <td class="p-3 text-xs text-slate-600 max-w-xs truncate">${params}</td>
+      <td class="p-3 text-center font-bold text-brand-navy">${h.wynik_count ?? '–'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// ─── ADMIN: ZARZĄDZANIE USERAMI ─────────────────────────
+async function loadAdminUsers() {
+  if (!SB_CLIENT || currentRole !== 'admin') return;
+  const el = document.getElementById('adminUsersTable');
+  if (!el) return;
+  el.innerHTML = '<div class="flex items-center gap-2 text-slate-400 justify-center py-6"><div class="loader"></div>Ładowanie...</div>';
+  const { data, error } = await SB_CLIENT.from('v_admin_users').select('*').order('created_at', { ascending: false });
+  if (error || !data) { el.innerHTML = '<div class="text-red-500 text-sm text-center py-6">Błąd: ' + (error?.message || 'brak danych') + '</div>'; return; }
+  let html = `<table class="w-full text-sm border-collapse min-w-[900px]">
+    <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
+      <tr><th class="p-3 text-left">Email</th><th class="p-3 text-left">Imię / Firma</th>
+      <th class="p-3 text-center">Rola</th><th class="p-3 text-center">Plan</th>
+      <th class="p-3 text-center">Ważny do</th><th class="p-3 text-center">Aktywny</th>
+      <th class="p-3 text-center">Wyszukiwania</th><th class="p-3 text-center">Ostatnie logowanie</th>
+      <th class="p-3"></th></tr>
+    </thead><tbody class="divide-y divide-slate-100">`;
+  data.forEach(u => {
+    const lastLogin = u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString('pl-PL') : '–';
+    const planDo = u.plan_do ? new Date(u.plan_do).toLocaleDateString('pl-PL') : '∞';
+    html += `<tr class="hover:bg-slate-50">
+      <td class="p-3 font-semibold text-brand-navy text-xs">${u.email}</td>
+      <td class="p-3 text-xs"><div class="font-bold">${u.full_name||'–'}</div><div class="text-slate-400">${u.firma||''}</div></td>
+      <td class="p-3 text-center">
+        <select onchange="updateUserField('${u.id}','rola',this.value)" class="inp text-xs py-1 px-2 w-24">
+          ${['viewer','broker','admin'].map(r=>`<option ${u.rola===r?'selected':''}>${r}</option>`).join('')}
+        </select></td>
+      <td class="p-3 text-center">
+        <select onchange="updateUserField('${u.id}','plan',this.value)" class="inp text-xs py-1 px-2 w-24">
+          ${['trial','starter','pro','agency'].map(r=>`<option ${u.plan===r?'selected':''}>${r}</option>`).join('')}
+        </select></td>
+      <td class="p-3 text-center text-xs font-bold text-slate-600">${planDo}</td>
+      <td class="p-3 text-center"><button onclick="updateUserField('${u.id}','aktywny',${!u.aktywny})" class="text-xs font-bold px-3 py-1 rounded-full ${u.aktywny?'bg-emerald-100 text-emerald-700':'bg-red-100 text-red-700'}">${u.aktywny?'✅ Tak':'❌ Nie'}</button></td>
+      <td class="p-3 text-center font-bold text-brand-navy">${u.liczba_wyszukiwan??0}</td>
+      <td class="p-3 text-center text-xs text-slate-500">${lastLogin}</td>
+      <td class="p-3 text-right"><button onclick="setUserPlanDo('${u.id}')" class="text-xs bg-brand-navy text-white font-bold px-3 py-1.5 rounded-lg">📅 Przedłuż</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function updateUserField(userId, field, value) {
+  if (!SB_CLIENT) return;
+  const body = {}; body[field] = value;
+  await SB_CLIENT.from('profiles').update(body).eq('id', userId);
+  loadAdminUsers();
+}
+
+function setUserPlanDo(userId) {
+  const months = prompt('Przedłuż plan o ile miesięcy?', '12');
+  if (!months) return;
+  const d = new Date();
+  d.setMonth(d.getMonth() + parseInt(months));
+  const body = { plan_do: d.toISOString().split('T')[0] };
+  SB_CLIENT.from('profiles').update(body).eq('id', userId).then(() => loadAdminUsers());
+}
+
+// ─── ZAPIS HISTORII WYSZUKIWAŃ ──────────────────────────
+async function saveSearchHistory(typ, parametry, wynik_count) {
+  if (!SB_CLIENT || !currentUser) return;
+  try { await SB_CLIENT.from('historia_wyszukiwan').insert({ user_id: currentUser.id, typ, parametry, wynik_count }); }
+  catch(e) {}
+}
+
 window.onload=initAuth;
 </script>
 
-<!-- ══════════════════════════════ MODAL LOGOWANIA (Auth V1.0.20) -->
+<!-- ══════════════════════════════ MODAL LOGOWANIA -->
 <div id="loginModal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-4 backdrop-blur-sm">
   <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
     <div class="text-center mb-7">
@@ -1542,34 +1760,21 @@ window.onload=initAuth;
       <p class="text-sm text-slate-500 mt-1">Zaloguj się do swojego konta</p>
     </div>
     <div class="space-y-3 mb-4">
-      <div>
-        <label class="lbl">Adres e-mail</label>
-        <input type="email" id="loginEmail" class="inp" placeholder="twoj@email.pl" onkeydown="if(event.key==='Enter') doLogin()"/>
-      </div>
-      <div>
-        <label class="lbl">Hasło</label>
-        <input type="password" id="loginPass" class="inp" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()"/>
-      </div>
+      <div><label class="lbl">Adres e-mail</label><input type="email" id="loginEmail" class="inp" placeholder="twoj@email.pl" onkeydown="if(event.key==='Enter') doLogin()"/></div>
+      <div><label class="lbl">Hasło</label><input type="password" id="loginPass" class="inp" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()"/></div>
     </div>
-    <button onclick="doLogin()" id="btnLogin" class="w-full bg-brand-navy hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md mb-3 transition-colors">
-      <span id="loginBtnTxt">Zaloguj się</span>
-    </button>
+    <button onclick="doLogin()" class="w-full bg-brand-navy hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md mb-3 transition-colors"><span id="loginBtnTxt">Zaloguj się</span></button>
     <p id="loginError" class="text-red-500 text-xs text-center font-bold mb-3 hidden"></p>
     <div class="text-center border-t border-slate-100 pt-3">
-      <a href="#" onclick="doMagicLink(); return false;" class="text-xs text-slate-400 hover:text-brand-pink font-semibold transition-colors">
-        ✉️ Wyślij link logowania na email
-      </a>
+      <a href="#" onclick="doMagicLink(); return false;" class="text-xs text-slate-400 hover:text-brand-pink font-semibold transition-colors">✉️ Wyślij link logowania na email</a>
     </div>
     <p id="magicMsg" class="hidden text-emerald-600 text-xs text-center font-bold mt-2"></p>
   </div>
 </div>
-
-<!-- Pasek użytkownika -->
 <div id="userBar" class="hidden fixed bottom-4 right-4 z-40 bg-brand-navy text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl items-center gap-2">
   <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
   <span id="userBarName">Zalogowany</span>
   <span id="userBarRole" class="bg-white/20 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider"></span>
 </div>
-
 </body>
 </html>
