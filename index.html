@@ -55,7 +55,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.5</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.7</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -176,7 +176,7 @@
     </div>
     <div class="flex gap-3 items-center">
       <div class="ac-wrap flex-grow">
-        <input type="text" id="searchQuery" placeholder="np. kardiolog, USG brzucha, morfologia..." class="inp w-full text-base" autocomplete="off"
+        <input type="text" id="searchQuery" placeholder="np. kardiolog, USG brzucha, morfologia..." class="inp w-full text-base font-bold" autocomplete="off"
           oninput="acInput(this.value)" onkeydown="acKeydown(event)" onblur="setTimeout(()=>acHide(),200)"/>
         <ul id="acList" class="ac-list hidden"></ul>
       </div>
@@ -187,7 +187,7 @@
   <div id="searchResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
     <div class="bg-brand-navy p-5">
       <h3 id="searchResultTitle" class="text-base font-bold text-white"></h3>
-      <p class="text-xs text-slate-400 mt-0.5">Dostępne pakiety (kliknij pakiet, aby zobaczyć jego pełne szczegóły)</p>
+      <p class="text-xs text-slate-400 mt-0.5">Automatyczne dziedziczenie (pakiety wyższego szczebla również zawierają to badanie)</p>
     </div>
     <div id="searchResultBody" class="p-5"></div>
   </div>
@@ -523,15 +523,14 @@ async function checkDbStatus(){
   const d=await apiGet('dostawcy','select=id&aktywny=eq.true');
   if(d){
     txt.textContent='Połączono'; dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500';
-    document.getElementById('statusProviders').textContent=d.length; 
     const p=await apiGet('pakiety','select=id&aktywna=eq.true');
     document.getElementById('statusPackages').textContent=p?p.length:'–';
   }
 }
 
-// 🔥 Tarcza anty-duplikatowa dla listy dostawców
+// 🔥 Tarcza anty-duplikatowa V2
 async function loadProvidersFromDB(){
-  const d=await apiGet('dostawcy','select=id,nazwa,skrot&aktywny=eq.true&order=nazwa');
+  const d=await apiGet('dostawcy','select=id,nazwa,skrot,aktywny&order=nazwa');
   let merged = {};
   
   if(d){
@@ -540,15 +539,16 @@ async function loadProvidersFromDB(){
       if(norm === 'TU ZDROWIE!!!' || norm === 'TUZDROWIE') norm = 'TU ZDROWIE';
 
       if(!merged[norm]) {
-        merged[norm] = { idArr: [p.id], nazwa: norm, idStr: p.id.toString() };
+        merged[norm] = { idArr: [p.id], nazwa: norm, idStr: p.id.toString(), isActive: p.aktywny };
       } else {
         merged[norm].idArr.push(p.id);
         merged[norm].idStr = merged[norm].idArr.join('-');
+        if(p.aktywny) merged[norm].isActive = true;
       }
     });
   }
   
-  allProviders = Object.values(merged).sort((a,b) => a.nazwa.localeCompare(b.nazwa));
+  allProviders = Object.values(merged).filter(m => m.isActive).sort((a,b) => a.nazwa.localeCompare(b.nazwa));
   document.getElementById('statusProviders').textContent = allProviders.length;
   
   buildProvList();
@@ -634,46 +634,92 @@ async function acInput(val) {
 function acHide() { document.getElementById('acList').classList.add('hidden'); }
 function acKeydown(e) { if(e.key==='Enter') runSearch(); }
 
+// 🔥 WODOPSADOWA LOGIKA DZIEDZICZENIA ZAKRESÓW 🔥
 async function runSearch() {
   const q = document.getElementById('searchQuery').value.trim();
   const hint = document.getElementById('searchHint');
   const res = document.getElementById('searchResult');
   const body = document.getElementById('searchResultBody');
   if(!q) return;
-  hint.textContent = 'Szukam...'; res.classList.add('hidden');
+  
+  hint.textContent = 'Szukam i przeliczam logikę dziedziczenia pakietów...'; 
+  res.classList.add('hidden');
   
   const table = searchType === 'spec' ? 'pakiety_specjalizacje' : 'pakiety_badania';
   const col = searchType === 'spec' ? 'specjalizacja_nazwa' : 'badanie_nazwa';
-  const d = await apiGet(table, `select=pakiet_id,${col}&${col}=ilike.*${encodeURIComponent(q)}*`);
   
-  if(!d || !d.length) { hint.textContent = 'Brak wyników.'; return; }
+  // 1. Zlokalizuj wszystkie pakiety, w których usługa jest wgrana WPROST
+  const d = await apiGet(table, `select=pakiet_id,${col}&${col}=ilike.*${encodeURIComponent(q)}*`);
+  if(!d || !d.length) { hint.textContent = 'Brak wyników w bazie.'; return; }
   
   const pids = [...new Set(d.map(x => x.pakiet_id))];
-  const pkgs = await fetchEnhancedPackages(`select=*&id=in.(${pids.join(',')})`);
+  const directPkgs = await fetchEnhancedPackages(`select=*&id=in.(${pids.join(',')})`);
   
-  hint.textContent = `Znaleziono w ${pkgs.length} pakietach.`;
+  if(!directPkgs || !directPkgs.length) { hint.textContent = 'Błąd pobierania danych bazowych.'; return; }
+
+  // Normalizator nazw, żeby powiązać "TU ZDROWIE" z "TU ZDROWIE!!!" itp.
+  const getNorm = (raw) => { let n = (raw||'').trim().toUpperCase(); if(n==='TU ZDROWIE!!!'||n==='TUZDROWIE') return 'TU ZDROWIE'; return n; };
+
+  // 2. Znajdź MINIMALNY tier (poziom) na którym badanie jest dostępne u każdego z ubezpieczycieli
+  const minTierMap = {};
+  directPkgs.forEach(p => {
+    const norm = getNorm(p.dostawca_nazwa);
+    const t = p.tier || 999;
+    if(minTierMap[norm] === undefined || t < minTierMap[norm]) {
+       minTierMap[norm] = t;
+    }
+  });
+
+  // 3. Pobierz WSZYSTKIE pakiety z bazy dla tych ubezpieczycieli, by móc przypisać im to badanie "z góry"
+  const targetIds = [];
+  Object.keys(minTierMap).forEach(norm => {
+    const prov = allProviders.find(ap => ap.nazwa === norm);
+    if(prov) targetIds.push(...prov.idArr);
+  });
+
+  let finalPkgs = [];
+  if(targetIds.length > 0) {
+    const cascadePkgs = await fetchEnhancedPackages(`select=*&dostawca_id=in.(${targetIds.join(',')})&aktywna=eq.true`);
+    // Filtrujemy tylko pakiety, które są RÓWNE lub WYŻSZE (>=) w hierarchii niż pakiet bazowy
+    finalPkgs = cascadePkgs.filter(p => {
+      const norm = getNorm(p.dostawca_nazwa);
+      return minTierMap[norm] !== undefined && (p.tier || 0) >= minTierMap[norm];
+    });
+  }
+
+  // 4. Budowanie eleganckiego widoku
+  hint.textContent = `Analiza zakończona. Znaleziono ${directPkgs.length} pakietów bazowych. Dziedziczenie aktywowało dodatkowe ${finalPkgs.length - directPkgs.length} wariantów wyższego rzędu.`;
   document.getElementById('searchResultTitle').textContent = `Wyniki dla: ${q}`;
   
-  pkgs.sort((a,b)=>a.dostawca_nazwa.localeCompare(b.dostawca_nazwa) || (a.tier||0)-(b.tier||0));
+  finalPkgs.sort((a,b)=>getNorm(a.dostawca_nazwa).localeCompare(getNorm(b.dostawca_nazwa)) || (a.tier||0)-(b.tier||0));
   
   const grouped = {};
-  pkgs.forEach(p => {
-    if(!grouped[p.dostawca_nazwa]) grouped[p.dostawca_nazwa] = [];
-    grouped[p.dostawca_nazwa].push(p);
+  finalPkgs.forEach(p => {
+    const norm = getNorm(p.dostawca_nazwa);
+    if(!grouped[norm]) grouped[norm] = [];
+    grouped[norm].push(p);
   });
 
   let html = '';
   for(const [prov, items] of Object.entries(grouped)) {
     html += `
-      <div class="mb-5 bg-slate-50 border border-slate-100 rounded-2xl p-5 shadow-sm">
-        <h4 class="font-black text-brand-navy text-sm uppercase tracking-widest mb-3 border-b border-slate-200 pb-2">${prov}</h4>
-        <div class="flex flex-wrap gap-2">
-          ${items.map(p => `
-            <button onclick="showPackageDetails(${p.id})" class="text-xs bg-white border-2 border-slate-200 hover:border-brand-pink hover:text-brand-pink transition-colors px-4 py-2 rounded-xl shadow-sm font-bold flex items-center gap-1.5">
+      <div class="mb-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-brand-navy"></div>
+        <h4 class="font-black text-brand-navy text-sm uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">${prov}</h4>
+        <div class="flex flex-wrap gap-2.5">
+          ${items.map(p => {
+            const isDirect = pids.includes(p.id);
+            // Pakiety "wpisane wprost" mają zieloną ramkę, a "z dziedziczenia" mają ramkę szarą
+            return `
+            <button onclick="showPackageDetails(${p.id})" class="text-xs bg-white border-2 ${isDirect ? 'border-brand-emerald text-brand-navy' : 'border-slate-200 text-slate-500'} hover:border-brand-pink hover:text-brand-pink transition-colors px-4 py-2.5 rounded-xl shadow-sm font-bold flex items-center gap-2" title="${isDirect ? 'Badanie wpisane wprost w wykaz' : 'Pakiet posiada to badanie, ponieważ dziedziczy usługi z niższych pakietów'}">
               ${p.pakiet_nazwa||p.nazwa}
-              <span class="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider">T${p.tier}</span>
+              <span class="${isDirect ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'} px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black">T${p.tier}</span>
             </button>
-          `).join('')}
+          `}).join('')}
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-50 text-[10px] text-slate-400 font-semibold flex flex-wrap gap-4">
+           <span class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-brand-emerald"></div> Wpisane wprost z bazy</span>
+           <span class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-slate-200"></div> Automatyczne przypisanie (wyższy wariant)</span>
         </div>
       </div>
     `;
@@ -835,7 +881,6 @@ async function searchClinics(){
     const searchProv = provName.trim().toUpperCase();
     filteredData = data.filter(p => {
       if(!p.dostawcy_tagi) return false;
-      // KULOODPORNE PARSOWANIE TABLICY Z BAZY DANYCH:
       let tags = [];
       if (Array.isArray(p.dostawcy_tagi)) {
         tags = p.dostawcy_tagi;
@@ -860,7 +905,6 @@ async function searchClinics(){
   filteredData.forEach((p, idx) => {
     let tagsInline = '';
     
-    // KULOODPORNE PARSOWANIE WYŚWIETLANIA:
     let pTags = [];
     if(p.dostawcy_tagi) {
        pTags = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
@@ -903,7 +947,6 @@ function openClinicModal(idx) {
   document.getElementById('cdmContact').textContent = `📞 Telefon: ${p.telefon || 'Brak w bazie'}`;
   document.getElementById('cdmHours').textContent = `🕒 Otwarte: ${p.godziny_otwarcia || 'Brak danych'}`;
   
-  // KULOODPORNE PARSOWANIE DLA MODALA:
   let tagsArr = [];
   if(p.dostawcy_tagi) {
     tagsArr = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
