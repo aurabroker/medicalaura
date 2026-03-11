@@ -53,9 +53,9 @@
 
 <header class="bg-brand-navy text-white shadow-md sticky top-0 z-40">
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-    <div>
+    <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <div class="text-xs text-slate-400 tracking-wide uppercase mt-0.5">Zarządzanie Ofertami Medycznymi</div>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.5</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -218,7 +218,7 @@
     <div class="flex items-end mb-4">
       <button onclick="searchClinics()" class="w-full bg-brand-emerald hover:bg-emerald-600 text-white font-bold py-3 px-7 rounded-xl shadow-md">Znajdź Placówki</button>
     </div>
-    <div id="clinHint" class="text-xs text-slate-400"></div>
+    <div id="clinHint" class="text-xs text-slate-400 font-bold"></div>
   </div>
 
   <div id="clinResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
@@ -793,17 +793,40 @@ async function searchClinics(){
   const countEl = document.getElementById('clinCount');
   
   hint.textContent = 'Szukam placówek...';
+  hint.className = 'text-xs text-brand-navy font-bold mt-2';
   resultDiv.classList.add('hidden');
   
+  if(!SB_URL||!SB_KEY) { 
+    hint.textContent = 'Błąd: Brak połączenia z bazą (sprawdź klucze w zakładce Admin).'; 
+    hint.className = 'text-xs text-red-600 font-bold mt-2';
+    return; 
+  }
+
   let query = 'select=*&limit=1000'; 
   if(city) query += `&miejscowosc=ilike.*${encodeURIComponent(city)}*`;
   if(powiat) query += `&powiat=ilike.*${encodeURIComponent(powiat)}*`;
   if(name) query += `&or=(nazwa_oddzialu.ilike.*${encodeURIComponent(name)}*,siec_bazowa.ilike.*${encodeURIComponent(name)}*)`;
 
-  const data = await apiGet('placowki_medyczne', query);
+  let data;
+  try {
+    const response = await fetch(`${SB_URL}/rest/v1/placowki_medyczne?${query}`, {
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'}
+    });
+    if (!response.ok) {
+        hint.textContent = 'Błąd pobierania danych z bazy. Spróbuj zmodyfikować kryteria.';
+        hint.className = 'text-xs text-red-600 font-bold mt-2';
+        return;
+    }
+    data = await response.json();
+  } catch(e) {
+    hint.textContent = 'Błąd sieci. Brak odpowiedzi serwera.';
+    hint.className = 'text-xs text-red-600 font-bold mt-2';
+    return;
+  }
   
   if(!Array.isArray(data) || !data.length) {
-    hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów lub wystąpił błąd zapytania.';
+    hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów.';
+    hint.className = 'text-xs text-slate-500 font-bold mt-2';
     return;
   }
   
@@ -811,13 +834,21 @@ async function searchClinics(){
   if(provVal && provName !== '— Wszyscy Partnerzy —') {
     const searchProv = provName.trim().toUpperCase();
     filteredData = data.filter(p => {
-      if(!p.dostawcy_tagi || !Array.isArray(p.dostawcy_tagi)) return false;
-      return p.dostawcy_tagi.some(t => t.trim().toUpperCase() === searchProv);
+      if(!p.dostawcy_tagi) return false;
+      // KULOODPORNE PARSOWANIE TABLICY Z BAZY DANYCH:
+      let tags = [];
+      if (Array.isArray(p.dostawcy_tagi)) {
+        tags = p.dostawcy_tagi;
+      } else {
+        tags = String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
+      }
+      return tags.some(t => t.trim().toUpperCase() === searchProv);
     });
   }
 
   if(!filteredData.length) {
-    hint.textContent = 'Brak przypisanych placówek dla wybranej sieci w tej lokalizacji.';
+    hint.textContent = 'Znaleziono placówki w tej lokalizacji, ale żadna nie jest powiązana z wybraną siecią.';
+    hint.className = 'text-xs text-slate-500 font-bold mt-2';
     return;
   }
   
@@ -828,8 +859,15 @@ async function searchClinics(){
   let html = '';
   filteredData.forEach((p, idx) => {
     let tagsInline = '';
-    if(p.dostawcy_tagi && Array.isArray(p.dostawcy_tagi) && p.dostawcy_tagi.length > 0){
-      tagsInline = p.dostawcy_tagi.map(t => `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-[10px] font-black uppercase px-2 py-1 rounded-md mr-1 mb-1">${t}</span>`).join('');
+    
+    // KULOODPORNE PARSOWANIE WYŚWIETLANIA:
+    let pTags = [];
+    if(p.dostawcy_tagi) {
+       pTags = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
+    }
+    
+    if(pTags.length > 0){
+      tagsInline = pTags.map(t => `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-[10px] font-black uppercase px-2 py-1 rounded-md mr-1 mb-1">${t.trim()}</span>`).join('');
     } else {
       tagsInline = '<span class="text-[10px] text-slate-400 italic">Brak partnerów</span>';
     }
@@ -865,9 +903,15 @@ function openClinicModal(idx) {
   document.getElementById('cdmContact').textContent = `📞 Telefon: ${p.telefon || 'Brak w bazie'}`;
   document.getElementById('cdmHours').textContent = `🕒 Otwarte: ${p.godziny_otwarcia || 'Brak danych'}`;
   
+  // KULOODPORNE PARSOWANIE DLA MODALA:
+  let tagsArr = [];
+  if(p.dostawcy_tagi) {
+    tagsArr = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
+  }
+
   let tagsHtml = '';
-  if(p.dostawcy_tagi && Array.isArray(p.dostawcy_tagi) && p.dostawcy_tagi.length > 0){
-    tagsHtml = p.dostawcy_tagi.map(t => `<span class="bg-brand-navy text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm">${t}</span>`).join('');
+  if(tagsArr.length > 0){
+    tagsHtml = tagsArr.map(t => `<span class="bg-brand-navy text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm">${t.trim()}</span>`).join('');
   } else {
     tagsHtml = '<span class="text-sm text-slate-400 italic">Brak przypisanych ubezpieczycieli</span>';
   }
