@@ -55,7 +55,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.17</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.18</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -431,7 +431,6 @@
 // ─── BEZPIECZNE KODOWANIE ZNAKÓW DLA AUTOCOMPLETE I WYSZUKIWARKI ───────
 const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// Tarcza ochronna dla PostgREST - pozwala na nawiasy i przecinki
 const pgSafe = (val) => {
   const cleanVal = val.replace(/"/g, ''); 
   return encodeURIComponent(`"*${cleanVal}*"`);
@@ -441,7 +440,7 @@ const pgSafe = (val) => {
 const getMedicalSynonyms = (val) => {
   const qLower = val.toLowerCase().trim();
   const dictionary = [
-    { triggers: ['serc', 'zawał', 'kardiolog', 'ciśnien', 'kłuci'], terms: ['kardiolog', 'ekg', 'echo', 'holter', 'próba wysiłkowa', 'lipidogram', 'troponina', 'potas', 'sód', 'ck-mb'] },
+    { triggers: ['serc', 'zawał', 'kardiolog', 'ciśnien', 'kłuci', 'ekg'], terms: ['kardiolog', 'ekg', 'echo', 'holter', 'próba wysiłkowa', 'lipidogram', 'troponina', 'potas', 'sód', 'ck-mb'] },
     { triggers: ['głow', 'migren', 'mózg', 'neurolog', 'zawrot'], terms: ['neurolog', 'eeg', 'tomografia głowy', 'rezonans głowy', 'tk głowy', 'mri głowy', 'doppler tętnic'] },
     { triggers: ['brzuch', 'żołądk', 'żołądek', 'jelit', 'zgag', 'trawien', 'wzdęci'], terms: ['gastrolog', 'jamy brzusznej', 'gastroskopia', 'kolonoskopia', 'helicobacter', 'krew utajona', 'lipaza', 'amylaza'] },
     { triggers: ['wątrob'], terms: ['hepatolog', 'alat', 'aspat', 'alt', 'ast', 'ggtp', 'bilirubina', 'hcv', 'hbs'] },
@@ -459,6 +458,7 @@ const getMedicalSynonyms = (val) => {
     { triggers: ['alergi', 'uczul', 'wysypk'], terms: ['alergolog', 'ige', 'panel alergologiczny', 'testy skórne', 'odczulanie'] }
   ];
   
+  // Zawsze dodajemy to, co wpisał użytkownik, by wyszukało to precyzyjnie niezależnie od powiązań
   let matchedTerms = [qLower]; 
   
   dictionary.forEach(entry => {
@@ -671,7 +671,6 @@ function validateSQL(){
 }
 
 // ─── SMART KONSULTANT (Wyszukiwarka Usług) ────────────────────
-let searchType = 'bad'; 
 
 let acTimer;
 async function acInput(val) {
