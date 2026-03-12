@@ -56,7 +56,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.1.0 PRO</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.1.4 PRO</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -82,6 +82,7 @@
     <span class="flex items-center gap-2 text-slate-500"><div id="dotDb" class="w-2.5 h-2.5 rounded-full bg-slate-300"></div>Baza: <strong id="statusDb">łączenie...</strong></span>
     <span class="text-slate-500">Dostawcy: <strong id="statusProviders">–</strong></span>
     <span class="text-slate-500">Pakiety: <strong id="statusPackages">–</strong></span>
+    <span class="text-slate-500">Placówki w bazie: <strong id="statusClinics" class="text-brand-navy font-black">–</strong></span>
   </div>
 
   <!-- GŁÓWNY PANEL WYBORU -->
@@ -244,9 +245,9 @@
       <table class="w-full text-sm border-collapse min-w-[900px]">
         <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
           <tr>
-            <th class="p-4 text-left">Placówka / Nazwa (Kliknij)</th>
-            <th class="p-4 text-left">Miasto i Adres</th>
-            <th class="p-4 text-left">Powiat</th>
+            <th class="p-4 text-left cursor-pointer hover:bg-slate-200 transition-colors select-none" id="th-clin-name" onclick="sortClinics('name')" title="Sortuj po nazwie">Placówka / Nazwa</th>
+            <th class="p-4 text-left cursor-pointer hover:bg-slate-200 transition-colors select-none" id="th-clin-city" onclick="sortClinics('city')" title="Sortuj po mieście">Miasto i Adres</th>
+            <th class="p-4 text-left cursor-pointer hover:bg-slate-200 transition-colors select-none" id="th-clin-powiat" onclick="sortClinics('powiat')" title="Sortuj po powiecie">Powiat</th>
             <th class="p-4 text-left">Partnerzy (Dostawcy)</th>
           </tr>
         </thead>
@@ -399,14 +400,12 @@
 <!-- ══════════════════════════════ ADMIN -->
 <div id="tab-admin" class="tab-panel">
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- W panelu admina zniknęło pole do wpisywania kluczy przez usera. Klucze wpisane są w kodzie. -->
     <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
       <h2 class="text-base font-bold text-brand-navy mb-5">🔌 Status Połączenia (Zablokowane w kodzie)</h2>
       <p class="text-sm text-slate-500 mb-4">Aplikacja w wersji biznesowej loguje się automatycznie przy użyciu bezpiecznych, zintegrowanych kluczy. Klient nie ma do nich dostępu.</p>
       <button onclick="checkDbStatus()" class="bg-brand-navy text-white font-bold py-2.5 px-6 rounded-xl">Sprawdź stan bazy</button>
     </div>
     
-    <!-- Users table (admin only) -->
     <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm lg:col-span-2 mt-4">
       <div class="flex justify-between items-center mb-5">
         <h2 class="text-base font-bold text-brand-navy">👥 Zarządzanie Użytkownikami</h2>
@@ -543,6 +542,10 @@ let allCalcPkgs    = [];
 let selectedCalc   = new Set();
 let currentClinicData = []; 
 
+// Stan sortowania placówek
+let clinicSortCol = 'city'; 
+let clinicSortAsc = true;
+
 function switchTab(id,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>{
@@ -653,6 +656,10 @@ async function checkDbStatus(){
     txt.textContent='Połączono'; dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500';
     const { data: p } = await SB_CLIENT.from('pakiety').select('id').eq('aktywna', true);
     document.getElementById('statusPackages').textContent=p?p.length:'–';
+    
+    // Optymalne pobieranie licznika placówek bez pobierania danych (head: true)
+    const { count: cClinics } = await SB_CLIENT.from('placowki_medyczne').select('*', { count: 'exact', head: true });
+    document.getElementById('statusClinics').textContent = cClinics !== null ? cClinics : '–';
   } else {
     txt.textContent='Błąd bazy'; dot.className='w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse';
   }
@@ -694,7 +701,6 @@ function populateAllSelects(){
 }
 
 // ─── INTELIGENTNE ZLICZANIE (Nowa Architektura) ───
-// Przyjmuje natywną funkcję modyfikującą zapytanie (np. q => q.in('id', pids))
 async function fetchEnhancedPackages(queryBuilder) {
   let query = SB_CLIENT.from('pakiety_pelne').select('*');
   query = queryBuilder(query);
@@ -1147,7 +1153,7 @@ async function runSearch() {
 }
 
 
-// ─── WYSZUKIWARKA PLACÓWEK Z AUTOCOMPLETE I NATYWNĄ OCHRONĄ ───
+// ─── WYSZUKIWARKA PLACÓWEK Z AUTOCOMPLETE, SORTOWANIEM I OCHRONĄ ───
 let acCityTimer;
 async function acCity(q) {
   clearTimeout(acCityTimer);
@@ -1190,6 +1196,71 @@ async function acClinic(q) {
   }, 300);
 }
 
+function sortClinics(col) {
+  if (clinicSortCol === col) {
+    clinicSortAsc = !clinicSortAsc;
+  } else {
+    clinicSortCol = col;
+    clinicSortAsc = true;
+  }
+  renderClinicTable();
+}
+
+function renderClinicTable() {
+  const resultBody = document.getElementById('clinResultBody');
+  if (!currentClinicData || currentClinicData.length === 0) {
+     resultBody.innerHTML = ''; return;
+  }
+
+  const sorted = [...currentClinicData].sort((a, b) => {
+    let valA = '', valB = '';
+    if (clinicSortCol === 'name') { valA = a.nazwa_oddzialu || a.siec_bazowa || ''; valB = b.nazwa_oddzialu || b.siec_bazowa || ''; }
+    if (clinicSortCol === 'city') { valA = a.miejscowosc || ''; valB = b.miejscowosc || ''; }
+    if (clinicSortCol === 'powiat') { valA = a.powiat || ''; valB = b.powiat || ''; }
+    
+    valA = valA.toLowerCase(); valB = valB.toLowerCase();
+    if(valA < valB) return clinicSortAsc ? -1 : 1;
+    if(valA > valB) return clinicSortAsc ? 1 : -1;
+    return 0;
+  });
+
+  const arrow = clinicSortAsc ? ' <span class="text-brand-pink ml-1">↑</span>' : ' <span class="text-brand-pink ml-1">↓</span>';
+  document.getElementById('th-clin-name').innerHTML = `Placówka / Nazwa ${clinicSortCol==='name'?arrow:''}`;
+  document.getElementById('th-clin-city').innerHTML = `Miasto i Adres ${clinicSortCol==='city'?arrow:''}`;
+  document.getElementById('th-clin-powiat').innerHTML = `Powiat ${clinicSortCol==='powiat'?arrow:''}`;
+
+  let html = '';
+  sorted.forEach((p) => {
+    let tagsInline = '';
+    if (p.dostawcy_tagi) {
+      const pTags = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
+      if (pTags.length > 0) {
+        tagsInline = pTags.map(t =>
+          `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-xs font-bold px-2.5 py-1.5 rounded-lg mr-1.5 mb-1.5 shadow-sm">${t.trim()}</span>`
+        ).join('');
+      }
+    }
+    if (!tagsInline) tagsInline = `<span class="text-xs text-slate-400 italic">Brak partnerów</span>`;
+
+    // Używamy currentClinicData.indexOf(p), aby modal zawsze odnosił się do właściwego elementu przed sortowaniem
+    const originalIndex = currentClinicData.indexOf(p);
+
+    html += `<tr class="hover:bg-slate-50 transition-colors cursor-pointer group" onclick="openClinicModal(${originalIndex})">
+      <td class="p-4">
+        <div class="font-bold text-brand-pink group-hover:underline text-base">${p.nazwa_oddzialu || p.siec_bazowa}</div>
+      </td>
+      <td class="p-4">
+        <div class="font-bold text-slate-700">${p.miejscowosc || ''}</div>
+        <div class="text-xs text-slate-500 mt-0.5">${p.adres || ''}</div>
+      </td>
+      <td class="p-4 text-xs font-semibold text-slate-600">${p.powiat || ''}</td>
+      <td class="p-4 min-w-[300px] md:min-w-[450px]">${tagsInline}</td>
+    </tr>`;
+  });
+
+  resultBody.innerHTML = html;
+}
+
 async function searchClinics() {
   const city    = document.getElementById('clinCity').value.trim();
   const powiat  = document.getElementById('clinPowiat').value.trim();
@@ -1200,7 +1271,6 @@ async function searchClinics() {
   
   const hint       = document.getElementById('clinHint');
   const resultDiv  = document.getElementById('clinResult');
-  const resultBody = document.getElementById('clinResultBody');
   const countEl   = document.getElementById('clinCount');
 
   hint.textContent = 'Szukam placówek...';
@@ -1253,34 +1323,11 @@ async function searchClinics() {
   hint.textContent  = '';
   countEl.textContent = filteredData.length + ' znalezionych';
 
-  let html = '';
-  filteredData.forEach((p, idx) => {
-    let tagsInline = '';
-    if (p.dostawcy_tagi) {
-      const pTags = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"]/g, '').split(',');
-      if (pTags.length > 0) {
-        tagsInline = pTags.map(t =>
-          `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-[10px] font-black uppercase px-2 py-1 rounded-md mr-1 mb-1">${t.trim()}</span>`
-        ).join('');
-      }
-    }
-    if (!tagsInline) tagsInline = `<span class="text-[10px] text-slate-400 italic">Brak partnerów</span>`;
+  // Domyślne sortowanie po mieście po każdym nowym wyszukiwaniu
+  clinicSortCol = 'city';
+  clinicSortAsc = true;
+  renderClinicTable();
 
-    html += `<tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="openClinicModal(${idx})">
-      <td class="p-4">
-        <div class="font-bold text-brand-pink hover:underline text-base">${p.nazwa_oddzialu || p.siec_bazowa}</div>
-        <div class="text-[10px] text-slate-500 font-black uppercase tracking-wider mt-0.5">WŁAŚCICIEL: ${p.siec_bazowa || 'Niezależna'}</div>
-      </td>
-      <td class="p-4">
-        <div class="font-bold text-slate-700">${p.miejscowosc || ''}</div>
-        <div class="text-xs text-slate-500 mt-0.5">${p.adres || ''}</div>
-      </td>
-      <td class="p-4 text-xs font-semibold text-slate-600">${p.powiat || ''}</td>
-      <td class="p-4 max-w-[250px] md:max-w-[400px]">${tagsInline}</td>
-    </tr>`;
-  });
-
-  resultBody.innerHTML = html;
   resultDiv.classList.remove('hidden');
 }
 
@@ -1310,7 +1357,7 @@ function openClinicModal(idx) {
   document.getElementById('clinicDetailsModal').classList.add('flex');
 }
 
-// ─── MODAL SZCZEGÓŁÓW PAKIETU Z WIDOKIEM LEKARZY I BADAŃ ───
+// ─── MODAL SZCZEGÓŁÓW PAKIETU Z WIDOKIEM LEKARZY I KATEGORIAMI BADAŃ ───
 async function showPackageDetails(pkgId) {
   const modal = document.getElementById('pkgDetailsModal');
   const mBody = document.getElementById('pdmBody');
@@ -1323,7 +1370,7 @@ async function showPackageDetails(pkgId) {
   mBody.innerHTML = '<div class="flex items-center justify-center py-20 text-slate-400"><div class="loader mr-3"></div> Ładowanie...</div>';
 
   try {
-    const [pkgDataRes, {data: specs}, {data: labs}] = await Promise.all([
+    const [pkgDataRes, {data: specsData}, {data: labsData}] = await Promise.all([
       fetchEnhancedPackages(q => q.eq('id', pkgId)),
       SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').eq('pakiet_id', pkgId).order('specjalizacja_nazwa'),
       SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').eq('pakiet_id', pkgId).order('badanie_nazwa')
@@ -1332,6 +1379,32 @@ async function showPackageDetails(pkgId) {
     if(!pkgDataRes || !pkgDataRes.length) { mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Błąd pobierania danych.</div>'; return; }
 
     const p = pkgDataRes[0];
+    const specs = specsData || [];
+    const labs = labsData || [];
+
+    // Kategoryzacja badań "w locie"
+    let catRTG = [], catUSG = [], catTK = [], catMR = [], catInne = [];
+    if (labs.length > 0) {
+        labs.forEach(l => {
+            const name = (l.badanie_nazwa || '').toUpperCase();
+            if (/\b(RTG|RENTGEN)\b/.test(name)) catRTG.push(l.badanie_nazwa);
+            else if (/\b(USG|ULTRASONOGRAF|ULTRASONOGRAFIA)\b/.test(name)) catUSG.push(l.badanie_nazwa);
+            else if (/\b(TK|TOMOGRAF|TOMOGRAFIA)\b/.test(name)) catTK.push(l.badanie_nazwa);
+            else if (/\b(MR|MRI|REZONANS)\b/.test(name)) catMR.push(l.badanie_nazwa);
+            else catInne.push(l.badanie_nazwa);
+        });
+    }
+
+    const renderCat = (title, items) => {
+        if (!items || items.length === 0) return '';
+        return `
+        <div class="mb-5 break-inside-avoid">
+            <h5 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">${title} <span class="text-brand-pink ml-1">(${items.length})</span></h5>
+            <ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-pink">
+                ${items.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+        </div>`;
+    };
 
     mTitle.innerHTML = `${p.pakiet_nazwa || p.nazwa} <span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded ml-3 align-middle">T${p.tier}</span>`;
     mSub.textContent = p.dostawca_nazwa;
@@ -1360,23 +1433,31 @@ async function showPackageDetails(pkgId) {
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <!-- Kolumna lewa: Lekarze -->
           <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
             <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
               <h4 class="text-base font-black text-brand-navy uppercase tracking-wide">Specjalizacje Lekarskie</h4>
-              <span class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full">${specs?.length||0} wpisów</span>
+              <span class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full">${specs.length} wpisów</span>
             </div>
-            <div class="list-columns" style="columns: 1;">
-              ${specs && specs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-navy">${specs.map(s => `<li class="break-inside-avoid">${s.specjalizacja_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
+            <div>
+              ${specs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-navy">${specs.map(s => `<li class="break-inside-avoid">${s.specjalizacja_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
             </div>
           </div>
           
+          <!-- Kolumna prawa: Badania pogrupowane -->
           <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
             <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
-              <h4 class="text-base font-black text-brand-pink uppercase tracking-wide">Badania i Zabiegi</h4>
-              <span class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full">${labs?.length||0} wpisów</span>
+              <h4 class="text-base font-black text-brand-pink uppercase tracking-wide">Badania i Diagnostyka</h4>
+              <span class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full">${labs.length} wpisów</span>
             </div>
-            <div class="list-columns" style="columns: 1;">
-              ${labs && labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-pink">${labs.map(s => `<li class="break-inside-avoid">${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
+            <div>
+              ${labs.length > 0 ? `
+                ${renderCat('USG (Ultrasonografia)', catUSG)}
+                ${renderCat('RTG (Rentgen)', catRTG)}
+                ${renderCat('TK (Tomografia Komputerowa)', catTK)}
+                ${renderCat('MR (Rezonans Magnetyczny)', catMR)}
+                ${renderCat('Badania Laboratoryjne i Pozostałe', catInne)}
+              ` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
             </div>
           </div>
       </div>
