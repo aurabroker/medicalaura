@@ -56,7 +56,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.3.1 PRO</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.3.2 PRO</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -753,17 +753,42 @@ async function fetchEnhancedPackages(queryBuilder) {
     const { data: specData } = await SB_CLIENT.from('pakiety_specjalizacje').select('pakiet_id,specjalizacja_nazwa').in('pakiet_id', ids);
     
     const labC={}, rtgC={}, tkC={}, mriC={}, specC={};
+    
     if (labsData) {
+      const uniqueLabs = {};
       labsData.forEach(r => {
         const pid = r.pakiet_id;
-        const name = (r.badanie_nazwa || '').toUpperCase();
-        labC[pid] = (labC[pid] || 0) + 1;
-        if (/\b(RTG|RENTGEN)\b/.test(name)) rtgC[pid] = (rtgC[pid] || 0) + 1;
-        if (/\b(TK|TOMOGRAF|TOMOGRAFIA)\b/.test(name)) tkC[pid] = (tkC[pid] || 0) + 1;
-        if (/\b(MR|MRI|REZONANS)\b/.test(name)) mriC[pid] = (mriC[pid] || 0) + 1;
+        if(!uniqueLabs[pid]) uniqueLabs[pid] = new Set();
+        const rawName = (r.badanie_nazwa || '').trim();
+        if (!rawName) return;
+        const lowerName = rawName.toLowerCase();
+
+        if (!uniqueLabs[pid].has(lowerName)) {
+          uniqueLabs[pid].add(lowerName);
+          labC[pid] = (labC[pid] || 0) + 1;
+          const upperName = rawName.toUpperCase();
+          if (/\b(RTG|RENTGEN)\b/.test(upperName)) rtgC[pid] = (rtgC[pid] || 0) + 1;
+          if (/\b(TK|TOMOGRAF|TOMOGRAFIA)\b/.test(upperName)) tkC[pid] = (tkC[pid] || 0) + 1;
+          if (/\b(MR|MRI|REZONANS)\b/.test(upperName)) mriC[pid] = (mriC[pid] || 0) + 1;
+        }
       });
     }
-    if (specData) { specData.forEach(r => { specC[r.pakiet_id] = (specC[r.pakiet_id] || 0) + 1; }); }
+
+    if (specData) {
+      const uniqueSpecs = {};
+      specData.forEach(r => {
+        const pid = r.pakiet_id;
+        if(!uniqueSpecs[pid]) uniqueSpecs[pid] = new Set();
+        const rawName = (r.specjalizacja_nazwa || '').trim();
+        if (!rawName) return;
+        const lowerName = rawName.toLowerCase();
+
+        if (!uniqueSpecs[pid].has(lowerName)) {
+          uniqueSpecs[pid].add(lowerName);
+          specC[pid] = (specC[pid] || 0) + 1;
+        }
+      });
+    }
 
     if (raw && raw.length) {
       data.forEach(d => {
@@ -1349,10 +1374,10 @@ async function showPackageDetails(pkgId) {
     let html = `
       <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Specjalizacje</div><div>${val(p.liczba_specjalizacji)}</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Specjalizacje</div><div>${val(specs.length > 0 ? specs.length : p.liczba_specjalizacji)}</div>
         </div>
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Badania Lab.</div><div>${val(p.liczba_badan_lab)}</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Badania Lab.</div><div>${val(labs.length > 0 ? labs.length : p.liczba_badan_lab)}</div>
         </div>
         <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm text-center">
           <div class="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">RTG (Limity)</div><div>${val(p.liczba_rtg)}</div>
