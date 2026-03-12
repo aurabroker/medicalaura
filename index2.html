@@ -56,7 +56,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.1.5 PRO</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.2.0 PRO</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -275,15 +275,15 @@
       <div class="flex items-center gap-3 text-slate-400 justify-center py-10"><div class="loader"></div>Ładowanie...</div>
     </div>
   </div>
-  <!-- EDYCJA -->
+
+  <!-- EDYCJA (Z ZARZĄDZANIEM LISTAMI USŁUG) -->
   <div id="editPanel" class="hidden bg-white border-2 border-brand-navy rounded-3xl p-8 shadow-xl mt-6">
     <div class="flex justify-between items-center mb-5">
       <h2 class="text-lg font-bold text-brand-navy">✏️ Edycja: <span id="editPkgName" class="text-brand-pink"></span></h2>
       <button onclick="document.getElementById('editPanel').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 text-xl">✕</button>
     </div>
+    
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5">
-      <div><label class="lbl">Specjalizacje</label><input type="number" id="eSpecjalizacje" class="inp"/></div>
-      <div><label class="lbl">Badania lab.</label><input type="number" id="eBadania" class="inp"/></div>
       <div><label class="lbl text-slate-400">RTG (Zliczane z bazy)</label><input type="text" id="eRtg" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
       <div><label class="lbl text-slate-400">Tomografia (TK)</label><input type="text" id="eTk" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
       <div><label class="lbl text-slate-400">Rezonans (MRI)</label><input type="text" id="eMri" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
@@ -294,6 +294,33 @@
       <div><label class="lbl">Dzieci do (lat)</label><input type="number" id="eDzieci" class="inp"/></div>
       <div><label class="lbl">Karencja (dni)</label><input type="number" id="eKarencja" class="inp"/></div>
     </div>
+
+    <!-- 🔥 NOWOŚĆ: INTERAKTYWNE LISTY BADAŃ I SPECJALIZACJI Z ALMANACHEM 🔥 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-5">
+      <!-- Specjalizacje -->
+      <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-inner">
+        <label class="lbl text-brand-navy">👨‍⚕️ Specjalizacje Lekarskie w tym pakiecie</label>
+        <div class="flex gap-2 mb-3">
+          <input type="text" id="eAddSpec" list="dl-specs" class="inp flex-grow" placeholder="Wpisz nową lub wybierz ze słownika...">
+          <button onclick="addSpecToEdit()" class="bg-brand-navy hover:bg-slate-700 text-white px-4 rounded-xl font-bold text-xs transition-colors shadow-sm">Dodaj</button>
+        </div>
+        <div id="eSpecTags" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto custom-scroll content-start"></div>
+      </div>
+
+      <!-- Badania -->
+      <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-inner">
+        <label class="lbl text-brand-pink">🔬 Badania i Zabiegi w tym pakiecie</label>
+        <div class="flex gap-2 mb-3">
+          <input type="text" id="eAddBad" list="dl-bads" class="inp flex-grow" placeholder="Wpisz nowe lub wybierz ze słownika...">
+          <button onclick="addBadToEdit()" class="bg-brand-pink hover:bg-rose-700 text-white px-4 rounded-xl font-bold text-xs transition-colors shadow-sm">Dodaj</button>
+        </div>
+        <div id="eBadTags" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto custom-scroll content-start"></div>
+      </div>
+    </div>
+
+    <!-- Datalists for Almanach Autocomplete -->
+    <datalist id="dl-specs"></datalist>
+    <datalist id="dl-bads"></datalist>
     
     <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5 p-4 bg-slate-50 rounded-xl border border-slate-200">
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eTele" class="w-4 h-4 accent-brand-navy">Telemedycyna</label>
@@ -307,14 +334,9 @@
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRefundacja" class="w-4 h-4 accent-brand-navy">Refundacja</label>
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eSwoboda" class="w-4 h-4 accent-brand-navy">Swoboda leczenia</label>
     </div>
-    <div class="border-t border-slate-200 pt-5 mb-5">
-      <h3 class="text-xs font-bold text-slate-500 uppercase mb-3">💰 Składka pracownicza (zł)</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div><input type="number" step="0.01" id="ePriceGrup" placeholder="0.00" class="inp font-bold text-brand-pink text-lg"/></div>
-      </div>
-    </div>
+    
     <div class="flex gap-3 items-center">
-      <button onclick="saveEdit()" class="bg-brand-pink text-white font-bold py-3 px-8 rounded-xl shadow-md">💾 Zapisz do bazy</button>
+      <button onclick="saveEdit()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition-colors">💾 Zapisz do bazy</button>
       <span id="editStatus" class="text-sm font-semibold"></span>
     </div>
     <input type="hidden" id="editPkgId"/>
@@ -474,10 +496,7 @@
             <h3 id="pdmTitle" class="font-bold text-xl md:text-3xl tracking-tight flex items-center">Ładowanie...</h3>
             <p id="pdmSub" class="text-brand-pink font-bold text-sm uppercase tracking-widest mt-1"></p>
           </div>
-          <div class="bg-white/10 px-6 py-3 rounded-2xl border border-white/20 text-right shrink-0">
-            <div class="text-[10px] uppercase tracking-wider text-slate-300 font-bold mb-0.5">Składka pracownicza</div>
-            <div id="pdmPrice" class="text-3xl font-black text-white">-- zł<span class="text-sm font-normal"> / mies.</span></div>
-          </div>
+          <!-- Usunięto okienko ze składką -->
         </div>
       </div>
       <button onclick="document.getElementById('pkgDetailsModal').classList.add('hidden')" class="w-10 h-10 ml-4 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-2xl transition-colors shrink-0">&times;</button>
@@ -488,15 +507,11 @@
 
 <script>
 // ─── KONFIGURACJA BAZY (TWARDE KLUCZE ZAMIAST LOCALSTORAGE) ───
-// Tu wklej swoje publiczne dane z Supabase (Project URL i anon key). 
-// W architekturze Supabase ten klucz MUSI być publiczny na stronie. Bezpieczeństwa pilnują RLS.
 const SB_URL = 'https://kukvgsjrmrqtzhkszzum.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY';
 
 // ─── BEZPIECZNE KODOWANIE ZNAKÓW ───────
 const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-// Funkcja chroniąca funkcje OR() biblioteki Supabase JS przed wstrzykiwaniem przecinków i nawiasów
 const safeOr = (val) => val.replace(/[,()"]/g, '').trim();
 
 // 🔥 SŁOWNIK MEDYCZNY (SMART KONSULTANT) 🔥
@@ -541,6 +556,11 @@ let lastCompData   = [];
 let allCalcPkgs    = [];
 let selectedCalc   = new Set();
 let currentClinicData = []; 
+
+// Stan Edycji List Usług
+let editCurrentSpecs = [];
+let editCurrentBads = [];
+let almanachLoaded = false;
 
 // Stan sortowania placówek
 let clinicSortCol = 'city'; 
@@ -1242,7 +1262,6 @@ function renderClinicTable() {
     }
     if (!tagsInline) tagsInline = `<span class="text-xs text-slate-400 italic">Brak partnerów</span>`;
 
-    // Używamy currentClinicData.indexOf(p), aby modal zawsze odnosił się do właściwego elementu przed sortowaniem
     const originalIndex = currentClinicData.indexOf(p);
 
     html += `<tr class="hover:bg-slate-50 transition-colors cursor-pointer group" onclick="openClinicModal(${originalIndex})">
@@ -1323,7 +1342,6 @@ async function searchClinics() {
   hint.textContent  = '';
   countEl.textContent = filteredData.length + ' znalezionych';
 
-  // Domyślne sortowanie po mieście po każdym nowym wyszukiwaniu
   clinicSortCol = 'city';
   clinicSortAsc = true;
   renderClinicTable();
@@ -1363,10 +1381,9 @@ async function showPackageDetails(pkgId) {
   const mBody = document.getElementById('pdmBody');
   const mTitle = document.getElementById('pdmTitle');
   const mSub = document.getElementById('pdmSub');
-  const mPrice = document.getElementById('pdmPrice');
   
   modal.classList.remove('hidden'); modal.classList.add('flex');
-  mTitle.textContent = 'Pobieranie danych...'; mSub.textContent = ''; mPrice.innerHTML = '-- zł';
+  mTitle.textContent = 'Pobieranie danych...'; mSub.textContent = '';
   mBody.innerHTML = '<div class="flex items-center justify-center py-20 text-slate-400"><div class="loader mr-3"></div> Ładowanie...</div>';
 
   try {
@@ -1382,7 +1399,6 @@ async function showPackageDetails(pkgId) {
     const specs = specsData || [];
     const labs = labsData || [];
 
-    // Kategoryzacja badań "w locie"
     let catRTG = [], catUSG = [], catTK = [], catMR = [], catInne = [];
     if (labs.length > 0) {
         labs.forEach(l => {
@@ -1408,7 +1424,6 @@ async function showPackageDetails(pkgId) {
 
     mTitle.innerHTML = `${p.pakiet_nazwa || p.nazwa} <span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded ml-3 align-middle">T${p.tier}</span>`;
     mSub.textContent = p.dostawca_nazwa;
-    mPrice.innerHTML = (p.cena_grup_mies !== null && p.cena_grup_mies !== undefined) ? `${parseFloat(p.cena_grup_mies).toFixed(2)} zł<span class="text-sm font-normal text-slate-300"> / mies.</span>` : '<span class="text-sm">Brak wyceny</span>';
 
     const val = v => (v !== null && v !== undefined && v !== '' && v > 0) ? `<span class="text-2xl font-black text-brand-navy">${v}</span>` : '<span class="text-xs text-red-500 font-bold mt-1 block">Brak wpisu</span>';
     const boolIco = v => v ? '✅' : '❌';
@@ -1433,7 +1448,6 @@ async function showPackageDetails(pkgId) {
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <!-- Kolumna lewa: Lekarze -->
           <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
             <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
               <h4 class="text-base font-black text-brand-navy uppercase tracking-wide">Specjalizacje Lekarskie</h4>
@@ -1444,7 +1458,6 @@ async function showPackageDetails(pkgId) {
             </div>
           </div>
           
-          <!-- Kolumna prawa: Badania pogrupowane -->
           <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
             <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
               <h4 class="text-base font-black text-brand-pink uppercase tracking-wide">Badania i Diagnostyka</h4>
@@ -1534,10 +1547,49 @@ async function loadLibrary(){
   el.innerHTML=html;
 }
 
+// 🔥 EDYCJA PAKIETÓW (Z ZARZĄDZANIEM LISTAMI I ALMANACHEM) 🔥
+let almanachSpecs = new Set();
+let almanachBads = new Set();
+let editCurrentSpecs = [];
+let editCurrentBads = [];
+
+async function loadAlmanachForEdit() {
+  const {data: sData} = await SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').limit(5000);
+  if(sData) {
+     sData.forEach(d => { if(d.specjalizacja_nazwa) almanachSpecs.add(d.specjalizacja_nazwa.trim()); });
+     document.getElementById('dl-specs').innerHTML = Array.from(almanachSpecs).sort().map(s => `<option value="${s}">`).join('');
+  }
+  const {data: bData} = await SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').limit(5000);
+  if(bData) {
+     bData.forEach(d => { if(d.badanie_nazwa) almanachBads.add(d.badanie_nazwa.trim()); });
+     document.getElementById('dl-bads').innerHTML = Array.from(almanachBads).sort().map(s => `<option value="${s}">`).join('');
+  }
+}
+
+function renderEditLists() {
+  const sCont = document.getElementById('eSpecTags');
+  sCont.innerHTML = editCurrentSpecs.map((s, i) => `<span class="bg-white border border-brand-navy text-brand-navy text-[11px] font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">${s} <button onclick="removeEditSpec(${i})" class="text-red-500 hover:bg-red-50 rounded-full w-4 h-4 flex items-center justify-center ml-1">✕</button></span>`).join('');
+  
+  const bCont = document.getElementById('eBadTags');
+  bCont.innerHTML = editCurrentBads.map((b, i) => `<span class="bg-white border border-brand-pink text-brand-pink text-[11px] font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">${b} <button onclick="removeEditBad(${i})" class="text-red-500 hover:bg-red-50 rounded-full w-4 h-4 flex items-center justify-center ml-1">✕</button></span>`).join('');
+}
+
+function addSpecToEdit() {
+  const v = document.getElementById('eAddSpec').value.trim();
+  if(v && !editCurrentSpecs.includes(v)) { editCurrentSpecs.push(v); renderEditLists(); document.getElementById('eAddSpec').value=''; }
+}
+function removeEditSpec(i) { editCurrentSpecs.splice(i, 1); renderEditLists(); }
+
+function addBadToEdit() {
+  const v = document.getElementById('eAddBad').value.trim();
+  if(v && !editCurrentBads.includes(v)) { editCurrentBads.push(v); renderEditLists(); document.getElementById('eAddBad').value=''; }
+}
+function removeEditBad(i) { editCurrentBads.splice(i, 1); renderEditLists(); }
+
 async function openEdit(pkgId){
   const data=await fetchEnhancedPackages(q => q.eq('id', pkgId)); if(!data||!data[0]) return; const p=data[0];
   document.getElementById('editPkgId').value=pkgId; document.getElementById('editPkgName').textContent=`${p.dostawca_nazwa} — ${p.pakiet_nazwa || p.nazwa}`;
-  const map={eSpecjalizacje:'liczba_specjalizacji',eBadania:'liczba_badan_lab',ePoz:'czas_oczekiwania_poz',eSpec:'czas_oczekiwania_spec',eMinPrac:'min_pracownicy',eDzieci:'wiek_dzieci_do',eKarencja:'karencja_dni'};
+  const map={ePoz:'czas_oczekiwania_poz',eSpec:'czas_oczekiwania_spec',eMinPrac:'min_pracownicy',eDzieci:'wiek_dzieci_do',eKarencja:'karencja_dni'};
   Object.entries(map).forEach(([id,key])=>document.getElementById(id).value=isValid(p[key])?p[key]:'');
   
   document.getElementById('eRtg').value = p.liczba_rtg || 0;
@@ -1547,16 +1599,49 @@ async function openEdit(pkgId){
   const bools={eTele:'telemedycyna', eCiaza:'ciaza', eRehab:'rehabilitacja',eStom:'stomatologia',ePsych:'opieka_psychiatryczna',eWizyty:'wizyty_domowe',eSzpital:'leczenie_szpitalne',eHotline:'hotline_24h', eRefundacja:'refundacja', eSwoboda:'swoboda_leczenia'};
   Object.entries(bools).forEach(([id,key])=>document.getElementById(id).checked=!!p[key]);
   document.getElementById('ePriceGrup').value=p.cena_grup_mies||'';
+  
+  // Zaciąganie list do edycji
+  const [{data: specs}, {data: bads}] = await Promise.all([
+     SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').eq('pakiet_id', pkgId),
+     SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').eq('pakiet_id', pkgId)
+  ]);
+  
+  editCurrentSpecs = specs ? specs.map(s => s.specjalizacja_nazwa) : [];
+  editCurrentBads = bads ? bads.map(b => b.badanie_nazwa) : [];
+  renderEditLists();
+  
+  if(almanachSpecs.size === 0) loadAlmanachForEdit(); // Ładowanie Almanachu za pierwszym otwarciem
+  
   document.getElementById('editStatus').textContent=''; document.getElementById('editPanel').classList.remove('hidden'); document.getElementById('editPanel').scrollIntoView({behavior:'smooth'});
 }
 
 async function saveEdit(){
   const pkgId=document.getElementById('editPkgId').value;
   const n=id=>{const v=document.getElementById(id).value;return v===''?null:parseFloat(v)};
+  
+  document.getElementById('editStatus').textContent='Zapisywanie...';
+  document.getElementById('editStatus').className='text-sm font-bold text-slate-500';
+
+  // 1. Zmiana list w bazie (usunięcie starych, wgranie nowych)
+  await SB_CLIENT.from('pakiety_specjalizacje').delete().eq('pakiet_id', pkgId);
+  await SB_CLIENT.from('pakiety_badania').delete().eq('pakiet_id', pkgId);
+  
+  if(editCurrentSpecs.length > 0) {
+     await SB_CLIENT.from('pakiety_specjalizacje').insert(editCurrentSpecs.map(s => ({pakiet_id: pkgId, specjalizacja_nazwa: s})));
+  }
+  if(editCurrentBads.length > 0) {
+     await SB_CLIENT.from('pakiety_badania').insert(editCurrentBads.map(b => ({pakiet_id: pkgId, badanie_nazwa: b})));
+  }
+
+  // 2. Aktualizacja głównych danych pakietu (w tym nowych zliczonych ilości)
   const body={
-    liczba_specjalizacji:n('eSpecjalizacje'),liczba_badan_lab:n('eBadania'),
-    czas_oczekiwania_poz:n('ePoz'),czas_oczekiwania_spec:n('eSpec'),
-    min_pracownicy:n('eMinPrac'),wiek_dzieci_do:n('eDzieci'),karencja_dni:n('eKarencja'),
+    liczba_specjalizacji: editCurrentSpecs.length,
+    liczba_badan_lab: editCurrentBads.length,
+    czas_oczekiwania_poz:n('ePoz'),
+    czas_oczekiwania_spec:n('eSpec'),
+    min_pracownicy:n('eMinPrac'),
+    wiek_dzieci_do:n('eDzieci'),
+    karencja_dni:n('eKarencja'),
     telemedycyna:document.getElementById('eTele').checked,
     ciaza:document.getElementById('eCiaza').checked,
     rehabilitacja:document.getElementById('eRehab').checked,
@@ -1569,10 +1654,13 @@ async function saveEdit(){
     swoboda_leczenia:document.getElementById('eSwoboda').checked,
     cena_grup_mies:n('ePriceGrup'),
   };
+  
   const { error } = await SB_CLIENT.from('pakiety').update(body).eq('id', pkgId);
+  
   const st=document.getElementById('editStatus');
-  st.textContent= !error ? '✓ Zapisano do bazy.' : '✗ Błąd zapisu (Brak uprawnień Admina).'; 
+  st.textContent= !error ? '✓ Zapisano do bazy pomyślnie.' : '✗ Błąd zapisu (Brak uprawnień Admina).'; 
   st.className=`text-sm font-bold ${!error?'text-emerald-600':'text-red-600'}`;
+  
   if(!error) loadLibrary();
 }
 
