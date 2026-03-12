@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MEDICALAURA — Porównywarka</title>
+  <title>MEDICALAURA — Porównywarka B2B</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>tailwind.config={theme:{extend:{colors:{'brand-navy':'#1e294a','brand-pink':'#e11d48','brand-emerald':'#10b981','brand-senior':'#f59e0b'},fontFamily:{sans:['Inter','sans-serif']}}}}</script>
   <style>
     .tab-panel{display:none}.tab-panel.active{display:block}
@@ -55,16 +56,17 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.0.10</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.1.0 PRO</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
-      <button onclick="switchTab('search',this)"  id="btn-search"  class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🔎 Wyszukaj Pakiety</button>
+      <button onclick="switchTab('search',this)"  id="btn-search"  class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🤖 Smart Konsultant</button>
       <button onclick="switchTab('clinics',this)" id="btn-clinics" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🏥 Baza Placówek</button>
       <button onclick="switchTab('library',this)" id="btn-library" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">📚 Biblioteka</button>
       <button onclick="switchTab('calc',this)"    id="btn-calc"    class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧮 Kalkulator</button>
-      <button onclick="switchTab('learn',this)"   id="btn-learn"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white">🧠 SQL</button>
-      <button onclick="switchTab('admin',this)"   id="btn-admin"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white flex items-center gap-1">🔒 Admin</button>
+      <button onclick="switchTab('account',this)" id="btn-account" class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white hidden">👤 Moje Konto</button>
+      <button onclick="switchTab('admin',this)"   id="btn-admin"   class="tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-slate-300 hover:text-white hidden flex-items-center gap-1">🔒 Admin</button>
+      <button onclick="doLogout()" id="btn-logout" class="hidden tab-btn px-4 py-2 text-sm font-semibold rounded-lg text-red-400 hover:text-red-300">Wyloguj</button>
     </nav>
   </div>
 </header>
@@ -84,7 +86,6 @@
 
   <!-- GŁÓWNY PANEL WYBORU -->
   <div class="bg-white border border-slate-200 rounded-3xl shadow-sm mb-5 overflow-hidden flex flex-col md:flex-row min-h-[450px]">
-    
     <!-- LEWA: lista dostawców w układzie GRID -->
     <div class="w-full md:w-1/2 bg-slate-50 border-r border-slate-200 flex flex-col">
       <div class="p-5 border-b border-slate-200 bg-slate-100 flex justify-between items-center">
@@ -165,31 +166,36 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════ WYSZUKAJ (Zakresy) -->
+<!-- ══════════════════════════════ SMART KONSULTANT (ZAKRESY) -->
 <div id="tab-search" class="tab-panel">
-  <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
-    <h2 class="text-xl font-bold text-brand-navy mb-2">🔎 Wyszukiwarka zakresów medycznych</h2>
-    <p class="text-sm text-slate-500 mb-6">Sprawdź jacy dostawcy i w jakich pakietach oferują wybraną specjalizację lub badanie.</p>
-    <div class="flex gap-3 mb-6">
-      <button onclick="setSearchType('spec')" id="stype-spec" class="px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm">Specjalizacja</button>
-      <button onclick="setSearchType('bad')"  id="stype-bad"  class="px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200">Badanie laboratoryjne</button>
-    </div>
-    <div class="flex gap-3 items-center">
-      <div class="ac-wrap flex-grow">
-        <input type="text" id="searchQuery" placeholder="np. kardiolog, USG brzucha, morfologia..." class="inp w-full text-base font-bold" autocomplete="off"
+  <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6 bg-gradient-to-br from-white to-pink-50/30 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-32 h-32 bg-brand-pink rounded-bl-full opacity-5 pointer-events-none"></div>
+    
+    <h2 class="text-2xl font-black text-brand-navy mb-2 flex items-center gap-3">
+      🤖 Smart Konsultant Medyczny
+      <span class="text-[10px] bg-brand-pink text-white px-2 py-1 rounded-full uppercase tracking-widest">Wyszukiwarka Usług</span>
+    </h2>
+    <p class="text-sm text-slate-500 mb-8 max-w-3xl">Zapomnij o medycznym żargonie. Opisz problem własnymi słowami (np. <strong class="text-brand-pink">serce, ból głowy, tarczyca, wątroba, mocz</strong>), a system sam sprawdzi dedykowanych specjalistów, badania krwi i diagnostykę w pakietach ubezpieczeniowych!</p>
+    
+    <div class="flex flex-col md:flex-row gap-4 items-center">
+      <div class="ac-wrap w-full md:flex-grow shadow-md rounded-xl">
+        <input type="text" id="searchQuery" placeholder="Co dolega Pacjentowi? (np. serce, cukier, skóra)..." class="w-full text-lg font-black text-brand-navy border-2 border-brand-pink/30 rounded-xl p-5 outline-none focus:border-brand-pink transition-colors h-16" autocomplete="off"
           oninput="acInput(this.value)" onkeydown="acKeydown(event)" onblur="setTimeout(()=>acHide(),200)"/>
-        <ul id="acList" class="ac-list hidden"></ul>
+        <ul id="acList" class="ac-list hidden mt-1 border-brand-pink/20 shadow-xl rounded-xl"></ul>
       </div>
-      <button onclick="runSearch()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-7 rounded-xl shadow-md">Szukaj</button>
+      <button onclick="runSearch()" class="w-full md:w-auto bg-brand-navy hover:bg-slate-800 text-white font-black py-5 px-10 rounded-xl shadow-lg transition-transform active:scale-95 text-lg h-16 shrink-0 flex items-center justify-center gap-2">
+        <span>🔎</span> Znajdź Pakiety
+      </button>
     </div>
-    <div id="searchHint" class="mt-3 text-xs text-slate-400"></div>
+    <div id="searchHint" class="mt-4 text-sm text-slate-500 font-semibold h-6"></div>
   </div>
+  
   <div id="searchResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl">
     <div class="bg-brand-navy p-5">
       <h3 id="searchResultTitle" class="text-base font-bold text-white"></h3>
-      <p class="text-xs text-slate-400 mt-0.5">Wykaz pakietów zawierających to świadczenie (w tym dziedziczenie dla wariantów wyższego szczebla)</p>
+      <p class="text-xs text-slate-400 mt-0.5">Automatyczne powiązania i dziedziczenie dla wariantów wyższego szczebla</p>
     </div>
-    <div id="searchResultBody" class="p-5"></div>
+    <div id="searchResultBody" class="p-6 bg-slate-50"></div>
   </div>
 </div>
 
@@ -336,50 +342,109 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════ SQL -->
-<div id="tab-learn" class="tab-panel">
-  <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
-    <h2 class="text-xl font-bold text-brand-navy mb-2">Wprowadź kod SQL</h2>
-    <textarea id="sqlInput" rows="10" class="w-full bg-slate-800 text-green-400 font-mono text-sm p-4 rounded-2xl outline-none focus:ring-2 focus:ring-brand-pink" placeholder="-- Kod wpisuj z panelu Supabase ..."></textarea>
-    <div class="flex gap-3 mt-4">
-      <button onclick="validateSQL()" class="bg-brand-emerald text-white font-bold py-3 px-6 rounded-xl">✔ Waliduj SQL</button>
-      <button onclick="document.getElementById('sqlInput').value=''" class="bg-slate-100 text-slate-700 font-bold py-3 px-6 rounded-xl border">Wyczyść</button>
+<!-- ══════════════════════════════ MOJE KONTO -->
+<div id="tab-account" class="tab-panel">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+    <!-- Profil -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+      <h2 class="text-base font-bold text-brand-navy mb-5">👤 Mój Profil</h2>
+      <div class="space-y-4 mb-5">
+        <div><label class="lbl">Imię i nazwisko</label><input type="text" id="accName" class="inp" placeholder="Jan Kowalski"/></div>
+        <div><label class="lbl">Firma / Kancelaria</label><input type="text" id="accFirma" class="inp" placeholder="Nazwa firmy"/></div>
+        <div><label class="lbl">Telefon</label><input type="text" id="accTel" class="inp" placeholder="+48 000 000 000"/></div>
+        <div><label class="lbl">NIP</label><input type="text" id="accNip" class="inp" placeholder="0000000000"/></div>
+      </div>
+      <button onclick="saveProfile()" class="bg-brand-navy text-white font-bold py-2.5 px-6 rounded-xl shadow-md">💾 Zapisz profil</button>
+      <p id="accStatus" class="mt-3 text-sm font-semibold"></p>
     </div>
-    <div id="sqlValidation" class="hidden mt-5 p-4 rounded-xl text-sm font-semibold border"></div>
+
+    <!-- Logo + Plan -->
+    <div class="space-y-6">
+      <!-- Logo -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <h2 class="text-base font-bold text-brand-navy mb-4">🖼 Logo do PDF</h2>
+        <div id="accLogoPreview" class="mb-4 hidden"><img id="accLogoImg" src="" class="max-h-16 rounded-lg border border-slate-200 p-2" alt="Logo"/></div>
+        <input type="file" id="accLogoFile" accept="image/*" class="inp mb-3" onchange="previewLogo(this)"/>
+        <button onclick="uploadLogo()" class="bg-brand-pink text-white font-bold py-2.5 px-6 rounded-xl shadow-md">⬆ Wgraj logo</button>
+        <p id="logoStatus" class="mt-3 text-sm font-semibold"></p>
+      </div>
+
+      <!-- Plan -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+        <h2 class="text-base font-bold text-brand-navy mb-4">📋 Plan subskrypcji</h2>
+        <div id="accPlanBox" class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Aktywny plan</span>
+            <span id="accPlanBadge" class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full uppercase">–</span>
+          </div>
+          <div class="text-sm text-slate-500">Ważny do: <strong id="accPlanDo" class="text-brand-navy">–</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historia wyszukiwań -->
+  <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mt-8">
+    <div class="flex justify-between items-center mb-5">
+      <h2 class="text-base font-bold text-brand-navy">📋 Historia wyszukiwań</h2>
+      <button onclick="loadHistory()" class="text-xs bg-slate-100 hover:bg-slate-200 font-bold px-4 py-2 rounded-xl border">🔄 Odśwież</button>
+    </div>
+    <div id="historyTable" class="tbl overflow-x-auto">
+      <div class="text-slate-400 text-sm text-center py-8">Kliknij Odśwież aby załadować historię</div>
+    </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════ ADMIN -->
 <div id="tab-admin" class="tab-panel">
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- W panelu admina zniknęło pole do wpisywania kluczy przez usera. Klucze wpisane są w kodzie. -->
     <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-      <h2 class="text-base font-bold text-brand-navy mb-5">🔌 Baza Danych (Supabase)</h2>
-      <div class="space-y-4 mb-5">
-        <div><label class="lbl">Project URL</label><input type="text" id="cfgUrl" class="inp"/></div>
-        <div><label class="lbl">Anon / API Key</label><input type="password" id="cfgKey" class="inp"/></div>
+      <h2 class="text-base font-bold text-brand-navy mb-5">🔌 Status Połączenia (Zablokowane w kodzie)</h2>
+      <p class="text-sm text-slate-500 mb-4">Aplikacja w wersji biznesowej loguje się automatycznie przy użyciu bezpiecznych, zintegrowanych kluczy. Klient nie ma do nich dostępu.</p>
+      <button onclick="checkDbStatus()" class="bg-brand-navy text-white font-bold py-2.5 px-6 rounded-xl">Sprawdź stan bazy</button>
+    </div>
+    
+    <!-- Users table (admin only) -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm lg:col-span-2 mt-4">
+      <div class="flex justify-between items-center mb-5">
+        <h2 class="text-base font-bold text-brand-navy">👥 Zarządzanie Użytkownikami</h2>
+        <button onclick="loadAdminUsers()" class="text-xs bg-slate-100 hover:bg-slate-200 font-bold px-4 py-2 rounded-xl border">🔄 Odśwież</button>
       </div>
-      <div class="flex gap-3">
-        <button onclick="saveConfig()" class="bg-brand-navy text-white font-bold py-2.5 px-6 rounded-xl">Zapisz ustawienia</button>
-        <button onclick="testConnection()" class="bg-slate-100 text-slate-700 font-bold py-2.5 px-6 rounded-xl border border-slate-200">Testuj API</button>
+      <div id="adminUsersTable" class="tbl overflow-x-auto">
+        <div class="text-slate-400 text-sm text-center py-8">Kliknij Odśwież aby załadować użytkowników</div>
       </div>
-      <p id="connStatus" class="mt-4 text-sm font-semibold"></p>
     </div>
   </div>
 </div>
 
 </main>
 
-<!-- ══════════════════════════════ MODALE -->
-<div id="adminAuthModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+<!-- ══════════════════════════════ MODALE I REJESTRACJA -->
+<div id="loginModal" class="fixed inset-0 bg-slate-900/80 z-[80] hidden items-center justify-center p-4 backdrop-blur-sm">
   <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-    <div class="text-center mb-6">
-      <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🔒</div>
-      <h2 class="text-xl font-bold text-brand-navy">Dostęp Zastrzeżony</h2>
+    <div class="text-center mb-7">
+      <div class="text-3xl font-black text-brand-navy mb-1">MEDICAL<span class="text-brand-pink">AURA</span></div>
+      <p class="text-sm text-slate-500 mt-1">Zaloguj się do swojego konta</p>
     </div>
-    <input type="password" id="adminPin" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-4 text-center text-2xl tracking-widest outline-none focus:border-brand-navy mb-4" placeholder="••••">
-    <button onclick="unlockAdmin()" class="w-full bg-brand-navy text-white font-bold py-3 rounded-xl shadow-md mb-2">Odblokuj</button>
-    <p id="adminAuthError" class="text-red-500 text-xs text-center font-bold mt-2 hidden">Błędny kod PIN!</p>
+    <div class="space-y-3 mb-4">
+      <div><label class="lbl">Adres e-mail</label><input type="email" id="loginEmail" class="inp" placeholder="twoj@email.pl" onkeydown="if(event.key==='Enter') doLogin()"/></div>
+      <div><label class="lbl">Hasło</label><input type="password" id="loginPass" class="inp" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()"/></div>
+    </div>
+    <button onclick="doLogin()" class="w-full bg-brand-navy hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md mb-3 transition-colors"><span id="loginBtnTxt">Zaloguj się</span></button>
+    <p id="loginError" class="text-red-500 text-xs text-center font-bold mb-3 hidden"></p>
+    <div class="text-center border-t border-slate-100 pt-3">
+      <a href="#" onclick="doMagicLink(); return false;" class="text-xs text-slate-400 hover:text-brand-pink font-semibold transition-colors">✉️ Wyślij link logowania na email</a>
+    </div>
+    <p id="magicMsg" class="hidden text-emerald-600 text-xs text-center font-bold mt-2"></p>
   </div>
+</div>
+
+<div id="userBar" class="hidden fixed bottom-4 right-4 z-40 bg-brand-navy text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl flex items-center gap-2">
+  <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+  <span id="userBarName">Zalogowany</span>
+  <span id="userBarRole" class="bg-white/20 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider"></span>
 </div>
 
 <!-- Modal dla pojedynczej placówki -->
@@ -410,7 +475,10 @@
             <h3 id="pdmTitle" class="font-bold text-xl md:text-3xl tracking-tight flex items-center">Ładowanie...</h3>
             <p id="pdmSub" class="text-brand-pink font-bold text-sm uppercase tracking-widest mt-1"></p>
           </div>
-          <div id="pdmPrice" class="hidden"></div>
+          <div class="bg-white/10 px-6 py-3 rounded-2xl border border-white/20 text-right shrink-0">
+            <div class="text-[10px] uppercase tracking-wider text-slate-300 font-bold mb-0.5">Składka pracownicza</div>
+            <div id="pdmPrice" class="text-3xl font-black text-white">-- zł<span class="text-sm font-normal"> / mies.</span></div>
+          </div>
         </div>
       </div>
       <button onclick="document.getElementById('pkgDetailsModal').classList.add('hidden')" class="w-10 h-10 ml-4 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-2xl transition-colors shrink-0">&times;</button>
@@ -420,12 +488,52 @@
 </div>
 
 <script>
-// ─── BEZPIECZNE KODOWANIE ZNAKÓW DLA AUTOCOMPLETE ───────
+// ─── KONFIGURACJA BAZY (TWARDE KLUCZE ZAMIAST LOCALSTORAGE) ───
+// Tu wklej swoje publiczne dane z Supabase (Project URL i anon key). 
+// W architekturze Supabase ten klucz MUSI być publiczny na stronie. Bezpieczeństwa pilnują RLS.
+const SB_URL = 'https://kukvgsjrmrqtzhkszzum.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY';
+
+// ─── BEZPIECZNE KODOWANIE ZNAKÓW ───────
 const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// Funkcja chroniąca funkcje OR() biblioteki Supabase JS przed wstrzykiwaniem przecinków i nawiasów
+const safeOr = (val) => val.replace(/[,()"]/g, '').trim();
+
+// 🔥 SŁOWNIK MEDYCZNY (SMART KONSULTANT) 🔥
+const getMedicalSynonyms = (val) => {
+  const qLower = val.toLowerCase().trim();
+  const dictionary = [
+    { triggers: ['serc', 'zawał', 'kardiolog', 'ciśnien', 'kłuci', 'ekg'], terms: ['kardiolog', 'ekg', 'echo', 'holter', 'próba wysiłkowa', 'lipidogram', 'troponina', 'potas', 'sód', 'ck-mb'] },
+    { triggers: ['głow', 'migren', 'mózg', 'neurolog', 'zawrot'], terms: ['neurolog', 'eeg', 'tomografia głowy', 'rezonans głowy', 'tk głowy', 'mri głowy', 'doppler tętnic'] },
+    { triggers: ['brzuch', 'żołądk', 'żołądek', 'jelit', 'zgag', 'trawien', 'wzdęci'], terms: ['gastrolog', 'jamy brzusznej', 'gastroskopia', 'kolonoskopia', 'helicobacter', 'krew utajona', 'lipaza', 'amylaza'] },
+    { triggers: ['wątrob'], terms: ['hepatolog', 'alat', 'aspat', 'alt', 'ast', 'ggtp', 'bilirubina', 'hcv', 'hbs'] },
+    { triggers: ['tarczyc', 'hashimoto'], terms: ['endokrynolog', 'usg tarczycy', 'tsh', 'ft3', 'ft4', 'anty-tpo', 'anty-tg', 'biopsja tarczycy'] },
+    { triggers: ['cukier', 'cukrzyc', 'insulin'], terms: ['diabetolog', 'glukoza', 'krzywa cukrowa', 'ogtt', 'hemoglobina glikowana', 'insulina', 'peptyd'] },
+    { triggers: ['nerk', 'mocz', 'pęcherz'], terms: ['nefrolog', 'urolog', 'badanie ogólne moczu', 'posiew moczu', 'urokultura', 'kreatynina', 'mocznik', 'kwas moczowy', 'układu moczowego'] },
+    { triggers: ['płuc', 'oddech', 'dusznoś', 'kasz'], terms: ['pulmonolog', 'rtg klatki', 'spirometria'] },
+    { triggers: ['kobiet', 'ciąż', 'miesiączk', 'antykoncepc'], terms: ['ginekolog', 'cytologia', 'piersi', 'mammografia', 'transwaginalne', 'ciąży', 'prolaktyna', 'progesteron', 'estradiol'] },
+    { triggers: ['mężczyzn', 'prostat'], terms: ['urolog', 'psa', 'prostaty', 'testosteron'] },
+    { triggers: ['skór', 'włos', 'paznokc', 'pieprzyk', 'znam', 'trądzik'], terms: ['dermatolog', 'dermatoskopia', 'znamienia'] },
+    { triggers: ['oko', 'ocz', 'wzrok', 'widzen'], terms: ['okulist', 'dna oka', 'pole widzenia', 'ciśnienie wewnątrzgałkowe', 'oct'] },
+    { triggers: ['uch', 'uszy', 'słuch', 'gardł', 'nos', 'zatok', 'chrap'], terms: ['laryngolog', 'audiogram', 'audiolog', 'wymaz z gardła', 'wymaz z nosa', 'zatok'] },
+    { triggers: ['kośc', 'staw', 'kręgosłup', 'kolan', 'plec', 'reumat', 'zwyrodn'], terms: ['ortopeda', 'reumatolog', 'rtg kręgosłupa', 'stawu', 'kwas moczowy', 'ob', 'czynnik reumatoidalny', 'crp'] },
+    { triggers: ['krew', 'anemi', 'żelaz', 'osłabien', 'zmęczen'], terms: ['hematolog', 'morfologia', 'żelazo', 'ferrytyna', 'witamina b12', 'kwas foliowy', 'ob', 'crp', 'd3'] },
+    { triggers: ['alergi', 'uczul', 'wysypk'], terms: ['alergolog', 'ige', 'panel alergologiczny', 'testy skórne', 'odczulanie'] }
+  ];
+  let matchedTerms = [qLower]; 
+  dictionary.forEach(entry => {
+    if (entry.triggers.some(trigger => qLower.includes(trigger))) {
+       matchedTerms = [...matchedTerms, ...entry.terms];
+    }
+  });
+  return [...new Set(matchedTerms)];
+};
+
 // ─── STATE ──────────────────────────────────────────────
-let SB_URL = localStorage.getItem('ma_url')||'';
-let SB_KEY = localStorage.getItem('ma_key')||'';
+let SB_CLIENT = null;
+let currentUser = null;
+let currentRole = 'viewer';
 let allProviders   = [];
 let providerPkgs   = {};    
 let selectedPkgs   = {};    
@@ -433,15 +541,9 @@ let activeProv     = null;
 let lastCompData   = [];
 let allCalcPkgs    = [];
 let selectedCalc   = new Set();
-let searchType     = 'spec';
 let currentClinicData = []; 
 
 function switchTab(id,btn){
-  if(id === 'admin' && sessionStorage.getItem('adminUnlocked') !== 'true') {
-    document.getElementById('adminAuthModal').classList.remove('hidden');
-    document.getElementById('adminAuthModal').classList.add('flex');
-    return;
-  }
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>{
     b.classList.remove('bg-white','text-brand-navy','shadow-sm');
@@ -450,42 +552,164 @@ function switchTab(id,btn){
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('bg-white','text-brand-navy','shadow-sm');
   btn.classList.remove('text-slate-300');
+  
   if(id==='library') loadLibrary();
   if(id==='calc') calcLoadPackages();
+  if(id==='account') loadAccountData();
+  if(id==='admin') loadAdminUsers();
 }
 
-function unlockAdmin() {
-  if(document.getElementById('adminPin').value === 'aura2026') { 
-    sessionStorage.setItem('adminUnlocked', 'true');
-    document.getElementById('adminAuthModal').classList.add('hidden');
-    document.getElementById('btn-admin').innerHTML = '⚙️ Admin (Odblokowano)';
-    switchTab('admin', document.getElementById('btn-admin'));
-  } else {
-    document.getElementById('adminAuthError').classList.remove('hidden');
+// ─── SUPABASE AUTH ───────────────────────────────────────
+async function initAuth() {
+  if (!SB_URL || !SB_KEY || SB_URL==='WKLEJ_TUTAJ_SWOJ_URL_Z_SUPABASE') {
+     showLoginModal('Programisto! Wklej poprawny URL i klucz bazy danych w pliku źródłowym (linia 384).');
+     return;
+  }
+  SB_CLIENT = supabase.createClient(SB_URL, SB_KEY);
+  
+  const { data:{session} } = await SB_CLIENT.auth.getSession();
+  if (!session) { showLoginModal(); return; }
+  
+  currentUser = session.user;
+  await loadUserRole();
+  hideLoginModal();
+  await init();
+}
+
+async function loadUserRole() {
+  if (!SB_CLIENT || !currentUser) return;
+  try {
+    const { data } = await SB_CLIENT.from('profiles').select('rola,full_name').eq('id',currentUser.id).single();
+    currentRole = data?.rola || 'viewer';
+    const name  = data?.full_name || currentUser.email;
+    document.getElementById('userBarName').textContent = name;
+    document.getElementById('userBarRole').textContent = currentRole;
+  } catch(e) { currentRole = 'viewer'; }
+  
+  document.getElementById('userBar').classList.remove('hidden');
+  document.getElementById('btn-logout').classList.remove('hidden');
+  document.getElementById('btn-account').classList.remove('hidden');
+  
+  if (currentRole === 'admin') document.getElementById('btn-admin').classList.remove('hidden');
+  else document.getElementById('btn-admin').classList.add('hidden');
+}
+
+function showLoginModal(msg) {
+  const m = document.getElementById('loginModal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+  if (msg) { const e=document.getElementById('loginError'); e.textContent=msg; e.classList.remove('hidden'); }
+}
+function hideLoginModal() {
+  const m = document.getElementById('loginModal');
+  m.classList.add('hidden'); m.classList.remove('flex');
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginError');
+  const btn   = document.getElementById('loginBtnTxt');
+  err.classList.add('hidden');
+  
+  if (!email||!pass) { err.textContent='Podaj email i hasło.'; err.classList.remove('hidden'); return; }
+  
+  btn.textContent = 'Logowanie...';
+  const { data, error } = await SB_CLIENT.auth.signInWithPassword({email,password:pass});
+  btn.textContent = 'Zaloguj się';
+  
+  if (error) { err.textContent='Błędny email lub hasło.'; err.classList.remove('hidden'); }
+  else { currentUser=data.user; await loadUserRole(); hideLoginModal(); await init(); }
+}
+
+async function doMagicLink() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const msg   = document.getElementById('magicMsg');
+  const err   = document.getElementById('loginError');
+  if (!email) { err.textContent='Wpisz email powyżej.'; err.classList.remove('hidden'); return; }
+  if (SB_CLIENT) {
+    await SB_CLIENT.auth.signInWithOtp({email});
+    msg.textContent = '✅ Link wysłany na '+email;
+    msg.classList.remove('hidden');
   }
 }
 
-// ─── API ────────────────────────────────────────────────
-async function apiGet(table,params=''){
-  if(!SB_URL||!SB_KEY) return null;
-  try{ const r=await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Accept':'application/json'}}); return r.ok?r.json():null; }catch(e){return null}
-}
-async function apiPatch(table,params,body){
-  if(!SB_URL||!SB_KEY) return false;
-  try{ const r=await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(body)}); return r.ok; }catch(e){return false}
+async function doLogout() {
+  if (SB_CLIENT) await SB_CLIENT.auth.signOut();
+  currentUser=null; currentRole='viewer';
+  document.getElementById('userBar').classList.add('hidden');
+  showLoginModal();
 }
 
-// ─── INTELIGENTNE ZLICZANIE (Regex dla TK/MR) ───
-async function fetchEnhancedPackages(params) {
-  let data = await apiGet('pakiety_pelne', params);
+// ─── INIT & STATUS BAZY ─────────────────────────────────
+async function init(){
+  await checkDbStatus();
+  await loadProvidersFromDB();
+}
+
+async function checkDbStatus(){
+  const dot=document.getElementById('dotDb'),txt=document.getElementById('statusDb');
+  const { data, error } = await SB_CLIENT.from('dostawcy').select('id').eq('aktywny', true).limit(1);
+  if(!error){
+    txt.textContent='Połączono'; dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500';
+    const { data: p } = await SB_CLIENT.from('pakiety').select('id').eq('aktywna', true);
+    document.getElementById('statusPackages').textContent=p?p.length:'–';
+  } else {
+    txt.textContent='Błąd bazy'; dot.className='w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse';
+  }
+}
+
+async function loadProvidersFromDB(){
+  const { data: d } = await SB_CLIENT.from('dostawcy').select('id,nazwa,skrot,aktywny').order('nazwa');
+  let merged = {};
+  if(d){
+    d.forEach(p => {
+      let norm = p.nazwa.trim().toUpperCase();
+      if(norm === 'TU ZDROWIE!!!' || norm === 'TUZDROWIE') norm = 'TU ZDROWIE';
+      if(!merged[norm]) {
+        merged[norm] = { idArr: [p.id], nazwa: norm, idStr: p.id.toString(), isActive: p.aktywny };
+      } else {
+        merged[norm].idArr.push(p.id);
+        merged[norm].idStr = merged[norm].idArr.join('-');
+        if(p.aktywny) merged[norm].isActive = true;
+      }
+    });
+  }
+  allProviders = Object.values(merged).filter(m => m.isActive).sort((a,b) => a.nazwa.localeCompare(b.nazwa));
+  document.getElementById('statusProviders').textContent = allProviders.length;
+  buildProvList();
+  populateAllSelects();
+}
+
+function populateAllSelects(){
+  ['libProvider','calcProvider'].forEach(id=>{
+    const el=document.getElementById(id);if(!el) return;
+    while(el.options.length>1) el.remove(1);
+    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.idArr.join(',');o.textContent=p.nazwa;el.appendChild(o);});
+  });
+  const clinEl=document.getElementById('clinProv');
+  if(clinEl){
+    while(clinEl.options.length>1) clinEl.remove(1);
+    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.nazwa;o.textContent=p.nazwa;clinEl.appendChild(o);});
+  }
+}
+
+// ─── INTELIGENTNE ZLICZANIE (Nowa Architektura) ───
+// Przyjmuje natywną funkcję modyfikującą zapytanie (np. q => q.in('id', pids))
+async function fetchEnhancedPackages(queryBuilder) {
+  let query = SB_CLIENT.from('pakiety_pelne').select('*');
+  query = queryBuilder(query);
+  
+  const { data } = await query;
   if (!data || !data.length) return data;
   
-  const ids = data.map(d => d.id).join(',');
-  if (ids) {
-    const raw = await apiGet('pakiety', `select=id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do,telemedycyna,ciaza,rehabilitacja,stomatologia,opieka_psychiatryczna,wizyty_domowe,leczenie_szpitalne,hotline_24h,refundacja,swoboda_leczenia&id=in.(${ids})`);
+  const ids = data.map(d => d.id);
+  if (ids.length > 0) {
+    const { data: raw } = await SB_CLIENT.from('pakiety').select('id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do,telemedycyna,ciaza,rehabilitacja,stomatologia,opieka_psychiatryczna,wizyty_domowe,leczenie_szpitalne,hotline_24h,refundacja,swoboda_leczenia').in('id', ids);
     
-    const labsData = await apiGet('pakiety_badania', `select=pakiet_id,badanie_nazwa&pakiet_id=in.(${ids})`);
-    const labC={}, rtgC={}, tkC={}, mriC={};
+    const { data: labsData } = await SB_CLIENT.from('pakiety_badania').select('pakiet_id,badanie_nazwa').in('pakiet_id', ids);
+    const { data: specData } = await SB_CLIENT.from('pakiety_specjalizacje').select('pakiet_id,specjalizacja_nazwa').in('pakiet_id', ids);
+    
+    const labC={}, rtgC={}, tkC={}, mriC={}, specC={};
     
     if (labsData) {
       labsData.forEach(r => {
@@ -498,17 +722,22 @@ async function fetchEnhancedPackages(params) {
       });
     }
 
+    if (specData) {
+      specData.forEach(r => {
+        specC[r.pakiet_id] = (specC[r.pakiet_id] || 0) + 1;
+      });
+    }
+
     if (raw && raw.length) {
       data.forEach(d => {
         const r = raw.find(x => x.id === d.id);
         if (r) {
-          // Kopiowanie nadpisanych i nowo dodanych pól boolowskich
           ['czas_oczekiwania_poz','czas_oczekiwania_spec','karencja_dni','min_pracownicy','wiek_dzieci_do',
            'telemedycyna','ciaza','rehabilitacja','stomatologia','opieka_psychiatryczna','wizyty_domowe',
            'leczenie_szpitalne','hotline_24h','refundacja','swoboda_leczenia'].forEach(k => {
             if(r[k] !== null && r[k] !== undefined) d[k] = r[k];
           });
-          d.liczba_specjalizacji = r.liczba_specjalizacji; 
+          d.liczba_specjalizacji = specC[d.id] !== undefined ? specC[d.id] : r.liczba_specjalizacji; 
           d.liczba_badan_lab = labC[d.id] !== undefined ? labC[d.id] : r.liczba_badan_lab;
         }
         d.liczba_rtg = rtgC[d.id] || 0;
@@ -520,617 +749,10 @@ async function fetchEnhancedPackages(params) {
   return data;
 }
 
-// ─── INIT & STATUS BAZY ─────────────────────────────────
-async function init(){
-  document.getElementById('cfgUrl').value=SB_URL;
-  document.getElementById('cfgKey').value=SB_KEY;
-  await checkDbStatus();
-  await loadProvidersFromDB();
-}
-
-async function checkDbStatus(){
-  const dot=document.getElementById('dotDb'),txt=document.getElementById('statusDb');
-  if(!SB_URL||!SB_KEY){ txt.textContent='Brak configu'; dot.className='w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse';return; }
-  const d=await apiGet('dostawcy','select=id&aktywny=eq.true');
-  if(d){
-    txt.textContent='Połączono'; dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500';
-    const p=await apiGet('pakiety','select=id&aktywna=eq.true');
-    document.getElementById('statusPackages').textContent=p?p.length:'–';
-  }
-}
-
-// 🔥 Tarcza anty-duplikatowa V2
-async function loadProvidersFromDB(){
-  const d=await apiGet('dostawcy','select=id,nazwa,skrot,aktywny&order=nazwa');
-  let merged = {};
-  
-  if(d){
-    d.forEach(p => {
-      let norm = p.nazwa.trim().toUpperCase();
-      if(norm === 'TU ZDROWIE!!!' || norm === 'TUZDROWIE') norm = 'TU ZDROWIE';
-
-      if(!merged[norm]) {
-        merged[norm] = { idArr: [p.id], nazwa: norm, idStr: p.id.toString(), isActive: p.aktywny };
-      } else {
-        merged[norm].idArr.push(p.id);
-        merged[norm].idStr = merged[norm].idArr.join('-');
-        if(p.aktywny) merged[norm].isActive = true;
-      }
-    });
-  }
-  
-  allProviders = Object.values(merged).filter(m => m.isActive).sort((a,b) => a.nazwa.localeCompare(b.nazwa));
-  document.getElementById('statusProviders').textContent = allProviders.length;
-  
-  buildProvList();
-  populateAllSelects();
-}
-
-function populateAllSelects(){
-  ['libProvider','calcProvider'].forEach(id=>{
-    const el=document.getElementById(id);if(!el) return;
-    while(el.options.length>1) el.remove(1);
-    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.idArr.join(',');o.textContent=p.nazwa;el.appendChild(o);});
-  });
-  
-  const clinEl=document.getElementById('clinProv');
-  if(clinEl){
-    while(clinEl.options.length>1) clinEl.remove(1);
-    allProviders.forEach(p=>{const o=document.createElement('option');o.value=p.nazwa;o.textContent=p.nazwa;clinEl.appendChild(o);});
-  }
-}
-
-// ─── ADMIN & USTAWIENIA ─────────────────────────────────
-function saveConfig(){
-  const url = document.getElementById('cfgUrl').value.trim();
-  const key = document.getElementById('cfgKey').value.trim();
-  localStorage.setItem('ma_url', url);
-  localStorage.setItem('ma_key', key);
-  SB_URL = url; SB_KEY = key;
-  const st = document.getElementById('connStatus');
-  st.textContent = '✓ Zapisano konfigurację. Odświeżanie bazy...';
-  st.className = 'mt-4 text-sm font-bold text-emerald-600';
-  init(); // Re-init
-}
-
-async function testConnection(){
-  const st = document.getElementById('connStatus');
-  st.textContent = 'Testowanie połączenia...'; st.className = 'mt-4 text-sm font-bold text-slate-500';
-  const d = await apiGet('dostawcy', 'limit=1');
-  if(d){
-    st.textContent = '✅ Połączenie z bazy Supabase nawiązane poprawnie!';
-    st.className = 'mt-4 text-sm font-bold text-emerald-600';
-  } else {
-    st.textContent = '❌ Błąd połączenia. Sprawdź poprawność adresu URL oraz klucza API anon.';
-    st.className = 'mt-4 text-sm font-bold text-red-600';
-  }
-}
-
-function validateSQL(){
-  const out = document.getElementById('sqlValidation');
-  out.classList.remove('hidden');
-  if(!document.getElementById('sqlInput').value.trim()){
-    out.textContent = 'Wprowadź kod SQL.'; out.className = 'mt-5 p-4 rounded-xl text-sm font-semibold border border-red-500 bg-red-50 text-red-700'; return;
-  }
-  out.textContent = 'Aby wykonać zapytania, skopiuj ten kod i wklej go do zakładki "SQL Editor" w swoim panelu Supabase. Przeglądarka zablokuje to ze względów bezpieczeństwa.';
-  out.className = 'mt-5 p-4 rounded-xl text-sm font-semibold border border-blue-500 bg-blue-50 text-blue-700';
-}
-
-// ─── WYSZUKIWARKA PAKIETÓW (ZAKRESY) ────────────────────
-function setSearchType(type) {
-  searchType = type;
-  document.getElementById('stype-spec').className = type==='spec'?'px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm':'px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200';
-  document.getElementById('stype-bad').className = type==='bad'?'px-5 py-2.5 text-sm font-bold rounded-xl bg-brand-navy text-white shadow-sm':'px-5 py-2.5 text-sm font-bold rounded-xl bg-slate-100 text-slate-600 border border-slate-200';
-  document.getElementById('searchQuery').placeholder = type==='spec'?'np. kardiolog, urolog...':'np. morfologia, USG brzucha...';
-}
-
-let acTimer;
-async function acInput(val) {
-  clearTimeout(acTimer);
-  const list = document.getElementById('acList');
-  if(!val || val.length < 2) { list.classList.add('hidden'); return; }
-  acTimer = setTimeout(async () => {
-    const table = searchType === 'spec' ? 'pakiety_specjalizacje' : 'pakiety_badania';
-    const col = searchType === 'spec' ? 'specjalizacja_nazwa' : 'badanie_nazwa';
-    const d = await apiGet(table, `select=${col}&${col}=ilike.*${encodeURIComponent(val)}*&limit=10`);
-    if(d && d.length) {
-      const unique = [...new Set(d.map(x => x[col]))];
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}';acHide();runSearch()">${u.replace(new RegExp(escRx(val),'gi'),'<strong>$&</strong>')}</li>`).join('');
-      list.classList.remove('hidden');
-    } else {
-      list.classList.add('hidden');
-    }
-  }, 300);
-}
-function acHide() { document.getElementById('acList').classList.add('hidden'); }
-function acKeydown(e) { if(e.key==='Enter') runSearch(); }
-
-// 🔥 WODOPSADOWA LOGIKA DZIEDZICZENIA ZAKRESÓW 🔥
-async function runSearch() {
-  const q = document.getElementById('searchQuery').value.trim();
-  const hint = document.getElementById('searchHint');
-  const res = document.getElementById('searchResult');
-  const body = document.getElementById('searchResultBody');
-  if(!q) return;
-  
-  hint.textContent = 'Szukam i przeliczam logikę dziedziczenia pakietów...'; 
-  res.classList.add('hidden');
-  
-  const table = searchType === 'spec' ? 'pakiety_specjalizacje' : 'pakiety_badania';
-  const col = searchType === 'spec' ? 'specjalizacja_nazwa' : 'badanie_nazwa';
-  
-  const d = await apiGet(table, `select=pakiet_id,${col}&${col}=ilike.${pgSafe(q)}`);
-  if(!d || !d.length) { hint.textContent = 'Brak wyników w bazie.'; return; }
-  
-  const pids = [...new Set(d.map(x => x.pakiet_id))];
-  const directPkgs = await fetchEnhancedPackages(`select=*&id=in.(${pids.join(',')})`);
-  
-  if(!directPkgs || !directPkgs.length) { hint.textContent = 'Błąd pobierania danych bazowych.'; return; }
-
-  const getNorm = (raw) => { let n = (raw||'').trim().toUpperCase(); if(n==='TU ZDROWIE!!!'||n==='TUZDROWIE') return 'TU ZDROWIE'; return n; };
-
-  const minTierMap = {};
-  directPkgs.forEach(p => {
-    const norm = getNorm(p.dostawca_nazwa);
-    const t = p.tier || 999;
-    if(minTierMap[norm] === undefined || t < minTierMap[norm]) {
-       minTierMap[norm] = t;
-    }
-  });
-
-  const targetIds = [];
-  Object.keys(minTierMap).forEach(norm => {
-    const prov = allProviders.find(ap => ap.nazwa === norm);
-    if(prov) targetIds.push(...prov.idArr);
-  });
-
-  let finalPkgs = [];
-  if(targetIds.length > 0) {
-    const cascadePkgs = await fetchEnhancedPackages(`select=*&dostawca_id=in.(${targetIds.join(',')})&aktywna=eq.true`);
-    finalPkgs = cascadePkgs.filter(p => {
-      const norm = getNorm(p.dostawca_nazwa);
-      return minTierMap[norm] !== undefined && (p.tier || 0) >= minTierMap[norm];
-    });
-  }
-
-  hint.textContent = `Poniżej znajdziesz pakiety zawierające wybrane świadczenie (w tym warianty wyższego szczebla)`;
-  document.getElementById('searchResultTitle').textContent = `Wyniki dla: ${q}`;
-  
-  finalPkgs.sort((a,b)=>getNorm(a.dostawca_nazwa).localeCompare(getNorm(b.dostawca_nazwa)) || (a.tier||0)-(b.tier||0));
-  
-  const grouped = {};
-  finalPkgs.forEach(p => {
-    const norm = getNorm(p.dostawca_nazwa);
-    if(!grouped[norm]) grouped[norm] = [];
-    grouped[norm].push(p);
-  });
-
-  // W tej wersji ujednolicone zostały ramki pakietów dla czystszego widoku
-  let html = '';
-  for(const [prov, items] of Object.entries(grouped)) {
-    html += `
-      <div class="mb-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-1 h-full bg-brand-navy"></div>
-        <h4 class="font-black text-brand-navy text-sm uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">${prov}</h4>
-        <div class="flex flex-wrap gap-2.5">
-          ${items.map(p => `
-            <button onclick="showPackageDetails(${p.id})" class="text-xs bg-white border-2 border-slate-200 hover:border-brand-pink hover:text-brand-pink transition-colors px-4 py-2.5 rounded-xl shadow-sm font-bold flex items-center gap-2 text-slate-700">
-              ${p.pakiet_nazwa||p.nazwa}
-              <span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black">T${p.tier}</span>
-            </button>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
-  body.innerHTML = html;
-  res.classList.remove('hidden');
-}
-
-// ─── KALKULATOR ─────────────────────────────────────────
-async function calcLoadPackages() {
-  const provId = document.getElementById('calcProvider').value; 
-  const el = document.getElementById('calcPackageList');
-  el.innerHTML = '<div class="col-span-full text-slate-400 text-sm"><div class="loader inline-block align-middle mr-2"></div>Ładowanie pakietów...</div>';
-  let q = 'select=*&aktywna=eq.true';
-  if(provId) q += `&dostawca_id=in.(${provId})`;
-  const d = await fetchEnhancedPackages(q);
-  allCalcPkgs = d || [];
-  allCalcPkgs.sort((a,b)=>a.dostawca_nazwa.localeCompare(b.dostawca_nazwa) || (a.tier||0)-(b.tier||0));
-  
-  el.innerHTML = allCalcPkgs.map(p => {
-    const sel = selectedCalc.has(p.id);
-    const isS = (p.pakiet_nazwa||p.nazwa||'').toLowerCase().includes('senior');
-    return `<div class="pkg-chip flex items-center justify-between gap-2 ${sel?'sel':''} ${isS?'senior':''}" onclick="toggleCalc(${p.id}, this)">
-      <div class="truncate pr-2">
-        <div class="text-[10px] ${isS?'text-amber-600':'text-slate-400'} font-bold uppercase truncate">${p.dostawca_nazwa}</div>
-        <div class="font-bold text-xs truncate">${p.pakiet_nazwa||p.nazwa}</div>
-      </div>
-      <div class="chk ${sel?'on':''}">${sel?'✓':''}</div>
-    </div>`;
-  }).join('');
-  calcUpdate();
-}
-
-function toggleCalc(id, el) {
-  if(selectedCalc.has(id)) { 
-    selectedCalc.delete(id); el.classList.remove('sel'); el.querySelector('.chk').classList.remove('on'); el.querySelector('.chk').textContent=''; 
-  } else { 
-    selectedCalc.add(id); el.classList.add('sel'); el.querySelector('.chk').classList.add('on'); el.querySelector('.chk').textContent='✓'; 
-  }
-  calcUpdate();
-}
-
-function calcUpdate() {
-  const w = parseInt(document.getElementById('calcWorkers').value)||1;
-  const type = document.getElementById('calcType').value;
-  const res = document.getElementById('calcResult');
-  const tb = document.getElementById('calcTable');
-  
-  if(!selectedCalc.size) { res.classList.add('hidden'); return; }
-  
-  const selPkgs = allCalcPkgs.filter(p => selectedCalc.has(p.id));
-  document.getElementById('calcSubtitle').textContent = `Wyliczenie dla ${w} pracowników`;
-  
-  let html = `<table class="w-full text-sm border-collapse min-w-[600px]">
-    <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
-      <tr><th class="p-3 text-left">Dostawca i Pakiet</th><th class="p-3 text-right">Składka jednostkowa</th><th class="p-3 text-right">Łącznie (Miesięcznie)</th><th class="p-3 text-right">Łącznie (Rocznie)</th></tr>
-    </thead>
-    <tbody class="divide-y divide-slate-100">`;
-    
-  selPkgs.forEach(p => {
-    const price = parseFloat(p[type]) || 0;
-    const sum = price * w;
-    const year = sum * 12;
-    html += `<tr class="hover:bg-slate-50 transition-colors">
-    <td class="p-4">
-      <div class="font-bold text-brand-navy">${p.dostawca_nazwa}</div>
-      <div class="text-brand-pink text-xs font-semibold">${p.pakiet_nazwa||p.nazwa} <span class="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 font-black">T${p.tier}</span></div>
-    </td>
-    <td class="p-4 text-right font-semibold">${price>0 ? price.toFixed(2)+' zł' : '<span class="text-red-500 text-xs">Brak wyceny</span>'}</td>
-    <td class="p-4 text-right font-black text-brand-navy text-lg">${price>0 ? sum.toFixed(2)+' zł' : '–'}</td>
-    <td class="p-4 text-right font-bold text-slate-500">${price>0 ? year.toFixed(2)+' zł' : '–'}</td></tr>`;
-  });
-  html += `</tbody></table>`;
-  tb.innerHTML = html;
-  res.classList.remove('hidden');
-}
-
-
-// ─── WYSZUKIWARKA PLACÓWEK Z AUTOCOMPLETE I OCHRONĄ BŁĘDÓW ───
-
-// Tarcza ochronna dla PostgREST — standardowy ilike z wildcard
-const pgSafe = (val) => {
-  const cleanVal = val.replace(/"/g, '');
-  return encodeURIComponent(`"*${cleanVal}*"`);
-};
-
-// Wersja bez cudzysłowów — bezpieczna wewnątrz or=() w PostgREST
-const pgSafeOr = (val) => encodeURIComponent(`*${val.replace(/["%]/g, '')}*`);
-
-// Autocomplete dla Miasta
-let acCityTimer;
-async function acCity(q) {
-  clearTimeout(acCityTimer);
-  const list = document.getElementById('acCityList');
-  if(!q || q.length < 2) { list.classList.add('hidden'); return; }
-  acCityTimer = setTimeout(async () => {
-    const data = await apiGet('placowki_medyczne', `select=miejscowosc&miejscowosc=ilike.${pgSafe(q)}&limit=20`);
-    if(data && data.length) {
-      const unique = [...new Set(data.map(d => d.miejscowosc))].slice(0, 10);
-      if(!unique.length) { list.classList.add('hidden'); return; }
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinCity').value='${u.replace(/'/g,"\\'").replace(/"/g,"&quot;")}'; document.getElementById('acCityList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(escRx(q),'gi'),'<strong>$&</strong>')}</li>`).join('');
-      list.classList.remove('hidden');
-    } else {
-      list.classList.add('hidden');
-    }
-  }, 300);
-}
-
-// Autocomplete dla Nazwy Sieci/Placówki
-let acClinTimer;
-async function acClinic(q) {
-  clearTimeout(acClinTimer);
-  const list = document.getElementById('acClinList');
-  if(!q || q.length < 2) { list.classList.add('hidden'); return; }
-  acClinTimer = setTimeout(async () => {
-    // or=() — używamy pgSafeOr (bez cudzysłowów)
-    const data = await apiGet('placowki_medyczne', `select=siec_bazowa,nazwa_oddzialu&or=(siec_bazowa.ilike.${pgSafeOr(q)},nazwa_oddzialu.ilike.${pgSafeOr(q)})&limit=30`);
-    if(data && data.length) {
-      let matches = [];
-      data.forEach(d => {
-        if(d.siec_bazowa && d.siec_bazowa.toLowerCase().includes(q.toLowerCase())) matches.push(d.siec_bazowa);
-        if(d.nazwa_oddzialu && d.nazwa_oddzialu.toLowerCase().includes(q.toLowerCase())) matches.push(d.nazwa_oddzialu);
-      });
-      const unique = [...new Set(matches)].slice(0, 10);
-      if(!unique.length) { list.classList.add('hidden'); return; }
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinName').value='${u.replace(/'/g,"\\'").replace(/"/g,"&quot;")}'; document.getElementById('acClinList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(escRx(q),'gi'),'<strong>$&</strong>')}</li>`).join('');
-      list.classList.remove('hidden');
-    } else {
-      list.classList.add('hidden');
-    }
-  }, 300);
-}
-
-// Główna funkcja szukająca placówek
-async function searchClinics(){
-  const city    = document.getElementById('clinCity').value.trim();
-  const powiat  = document.getElementById('clinPowiat').value.trim();
-  const name    = document.getElementById('clinName').value.trim();
-  const provSelect = document.getElementById('clinProv');
-  const provName   = provSelect.options[provSelect.selectedIndex].text;
-  const provVal    = provSelect.value;
-
-  const hint      = document.getElementById('clinHint');
-  const resultDiv = document.getElementById('clinResult');
-  const resultBody= document.getElementById('clinResultBody');
-  const countEl   = document.getElementById('clinCount');
-
-  hint.textContent = 'Szukam placówek...';
-  hint.className = 'text-xs text-brand-navy font-bold mt-2';
-  resultDiv.classList.add('hidden');
-
-  if(!SB_URL||!SB_KEY) {
-    hint.textContent = 'Błąd: Brak połączenia z bazą (sprawdź klucze w zakładce Admin).';
-    hint.className = 'text-xs text-red-600 font-bold mt-2';
-    return;
-  }
-
-  // Budowanie zapytania — or=() z pgSafeOr, pozostałe z pgSafe
-  let queryParams = ['select=*', 'limit=1000'];
-  if (city)   queryParams.push(`miejscowosc=ilike.${pgSafe(city)}`);
-  if (powiat) queryParams.push(`powiat=ilike.${pgSafe(powiat)}`);
-  if (name)   queryParams.push(`or=(nazwa_oddzialu.ilike.${pgSafeOr(name)},siec_bazowa.ilike.${pgSafeOr(name)})`);
-
-  const data = await apiGet('placowki_medyczne', queryParams.join('&'));
-
-  if(data === null) {
-    hint.textContent = 'Błąd pobierania danych z bazy. Spróbuj zmienić parametry wyszukiwania.';
-    hint.className = 'text-xs text-red-600 font-bold mt-2';
-    return;
-  }
-
-  if(!Array.isArray(data) || data.length === 0) {
-    hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów.';
-    hint.className = 'text-xs text-slate-500 font-bold mt-2';
-    return;
-  }
-
-  // Filtrowanie po dostawcy — po stronie klienta (tagi jako array lub string PostgreSQL)
-  let filteredData = data;
-  if(provVal && provName !== '— Wszyscy Partnerzy —') {
-    const searchProv = provName.trim().toUpperCase();
-    filteredData = data.filter(p => {
-      if(!p.dostawcy_tagi) return false;
-      const tags = Array.isArray(p.dostawcy_tagi)
-        ? p.dostawcy_tagi
-        : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
-      return tags.some(t => t.trim().toUpperCase() === searchProv);
-    });
-  }
-
-  if(!filteredData.length) {
-    hint.textContent = 'Znaleziono placówki w tej lokalizacji, ale żadna nie jest powiązana z wybraną siecią.';
-    hint.className = 'text-xs text-slate-500 font-bold mt-2';
-    return;
-  }
-
-  currentClinicData = filteredData;
-
-  // Zapis historii — ochrona przed błędem
-  try { saveSearchHistory('placowki', {city, powiat, name, provName}, filteredData.length); } catch(e) {}
-
-  hint.textContent = data.length >= 1000
-    ? `⚠️ Wyświetlono max 1000 rekordów — zawęź kryteria wyszukiwania.`
-    : '';
-  countEl.textContent = `${filteredData.length} znalezionych`;
-
-  let rowsHtml = '';
-  filteredData.forEach((p, idx) => {
-    let pTags = [];
-    if(p.dostawcy_tagi) {
-      pTags = Array.isArray(p.dostawcy_tagi)
-        ? p.dostawcy_tagi
-        : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
-    }
-    const tagsInline = pTags.length > 0
-      ? pTags.map(t => `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-[10px] font-black uppercase px-2 py-1 rounded-md mr-1 mb-1">${t.trim()}</span>`).join('')
-      : '<span class="text-[10px] text-slate-400 italic">Brak partnerów</span>';
-
-    rowsHtml += `
-      <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="openClinicModal(${idx})">
-        <td class="p-4">
-          <div class="font-bold text-brand-pink hover:underline text-base">${p.nazwa_oddzialu || p.siec_bazowa}</div>
-          <div class="text-[10px] text-slate-500 font-black uppercase tracking-wider mt-0.5">WŁAŚCICIEL: ${p.siec_bazowa || 'Niezależna'}</div>
-        </td>
-        <td class="p-4">
-          <div class="font-bold text-slate-700">${p.miejscowosc}</div>
-          <div class="text-xs text-slate-500 mt-0.5">${p.adres}</div>
-        </td>
-        <td class="p-4 text-xs font-semibold text-slate-600">${p.powiat || '–'}</td>
-        <td class="p-4 max-w-[250px] md:max-w-[400px]">${tagsInline}</td>
-      </tr>`;
-  });
-
-  resultBody.innerHTML = rowsHtml;
-  resultDiv.classList.remove('hidden');
-}
-
-function openClinicModal(idx) {
-  const p = currentClinicData[idx];
-  if(!p) return;
-  document.getElementById('cdmName').textContent    = p.nazwa_oddzialu || p.siec_bazowa || '–';
-  document.getElementById('cdmAddress').textContent = [p.adres, p.miejscowosc, p.powiat].filter(Boolean).join(', ');
-  document.getElementById('cdmContact').textContent = p.telefon  ? `Tel: ${p.telefon}`  : '';
-  document.getElementById('cdmHours').textContent   = p.godziny  ? `Godziny: ${p.godziny}` : '';
-  let pTags = [];
-  if(p.dostawcy_tagi) {
-    pTags = Array.isArray(p.dostawcy_tagi)
-      ? p.dostawcy_tagi
-      : String(p.dostawcy_tagi).replace(/[{}"']/g,'').split(',');
-  }
-  document.getElementById('cdmTags').innerHTML = pTags.length
-    ? pTags.map(t=>`<span class="bg-brand-navy text-white text-xs font-bold px-3 py-1.5 rounded-full">${t.trim()}</span>`).join('')
-    : '<span class="text-slate-400 text-sm italic">Brak danych</span>';
-  document.getElementById('clinicDetailsModal').classList.remove('hidden');
-  document.getElementById('clinicDetailsModal').classList.add('flex');
-}
-
-
-
-// ─── MODAL SZCZEGÓŁÓW PAKIETU ────────────────────────────
-async function showPackageDetails(pkgId) {
-  const modal = document.getElementById('pkgDetailsModal');
-  const mBody = document.getElementById('pdmBody');
-  const mTitle = document.getElementById('pdmTitle');
-  const mSub   = document.getElementById('pdmSub');
-  modal.classList.remove('hidden'); modal.classList.add('flex');
-  mTitle.textContent = 'Pobieranie danych...';
-  mSub.textContent   = '';
-  mBody.innerHTML    = '<div class="flex items-center justify-center py-20 text-slate-400"><div class="loader mr-3"></div>Ładowanie...</div>';
-
-  try {
-    const [pkgDataRes, specRes, labRes] = await Promise.all([
-      fetchEnhancedPackages(`select=*&id=eq.${pkgId}`),
-      apiGet('pakiety_specjalizacje', `select=specjalizacja_nazwa,limit_info,dla_dzieci,typ&pakiet_id=eq.${pkgId}&order=specjalizacja_nazwa`),
-      apiGet('pakiety_badania', `select=badanie_nazwa,kategoria,typ&pakiet_id=eq.${pkgId}&order=kategoria,badanie_nazwa`)
-    ]);
-
-    if (!pkgDataRes || !pkgDataRes.length) {
-      mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Błąd pobierania danych.</div>'; return;
-    }
-    const p     = pkgDataRes[0];
-    const specs = specRes || [];
-    const labs  = labRes  || [];
-
-    // Nagłówek — nazwa + czerwony badge tier
-    mTitle.innerHTML = `${p.pakiet_nazwa || p.nazwa} <span class="bg-brand-pink text-white text-xs font-black px-2.5 py-1 rounded-lg ml-3 align-middle">T${p.tier}</span>`;
-    mSub.textContent = p.dostawca_nazwa || '';
-
-    // ── HELPERS ──
-    const val = v => (v !== null && v !== undefined && v !== '' && v !== 0)
-      ? `<span class="text-2xl font-black text-brand-navy">${v}</span>`
-      : `<span class="text-xs text-red-400 font-bold">—</span>`;
-    const boolIco = v => v
-      ? '<span class="text-emerald-500 font-black text-lg">✓</span>'
-      : '<span class="text-slate-300 text-lg">—</span>';
-
-    // ── STAT BOXY (8 kolumn: Spec, Bad, RTG, TK, RM, EKG, USG, Szpital) ──
-    const stats = [
-      { lbl: 'Spec.',      v: p.liczba_specjalizacji, bg: 'bg-white',    border: 'border-slate-200' },
-      { lbl: 'Bad.',       v: p.liczba_badan_lab,     bg: 'bg-white',    border: 'border-slate-200' },
-      { lbl: 'RTG',        v: p.liczba_rtg,           bg: 'bg-amber-50', border: 'border-amber-200' },
-      { lbl: 'TK',         v: p.liczba_tk,            bg: 'bg-amber-50', border: 'border-amber-200' },
-      { lbl: 'RM',         v: p.liczba_mri,           bg: 'bg-amber-50', border: 'border-amber-200' },
-      { lbl: 'EKG',        v: p.liczba_ekg,           bg: 'bg-blue-50',  border: 'border-blue-200'  },
-      { lbl: 'USG',        v: p.liczba_usg,           bg: 'bg-blue-50',  border: 'border-blue-200'  },
-      { lbl: 'Szpital 1d', v: p.leczenie_szpitalne,  bg: 'bg-white',    border: 'border-slate-200', bool: true },
-    ];
-
-    const statsHtml = stats.map(s => `
-      <div class="${s.bg} border ${s.border} rounded-xl p-3 text-center shadow-sm">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">${s.lbl}</div>
-        <div>${s.bool ? boolIco(s.v) : val(s.v)}</div>
-      </div>`).join('');
-
-    // ── SPECJALIZACJE ──
-    const specsDorosli = specs.filter(s => !s.dla_dzieci && s.typ === 'included');
-    const specsDzieci  = specs.filter(s =>  s.dla_dzieci && s.typ === 'included');
-
-    const specHtml = specsDorosli.length
-      ? `<ul class="text-sm text-slate-700 space-y-1 list-disc list-inside marker:text-brand-pink">
-          ${specsDorosli.map(s => `<li class="break-inside-avoid">${s.specjalizacja_nazwa}${s.limit_info ? ` <span class="text-[10px] text-slate-400 font-semibold">(${s.limit_info})</span>` : ''}</li>`).join('')}
-        </ul>`
-      : '<p class="text-slate-400 text-sm italic">Brak danych</p>';
-
-    const specDzieciHtml = specsDzieci.length
-      ? `<div class="mt-4 border-t border-slate-100 pt-3">
-          <div class="text-[10px] font-bold text-brand-senior uppercase tracking-wider mb-2">&#x1F476; Dla Dzieci</div>
-          <ul class="text-sm text-slate-700 space-y-1 list-disc list-inside marker:text-brand-senior">
-            ${specsDzieci.map(s => `<li>${s.specjalizacja_nazwa}</li>`).join('')}
-          </ul>
-        </div>` : '';
-
-    // ── BADANIA — accordion per kategoria ──
-    const grouped = {};
-    labs.forEach(b => {
-      const cat = b.kategoria || 'Inne';
-      if (!grouped[cat]) grouped[cat] = [];
-      grouped[cat].push(b.badanie_nazwa);
-    });
-
-    let accId = 0;
-    const accordionHtml = Object.entries(grouped).map(([cat, items]) => {
-      const id = `acc_${pkgId}_${accId++}`;
-      return `<div class="border border-slate-200 rounded-xl overflow-hidden mb-2">
-          <button onclick="toggleAcc('${id}')" class="w-full flex justify-between items-center px-4 py-3 bg-white hover:bg-slate-50 text-sm font-bold text-brand-navy text-left">
-            <span>&#9658; ${cat} <span class="text-brand-pink">(${items.length})</span></span>
-          </button>
-          <div id="${id}" class="hidden px-4 pb-3 bg-slate-50">
-            <ul class="text-xs text-slate-700 space-y-0.5 list-disc list-inside marker:text-brand-pink mt-2">
-              ${items.map(i => `<li>${i}</li>`).join('')}
-            </ul>
-          </div>
-        </div>`;
-    }).join('');
-
-    // ── TAGI BOOLEAN ──
-    const boolTags = [
-      { lbl: 'Telemedycyna',     v: p.telemedycyna },
-      { lbl: 'Ciąża',             v: p.ciaza },
-      { lbl: 'Rehabilitacja',    v: p.rehabilitacja },
-      { lbl: 'Stomatologia',     v: p.stomatologia },
-      { lbl: 'Psychiatria',      v: p.opieka_psychiatryczna },
-      { lbl: 'Wizyty domowe',    v: p.wizyty_domowe },
-      { lbl: 'Hotline 24h',      v: p.hotline_24h },
-      { lbl: 'Refundacja',       v: p.refundacja },
-      { lbl: 'Swoboda leczenia', v: p.swoboda_leczenia },
-    ].map(t => `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${t.v ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-slate-100 border-slate-200 text-slate-400'}">${t.v ? '&#10003;' : '&mdash;'} ${t.lbl}</span>`).join('');
-
-    // ── ZŁOŻENIE ──
-    mBody.innerHTML = `
-      <div class="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-6">${statsHtml}</div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-            <h4 class="text-sm font-black text-brand-navy uppercase tracking-wide">Specjalizacje</h4>
-            <span class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full">${specsDorosli.length} wpis.</span>
-          </div>
-          <div class="list-columns">${specHtml}</div>
-          ${specDzieciHtml}
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-            <h4 class="text-sm font-black text-brand-navy uppercase tracking-wide">Badania</h4>
-            <span class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full">${labs.length} wpis.</span>
-          </div>
-          ${accordionHtml || '<p class="text-slate-400 text-sm italic">Brak wgranej listy.</p>'}
-        </div>
-      </div>
-      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Usługi dodatkowe</div>
-        <div class="flex flex-wrap gap-2">${boolTags}</div>
-      </div>`;
-
-  } catch(e) {
-    mBody.innerHTML = `<div class="p-10 text-center text-red-500 font-bold">Błąd: ${e.message}</div>`;
-  }
-}
-
-function toggleAcc(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.toggle('hidden');
-  const btn = el.previousElementSibling;
-  const span = btn && btn.querySelector('span');
-  if (span) span.innerHTML = span.innerHTML.replace(/[&#9658;&#9660;▸▾]/, el.classList.contains('hidden') ? '&#9658;' : '&#9660;');
-}
-
 // ─── LEWY PANEL DOSTAWCÓW ───────────────────────────────
 function buildProvList(){
   const el=document.getElementById('provList'); el.innerHTML='';
   if(!allProviders.length){el.innerHTML='<p class="text-xs text-slate-400">Brak w bazie</p>';return;}
-  
   el.className = 'grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 p-1';
 
   allProviders.forEach(p=>{
@@ -1156,7 +778,7 @@ async function selectProvider(provIdStr, provIdArr, provNazwa){
   document.getElementById('pkgGrid').innerHTML='<div class="flex gap-2 items-center text-slate-400 text-sm col-span-2 py-10"><div class="loader"></div>Pobieranie wariantów...</div>';
 
   if(!providerPkgs[provIdStr]){
-    const d=await apiGet('pakiety',`select=id,nazwa,tier,dostawca_id&dostawca_id=in.(${provIdArr.join(',')})&aktywna=eq.true`);
+    const { data: d } = await SB_CLIENT.from('pakiety').select('id,nazwa,tier,dostawca_id').in('dostawca_id', provIdArr).eq('aktywna', true);
     if(d) d.sort((a,b)=>{
       let aS = (a.nazwa||'').toLowerCase().includes('senior');
       let bS = (b.nazwa||'').toLowerCase().includes('senior');
@@ -1258,7 +880,7 @@ async function runComparison(){
   const ids=Object.keys(selectedPkgs);
   if(ids.length<2){showNotif('compare','Wybierz minimum 2 pakiety z paneli powyżej.','border-amber-500 bg-amber-50 text-amber-700');return;}
   
-  const data=await fetchEnhancedPackages(`select=*&id=in.(${ids.join(',')})`);
+  const data=await fetchEnhancedPackages(q => q.in('id', ids));
   if(!data||!data.length){showNotif('compare','Błąd bazy danych.','border-red-500 bg-red-50 text-red-700');return;}
 
   data.sort((a,b)=>{
@@ -1269,6 +891,7 @@ async function runComparison(){
   });
 
   lastCompData=data; renderCompTable(lastCompData); renderPriceSection(lastCompData);
+  saveSearchHistory('porownanie', {pakiety: ids.length}, data.length);
 }
 
 function showNotif(tab, msg, classes) {
@@ -1352,11 +975,11 @@ async function savePrices(){
   let ok=true;
   for(const p of lastCompData){
     const par=document.getElementById('pi_par_'+p.id)?.value;
-    if(par) { const r=await apiPatch('pakiety',`id=eq.${p.id}`,{cena_grup_mies:parseFloat(par)}); if(!r)ok=false; }
+    if(par) { const { error } = await SB_CLIENT.from('pakiety').update({cena_grup_mies:parseFloat(par)}).eq('id', p.id); if(error)ok=false; }
   }
   const st=document.getElementById('priceStatus'); st.classList.remove('hidden');
   st.className=ok?'mt-4 p-3 rounded-xl text-sm font-semibold border border-emerald-500 bg-emerald-50 text-emerald-700':'mt-4 p-3 rounded-xl text-sm font-semibold border border-red-500 bg-red-50 text-red-700';
-  st.textContent=ok?'✓ Składki zaktualizowane.':'✗ Błąd zapisu bazy.';
+  st.textContent=ok?'✓ Składki zaktualizowane.':'✗ Błąd zapisu bazy (Pamiętaj o prawach Admina).';
   if(ok){checkPricesComplete();runComparison();}
 }
 
@@ -1400,7 +1023,385 @@ function exportPDF(){
   const w=window.open('','_blank'); w.document.write(body); w.document.close(); setTimeout(()=>{w.focus();w.print();},600);
 }
 
-// ─── BIBLIOTEKA ─────────────────────────────────────────
+// ─── SMART KONSULTANT (Wyszukiwarka Usług) ────────────────────
+let acTimer;
+async function acInput(val) {
+  clearTimeout(acTimer);
+  const list = document.getElementById('acList');
+  if(!val || val.length < 2) { list.classList.add('hidden'); return; }
+  acTimer = setTimeout(async () => {
+    const terms = getMedicalSynonyms(val);
+    const specOr = terms.map(t => `specjalizacja_nazwa.ilike.%${safeOr(t)}%`).join(',');
+    const badOr = terms.map(t => `badanie_nazwa.ilike.%${safeOr(t)}%`).join(',');
+
+    const [ {data: dSpec}, {data: dBad} ] = await Promise.all([
+      SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').or(specOr).limit(5),
+      SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').or(badOr).limit(5)
+    ]);
+    
+    let combined = [];
+    if(dSpec && dSpec.length) combined = [...combined, ...dSpec.map(x => x.specjalizacja_nazwa)];
+    if(dBad && dBad.length) combined = [...combined, ...dBad.map(x => x.badanie_nazwa)];
+    
+    if(combined.length) {
+      const unique = [...new Set(combined)];
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}';acHide();runSearch()">${u}</li>`).join('');
+      list.classList.remove('hidden');
+    } else {
+      list.classList.add('hidden');
+    }
+  }, 300);
+}
+function acHide() { document.getElementById('acList').classList.add('hidden'); }
+function acKeydown(e) { if(e.key==='Enter') runSearch(); }
+
+async function runSearch() {
+  const q = document.getElementById('searchQuery').value.trim();
+  const hint = document.getElementById('searchHint');
+  const res = document.getElementById('searchResult');
+  const body = document.getElementById('searchResultBody');
+  if(!q) return;
+  
+  hint.textContent = 'Trwa inteligentne skanowanie bazy usług medycznych...'; 
+  res.classList.add('hidden');
+  
+  const terms = getMedicalSynonyms(q);
+  const specOr = terms.map(t => `specjalizacja_nazwa.ilike.%${safeOr(t)}%`).join(',');
+  const badOr = terms.map(t => `badanie_nazwa.ilike.%${safeOr(t)}%`).join(',');
+
+  const [ {data: dSpec}, {data: dBad} ] = await Promise.all([
+     SB_CLIENT.from('pakiety_specjalizacje').select('pakiet_id').or(specOr),
+     SB_CLIENT.from('pakiety_badania').select('pakiet_id').or(badOr)
+  ]);
+  
+  let pids = [];
+  if(dSpec && dSpec.length) pids = [...pids, ...dSpec.map(x => x.pakiet_id)];
+  if(dBad && dBad.length) pids = [...pids, ...dBad.map(x => x.pakiet_id)];
+  
+  pids = [...new Set(pids)];
+
+  if(!pids.length) { hint.textContent = 'Brak wyników. Spróbuj uogólnić zapytanie.'; return; }
+  
+  const directPkgs = await fetchEnhancedPackages(query => query.in('id', pids));
+  if(!directPkgs || !directPkgs.length) { hint.textContent = 'Błąd pobierania danych bazowych.'; return; }
+
+  const getNorm = (raw) => { let n = (raw||'').trim().toUpperCase(); if(n==='TU ZDROWIE!!!'||n==='TUZDROWIE') return 'TU ZDROWIE'; return n; };
+
+  const minTierMap = {};
+  directPkgs.forEach(p => {
+    const norm = getNorm(p.dostawca_nazwa);
+    const t = p.tier || 999;
+    if(minTierMap[norm] === undefined || t < minTierMap[norm]) {
+       minTierMap[norm] = t;
+    }
+  });
+
+  const targetIds = [];
+  Object.keys(minTierMap).forEach(norm => {
+    const prov = allProviders.find(ap => ap.nazwa === norm);
+    if(prov) targetIds.push(...prov.idArr);
+  });
+
+  let finalPkgs = [];
+  if(targetIds.length > 0) {
+    const cascadePkgs = await fetchEnhancedPackages(query => query.in('dostawca_id', targetIds).eq('aktywna', true));
+    finalPkgs = cascadePkgs.filter(p => {
+      const norm = getNorm(p.dostawca_nazwa);
+      return minTierMap[norm] !== undefined && (p.tier || 0) >= minTierMap[norm];
+    });
+  }
+
+  saveSearchHistory('wyszukiwanie', {query: q}, finalPkgs.length);
+  
+  hint.textContent = `✅ Znaleziono ${finalPkgs.length} pakietów. Warianty o równej lub wyższej cenie automatycznie dziedziczą tę usługę.`;
+  document.getElementById('searchResultTitle').textContent = `Pakiety dla: ${q.toUpperCase()}`;
+  
+  finalPkgs.sort((a,b)=>getNorm(a.dostawca_nazwa).localeCompare(getNorm(b.dostawca_nazwa)) || (a.tier||0)-(b.tier||0));
+  
+  const grouped = {};
+  finalPkgs.forEach(p => {
+    const norm = getNorm(p.dostawca_nazwa);
+    if(!grouped[norm]) grouped[norm] = [];
+    grouped[norm].push(p);
+  });
+
+  let html = '';
+  for(const [prov, items] of Object.entries(grouped)) {
+    html += `
+      <div class="mb-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-brand-navy"></div>
+        <h4 class="font-black text-brand-navy text-sm uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">${prov}</h4>
+        <div class="flex flex-wrap gap-2.5">
+          ${items.map(p => `
+            <button onclick="showPackageDetails(${p.id})" class="text-xs bg-white border-2 border-slate-200 hover:border-brand-pink hover:text-brand-pink transition-colors px-4 py-2.5 rounded-xl shadow-sm font-bold flex items-center gap-2 text-slate-700">
+              ${p.pakiet_nazwa||p.nazwa}
+              <span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black">T${p.tier}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+  body.innerHTML = html;
+  res.classList.remove('hidden');
+}
+
+
+// ─── WYSZUKIWARKA PLACÓWEK Z AUTOCOMPLETE I NATYWNĄ OCHRONĄ ───
+let acCityTimer;
+async function acCity(q) {
+  clearTimeout(acCityTimer);
+  const list = document.getElementById('acCityList');
+  if(!q || q.length < 2) { list.classList.add('hidden'); return; }
+  acCityTimer = setTimeout(async () => {
+    const { data } = await SB_CLIENT.from('placowki_medyczne').select('miejscowosc').ilike('miejscowosc', `%${q}%`).limit(20);
+    if(data && data.length) {
+      const unique = [...new Set(data.map(d => d.miejscowosc))].slice(0, 10);
+      if(!unique.length) { list.classList.add('hidden'); return; }
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinCity').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acCityList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(escRx(q),'gi'),'<strong>$&</strong>')}</li>`).join('');
+      list.classList.remove('hidden');
+    } else {
+      list.classList.add('hidden');
+    }
+  }, 300);
+}
+
+let acClinTimer;
+async function acClinic(q) {
+  clearTimeout(acClinTimer);
+  const list = document.getElementById('acClinList');
+  if(!q || q.length < 2) { list.classList.add('hidden'); return; }
+  acClinTimer = setTimeout(async () => {
+    const cleanQ = safeOr(q);
+    const { data } = await SB_CLIENT.from('placowki_medyczne').select('siec_bazowa,nazwa_oddzialu').or(`siec_bazowa.ilike.%${cleanQ}%,nazwa_oddzialu.ilike.%${cleanQ}%`).limit(30);
+    if(data && data.length) {
+      let matches = [];
+      data.forEach(d => {
+         if(d.siec_bazowa && d.siec_bazowa.toLowerCase().includes(q.toLowerCase())) matches.push(d.siec_bazowa);
+         if(d.nazwa_oddzialu && d.nazwa_oddzialu.toLowerCase().includes(q.toLowerCase())) matches.push(d.nazwa_oddzialu);
+      });
+      const unique = [...new Set(matches)].slice(0, 10);
+      if(!unique.length) { list.classList.add('hidden'); return; }
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('clinName').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}'; document.getElementById('acClinList').classList.add('hidden'); searchClinics();">${u.replace(new RegExp(escRx(q),'gi'),'<strong>$&</strong>')}</li>`).join('');
+      list.classList.remove('hidden');
+    } else {
+      list.classList.add('hidden');
+    }
+  }, 300);
+}
+
+async function searchClinics() {
+  const city    = document.getElementById('clinCity').value.trim();
+  const powiat  = document.getElementById('clinPowiat').value.trim();
+  const name    = document.getElementById('clinName').value.trim();
+  const provSelect = document.getElementById('clinProv');
+  const provName   = provSelect.options[provSelect.selectedIndex].text;
+  const provVal    = provSelect.value;
+  
+  const hint       = document.getElementById('clinHint');
+  const resultDiv  = document.getElementById('clinResult');
+  const resultBody = document.getElementById('clinResultBody');
+  const countEl   = document.getElementById('clinCount');
+
+  hint.textContent = 'Szukam placówek...';
+  hint.className   = 'text-xs text-brand-navy font-bold mt-2';
+  resultDiv.classList.add('hidden');
+
+  if (!city && !powiat && !name) {
+    hint.textContent = 'Wpisz co najmniej miejscowość, powiat lub nazwę placówki.';
+    hint.className   = 'text-xs text-slate-500 font-bold mt-2';
+    return;
+  }
+
+  let query = SB_CLIENT.from('placowki_medyczne').select('*').limit(1000);
+  if (city)   query = query.ilike('miejscowosc', `%${city}%`);
+  if (powiat) query = query.ilike('powiat', `%${powiat}%`);
+  if (name)   query = query.or(`nazwa_oddzialu.ilike.%${safeOr(name)}%,siec_bazowa.ilike.%${safeOr(name)}%`);
+
+  const { data, error } = await query;
+
+  if (error || data === null) {
+    hint.textContent = '❌ Błąd pobierania danych z bazy. Spróbuj zmienić parametry wyszukiwania.';
+    hint.className   = 'text-xs text-red-600 font-bold mt-2';
+    return;
+  }
+  
+  if (!Array.isArray(data) || data.length === 0) {
+    hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów.';
+    hint.className   = 'text-xs text-slate-500 font-bold mt-2';
+    return;
+  }
+
+  let filteredData = data;
+  if (provVal && provName !== '— Wszyscy Partnerzy —') {
+    const searchProv = provName.trim().toUpperCase();
+    filteredData = data.filter(p => {
+      if (!p.dostawcy_tagi) return false;
+      let tags = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"]/g, '').split(',');
+      return tags.some(t => t.trim().toUpperCase() === searchProv);
+    });
+    
+    if (!filteredData.length) {
+      hint.textContent = 'Znaleziono placówki w tej lokalizacji, ale żadna nie jest powiązana z wybraną siecią.';
+      hint.className   = 'text-xs text-slate-500 font-bold mt-2';
+      return;
+    }
+  }
+
+  currentClinicData = filteredData;
+  saveSearchHistory('placowki', {city, powiat, name, provName}, filteredData.length);
+  hint.textContent  = '';
+  countEl.textContent = filteredData.length + ' znalezionych';
+
+  let html = '';
+  filteredData.forEach((p, idx) => {
+    let tagsInline = '';
+    if (p.dostawcy_tagi) {
+      const pTags = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"]/g, '').split(',');
+      if (pTags.length > 0) {
+        tagsInline = pTags.map(t =>
+          `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-[10px] font-black uppercase px-2 py-1 rounded-md mr-1 mb-1">${t.trim()}</span>`
+        ).join('');
+      }
+    }
+    if (!tagsInline) tagsInline = `<span class="text-[10px] text-slate-400 italic">Brak partnerów</span>`;
+
+    html += `<tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="openClinicModal(${idx})">
+      <td class="p-4">
+        <div class="font-bold text-brand-pink hover:underline text-base">${p.nazwa_oddzialu || p.siec_bazowa}</div>
+        <div class="text-[10px] text-slate-500 font-black uppercase tracking-wider mt-0.5">WŁAŚCICIEL: ${p.siec_bazowa || 'Niezależna'}</div>
+      </td>
+      <td class="p-4">
+        <div class="font-bold text-slate-700">${p.miejscowosc || ''}</div>
+        <div class="text-xs text-slate-500 mt-0.5">${p.adres || ''}</div>
+      </td>
+      <td class="p-4 text-xs font-semibold text-slate-600">${p.powiat || ''}</td>
+      <td class="p-4 max-w-[250px] md:max-w-[400px]">${tagsInline}</td>
+    </tr>`;
+  });
+
+  resultBody.innerHTML = html;
+  resultDiv.classList.remove('hidden');
+}
+
+function openClinicModal(idx) {
+  const p = currentClinicData[idx];
+  if(!p) return;
+  
+  document.getElementById('cdmName').textContent = p.nazwa_oddzialu || p.siec_bazowa;
+  document.getElementById('cdmAddress').innerHTML = `${p.adres}<br/>${p.miejscowosc} ${p.powiat ? '('+p.powiat+')' : ''}, woj. ${p.wojewodztwo}`;
+  document.getElementById('cdmContact').textContent = `📞 Telefon: ${p.telefon || 'Brak w bazie'}`;
+  document.getElementById('cdmHours').textContent = `🕒 Otwarte: ${p.godziny_otwarcia || 'Brak danych'}`;
+  
+  let tagsArr = [];
+  if(p.dostawcy_tagi) {
+    tagsArr = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
+  }
+
+  let tagsHtml = '';
+  if(tagsArr.length > 0){
+    tagsHtml = tagsArr.map(t => `<span class="bg-brand-navy text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm">${t.trim()}</span>`).join('');
+  } else {
+    tagsHtml = '<span class="text-sm text-slate-400 italic">Brak przypisanych ubezpieczycieli</span>';
+  }
+  document.getElementById('cdmTags').innerHTML = tagsHtml;
+  
+  document.getElementById('clinicDetailsModal').classList.remove('hidden');
+  document.getElementById('clinicDetailsModal').classList.add('flex');
+}
+
+// ─── MODAL SZCZEGÓŁÓW PAKIETU Z WIDOKIEM LEKARZY I BADAŃ ───
+async function showPackageDetails(pkgId) {
+  const modal = document.getElementById('pkgDetailsModal');
+  const mBody = document.getElementById('pdmBody');
+  const mTitle = document.getElementById('pdmTitle');
+  const mSub = document.getElementById('pdmSub');
+  const mPrice = document.getElementById('pdmPrice');
+  
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  mTitle.textContent = 'Pobieranie danych...'; mSub.textContent = ''; mPrice.innerHTML = '-- zł';
+  mBody.innerHTML = '<div class="flex items-center justify-center py-20 text-slate-400"><div class="loader mr-3"></div> Ładowanie...</div>';
+
+  try {
+    const [pkgDataRes, {data: specs}, {data: labs}] = await Promise.all([
+      fetchEnhancedPackages(q => q.eq('id', pkgId)),
+      SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').eq('pakiet_id', pkgId).order('specjalizacja_nazwa'),
+      SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').eq('pakiet_id', pkgId).order('badanie_nazwa')
+    ]);
+
+    if(!pkgDataRes || !pkgDataRes.length) { mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Błąd pobierania danych.</div>'; return; }
+
+    const p = pkgDataRes[0];
+
+    mTitle.innerHTML = `${p.pakiet_nazwa || p.nazwa} <span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded ml-3 align-middle">T${p.tier}</span>`;
+    mSub.textContent = p.dostawca_nazwa;
+    mPrice.innerHTML = (p.cena_grup_mies !== null && p.cena_grup_mies !== undefined) ? `${parseFloat(p.cena_grup_mies).toFixed(2)} zł<span class="text-sm font-normal text-slate-300"> / mies.</span>` : '<span class="text-sm">Brak wyceny</span>';
+
+    const val = v => (v !== null && v !== undefined && v !== '' && v > 0) ? `<span class="text-2xl font-black text-brand-navy">${v}</span>` : '<span class="text-xs text-red-500 font-bold mt-1 block">Brak wpisu</span>';
+    const boolIco = v => v ? '✅' : '❌';
+
+    let html = `
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Specjalizacje</div><div>${val(p.liczba_specjalizacji)}</div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Badania Lab.</div><div>${val(p.liczba_badan_lab)}</div>
+        </div>
+        <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">RTG (Limity)</div><div>${val(p.liczba_rtg)}</div>
+        </div>
+        <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Tomografia TK</div><div>${val(p.liczba_tk)}</div>
+        </div>
+        <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm text-center">
+          <div class="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Rezonans MRI</div><div>${val(p.liczba_mri)}</div>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+              <h4 class="text-base font-black text-brand-navy uppercase tracking-wide">Specjalizacje Lekarskie</h4>
+              <span class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full">${specs?.length||0} wpisów</span>
+            </div>
+            <div class="list-columns" style="columns: 1;">
+              ${specs && specs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-navy">${specs.map(s => `<li class="break-inside-avoid">${s.specjalizacja_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
+            </div>
+          </div>
+          
+          <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+              <h4 class="text-base font-black text-brand-pink uppercase tracking-wide">Badania i Zabiegi</h4>
+              <span class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full">${labs?.length||0} wpisów</span>
+            </div>
+            <div class="list-columns" style="columns: 1;">
+              ${labs && labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-pink">${labs.map(s => `<li class="break-inside-avoid">${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
+            </div>
+          </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-8">
+        <h4 class="text-sm font-black text-brand-navy uppercase tracking-wide mb-4 border-b border-slate-100 pb-2">Usługi Dodatkowe i Standard Pakietu</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm font-semibold">
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Telemedycyna:</span> <span>${boolIco(p.telemedycyna)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Prowadzenie Ciąży:</span> <span>${boolIco(p.ciaza)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Rehabilitacja:</span> <span>${boolIco(p.rehabilitacja)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Wizyty domowe:</span> <span>${boolIco(p.wizyty_domowe)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Szpital 1-dniowy:</span> <span>${boolIco(p.leczenie_szpitalne)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Stomatologia:</span> <span>${boolIco(p.stomatologia)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Psychiatria:</span> <span>${boolIco(p.opieka_psychiatryczna)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Infolinia medyczna 24h:</span> <span>${boolIco(p.hotline_24h)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Refundacja kosztów leczenia:</span> <span>${boolIco(p.refundacja)}</span></div>
+          <div class="flex justify-between border-b border-slate-50 pb-2"><span class="text-slate-500 font-normal">Swoboda leczenia:</span> <span>${boolIco(p.swoboda_leczenia)}</span></div>
+        </div>
+      </div>
+    `;
+    mBody.innerHTML = html;
+  } catch (error) { mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Błąd połączenia z bazą danych.</div>'; }
+}
+
+// ─── BIBLIOTEKA I KALKULATOR ─────────────────────────────────────────
 async function loadLibrary(){
   const el=document.getElementById('libraryTable'); el.innerHTML='<div class="flex justify-center py-10"><div class="loader"></div></div>';
   document.getElementById('editPanel').classList.add('hidden');
@@ -1408,11 +1409,13 @@ async function loadLibrary(){
   const provId=document.getElementById('libProvider').value; 
   const tier=document.getElementById('libTier').value;
   
-  let params='select=*&aktywna=eq.true';
-  if(provId) params+=`&dostawca_id=in.(${provId})`;
-  if(tier)   params+=`&tier=eq.${tier}`;
-  
-  const data=await fetchEnhancedPackages(params);
+  const data = await fetchEnhancedPackages(q => {
+    let query = q.eq('aktywna', true);
+    if(provId) query = query.in('dostawca_id', provId.split(','));
+    if(tier)   query = query.eq('tier', tier);
+    return query;
+  });
+
   if(!data||!data.length){el.innerHTML='<div class="text-center py-10 text-slate-400">Brak w bazie.</div>';return;}
   
   data.sort((a,b)=>{
@@ -1451,7 +1454,7 @@ async function loadLibrary(){
 }
 
 async function openEdit(pkgId){
-  const data=await fetchEnhancedPackages(`select=*&id=eq.${pkgId}`); if(!data||!data[0]) return; const p=data[0];
+  const data=await fetchEnhancedPackages(q => q.eq('id', pkgId)); if(!data||!data[0]) return; const p=data[0];
   document.getElementById('editPkgId').value=pkgId; document.getElementById('editPkgName').textContent=`${p.dostawca_nazwa} — ${p.pakiet_nazwa || p.nazwa}`;
   const map={eSpecjalizacje:'liczba_specjalizacji',eBadania:'liczba_badan_lab',ePoz:'czas_oczekiwania_poz',eSpec:'czas_oczekiwania_spec',eMinPrac:'min_pracownicy',eDzieci:'wiek_dzieci_do',eKarencja:'karencja_dni'};
   Object.entries(map).forEach(([id,key])=>document.getElementById(id).value=isValid(p[key])?p[key]:'');
@@ -1487,13 +1490,177 @@ async function saveEdit(){
     swoboda_leczenia:document.getElementById('eSwoboda').checked,
     cena_grup_mies:n('ePriceGrup'),
   };
-  const ok=await apiPatch('pakiety',`id=eq.${pkgId}`,body);
+  const { error } = await SB_CLIENT.from('pakiety').update(body).eq('id', pkgId);
   const st=document.getElementById('editStatus');
-  st.textContent=ok?'✓ Zapisano do bazy.':'✗ Błąd zapisu.'; st.className=`text-sm font-bold ${ok?'text-emerald-600':'text-red-600'}`;
-  if(ok) loadLibrary();
+  st.textContent= !error ? '✓ Zapisano do bazy.' : '✗ Błąd zapisu (Brak uprawnień Admina).'; 
+  st.className=`text-sm font-bold ${!error?'text-emerald-600':'text-red-600'}`;
+  if(!error) loadLibrary();
 }
 
-window.onload=init;
+async function calcLoadPackages() {
+  const provId = document.getElementById('calcProvider').value; 
+  const el = document.getElementById('calcPackageList');
+  el.innerHTML = '<div class="col-span-full text-slate-400 text-sm"><div class="loader inline-block align-middle mr-2"></div>Ładowanie pakietów...</div>';
+  const d = await fetchEnhancedPackages(q => {
+      let query = q.eq('aktywna', true);
+      if(provId) query = query.in('dostawca_id', provId.split(','));
+      return query;
+  });
+  allCalcPkgs = d || [];
+  allCalcPkgs.sort((a,b)=>a.dostawca_nazwa.localeCompare(b.dostawca_nazwa) || (a.tier||0)-(b.tier||0));
+  
+  el.innerHTML = allCalcPkgs.map(p => {
+    const sel = selectedCalc.has(p.id);
+    const isS = (p.pakiet_nazwa||p.nazwa||'').toLowerCase().includes('senior');
+    return `<div class="pkg-chip flex items-center justify-between gap-2 ${sel?'sel':''} ${isS?'senior':''}" onclick="toggleCalc(${p.id}, this)">
+      <div class="truncate pr-2">
+        <div class="text-[10px] ${isS?'text-amber-600':'text-slate-400'} font-bold uppercase truncate">${p.dostawca_nazwa}</div>
+        <div class="font-bold text-xs truncate">${p.pakiet_nazwa||p.nazwa}</div>
+      </div>
+      <div class="chk ${sel?'on':''}">${sel?'✓':''}</div>
+    </div>`;
+  }).join('');
+  calcUpdate();
+}
+
+// ─── MOJE KONTO & ADMIN (Natwyne API Supabase) ────────────────────────────────────────
+async function loadAccountData() {
+  if (!SB_CLIENT || !currentUser) return;
+  const { data } = await SB_CLIENT.from('profiles').select('full_name,firma,telefon,nip,logo_url,plan,plan_do').eq('id', currentUser.id).single();
+  if (!data) return;
+  const s = (id, v) => { const el = document.getElementById(id); if(el && v) el.value = v; };
+  s('accName', data.full_name); s('accFirma', data.firma);
+  s('accTel', data.telefon);   s('accNip', data.nip);
+  if (data.logo_url) {
+    document.getElementById('accLogoImg').src = data.logo_url;
+    document.getElementById('accLogoPreview').classList.remove('hidden');
+  }
+  document.getElementById('accPlanBadge').textContent = (data.plan || 'trial').toUpperCase();
+  document.getElementById('accPlanDo').textContent = data.plan_do ? new Date(data.plan_do).toLocaleDateString('pl-PL') : 'Brak limitu';
+}
+
+async function saveProfile() {
+  if (!SB_CLIENT || !currentUser) return;
+  const body = {
+    full_name: document.getElementById('accName').value.trim(),
+    firma:     document.getElementById('accFirma').value.trim(),
+    telefon:   document.getElementById('accTel').value.trim(),
+    nip:       document.getElementById('accNip').value.trim(),
+  };
+  const { error } = await SB_CLIENT.from('profiles').update(body).eq('id', currentUser.id);
+  const st = document.getElementById('accStatus');
+  st.textContent = error ? '✗ Błąd zapisu: ' + error.message : '✓ Profil zapisany.';
+  st.className = 'mt-3 text-sm font-bold ' + (error ? 'text-red-600' : 'text-emerald-600');
+}
+
+function previewLogo(input) {
+  if (!input.files || !input.files[0]) return;
+  const url = URL.createObjectURL(input.files[0]);
+  document.getElementById('accLogoImg').src = url;
+  document.getElementById('accLogoPreview').classList.remove('hidden');
+}
+
+async function uploadLogo() {
+  const file = document.getElementById('accLogoFile').files[0];
+  const st   = document.getElementById('logoStatus');
+  if (!file) { st.textContent = 'Wybierz plik.'; st.className = 'mt-3 text-sm font-bold text-red-600'; return; }
+  if (!SB_CLIENT || !currentUser) return;
+  st.textContent = 'Wgrywanie...'; st.className = 'mt-3 text-sm font-bold text-slate-500';
+  const ext  = file.name.split('.').pop();
+  const path = `${currentUser.id}/logo.${ext}`;
+  const { error: upErr } = await SB_CLIENT.storage.from('logos').upload(path, file, { upsert: true });
+  if (upErr) { st.textContent = '✗ Błąd uploadu: ' + upErr.message; st.className = 'mt-3 text-sm font-bold text-red-600'; return; }
+  const { data: { publicUrl } } = SB_CLIENT.storage.from('logos').getPublicUrl(path);
+  await SB_CLIENT.from('profiles').update({ logo_url: publicUrl }).eq('id', currentUser.id);
+  document.getElementById('accLogoImg').src = publicUrl + '?t=' + Date.now();
+  document.getElementById('accLogoPreview').classList.remove('hidden');
+  st.textContent = '✓ Logo wgrane i zapisane.'; st.className = 'mt-3 text-sm font-bold text-emerald-600';
+}
+
+async function loadHistory() {
+  if (!SB_CLIENT || !currentUser) return;
+  const { data } = await SB_CLIENT.from('historia_wyszukiwan').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
+  const el = document.getElementById('historyTable');
+  if (!data || !data.length) { el.innerHTML = '<div class="text-slate-400 text-sm text-center py-8">Brak historii wyszukiwań.</div>'; return; }
+  let html = `<table class="w-full text-sm border-collapse min-w-[600px]">
+    <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
+      <tr><th class="p-3 text-left">Data</th><th class="p-3 text-left">Typ</th><th class="p-3 text-left">Parametry</th><th class="p-3 text-center">Wyniki</th></tr>
+    </thead><tbody class="divide-y divide-slate-100">`;
+  data.forEach(h => {
+    const d = new Date(h.created_at).toLocaleString('pl-PL');
+    const params = h.parametry ? JSON.stringify(h.parametry).substring(0, 80) : '–';
+    html += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-500">${d}</td>
+      <td class="p-3"><span class="bg-slate-100 text-brand-navy text-xs font-bold px-2 py-1 rounded-lg">${h.typ || '–'}</span></td>
+      <td class="p-3 text-xs text-slate-600 max-w-xs truncate">${params}</td>
+      <td class="p-3 text-center font-bold text-brand-navy">${h.wynik_count ?? '–'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function loadAdminUsers() {
+  if (!SB_CLIENT || currentRole !== 'admin') return;
+  const el = document.getElementById('adminUsersTable');
+  if (!el) return;
+  el.innerHTML = '<div class="flex items-center gap-2 text-slate-400 justify-center py-6"><div class="loader"></div>Ładowanie...</div>';
+  const { data, error } = await SB_CLIENT.from('v_admin_users').select('*').order('created_at', { ascending: false });
+  if (error || !data) { el.innerHTML = '<div class="text-red-500 text-sm text-center py-6">Błąd pobierania bazy klientów</div>'; return; }
+  let html = `<table class="w-full text-sm border-collapse min-w-[900px]">
+    <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
+      <tr><th class="p-3 text-left">Email</th><th class="p-3 text-left">Imię / Firma</th>
+      <th class="p-3 text-center">Rola</th><th class="p-3 text-center">Plan</th>
+      <th class="p-3 text-center">Ważny do</th><th class="p-3 text-center">Aktywny</th>
+      <th class="p-3 text-center">Wyszukiwania</th><th class="p-3 text-center">Ost. logowanie</th>
+      <th class="p-3"></th></tr>
+    </thead><tbody class="divide-y divide-slate-100">`;
+  data.forEach(u => {
+    const lastLogin = u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString('pl-PL') : '–';
+    const planDo = u.plan_do ? new Date(u.plan_do).toLocaleDateString('pl-PL') : '∞';
+    html += `<tr class="hover:bg-slate-50">
+      <td class="p-3 font-semibold text-brand-navy text-xs">${u.email}</td>
+      <td class="p-3 text-xs"><div class="font-bold">${u.full_name||'–'}</div><div class="text-slate-400">${u.firma||''}</div></td>
+      <td class="p-3 text-center">
+        <select onchange="updateUserField('${u.id}','rola',this.value)" class="inp text-xs py-1 px-2 w-24">
+          ${['viewer','broker','admin'].map(r=>`<option ${u.rola===r?'selected':''}>${r}</option>`).join('')}
+        </select></td>
+      <td class="p-3 text-center">
+        <select onchange="updateUserField('${u.id}','plan',this.value)" class="inp text-xs py-1 px-2 w-24">
+          ${['trial','starter','pro','agency'].map(r=>`<option ${u.plan===r?'selected':''}>${r}</option>`).join('')}
+        </select></td>
+      <td class="p-3 text-center text-xs font-bold text-slate-600">${planDo}</td>
+      <td class="p-3 text-center"><button onclick="updateUserField('${u.id}','aktywny',${!u.aktywny})" class="text-xs font-bold px-3 py-1 rounded-full ${u.aktywny?'bg-emerald-100 text-emerald-700':'bg-red-100 text-red-700'}">${u.aktywny?'✅ Tak':'❌ Nie'}</button></td>
+      <td class="p-3 text-center font-bold text-brand-navy">${u.liczba_wyszukiwan??0}</td>
+      <td class="p-3 text-center text-xs text-slate-500">${lastLogin}</td>
+      <td class="p-3 text-right"><button onclick="setUserPlanDo('${u.id}')" class="text-xs bg-brand-navy text-white font-bold px-3 py-1.5 rounded-lg">📅 Przedłuż</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function updateUserField(userId, field, value) {
+  if (!SB_CLIENT) return;
+  const body = {}; body[field] = value;
+  await SB_CLIENT.from('profiles').update(body).eq('id', userId);
+  loadAdminUsers();
+}
+
+function setUserPlanDo(userId) {
+  const months = prompt('Przedłuż plan o ile miesięcy?', '12');
+  if (!months) return;
+  const d = new Date();
+  d.setMonth(d.getMonth() + parseInt(months));
+  const body = { plan_do: d.toISOString().split('T')[0] };
+  SB_CLIENT.from('profiles').update(body).eq('id', userId).then(() => loadAdminUsers());
+}
+
+async function saveSearchHistory(typ, parametry, wynik_count) {
+  if (!SB_CLIENT || !currentUser) return;
+  try { await SB_CLIENT.from('historia_wyszukiwan').insert({ user_id: currentUser.id, typ, parametry, wynik_count }); }
+  catch(e) {}
+}
+
+window.onload=initAuth;
 </script>
 </body>
 </html>
