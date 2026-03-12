@@ -659,7 +659,7 @@ async function runSearch() {
   const table = searchType === 'spec' ? 'pakiety_specjalizacje' : 'pakiety_badania';
   const col = searchType === 'spec' ? 'specjalizacja_nazwa' : 'badanie_nazwa';
   
-  const d = await apiGet(table, `select=pakiet_id,${col}&${col}=ilike.*${encodeURIComponent(q)}*`);
+  const d = await apiGet(table, `select=pakiet_id,${col}&${col}=ilike.${pgSafe(q)}`);
   if(!d || !d.length) { hint.textContent = 'Brak wyników w bazie.'; return; }
   
   const pids = [...new Set(d.map(x => x.pakiet_id))];
