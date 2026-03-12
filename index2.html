@@ -557,11 +557,6 @@ let allCalcPkgs    = [];
 let selectedCalc   = new Set();
 let currentClinicData = []; 
 
-// Stan Edycji List Usług
-let editCurrentSpecs = [];
-let editCurrentBads = [];
-let almanachLoaded = false;
-
 // Stan sortowania placówek
 let clinicSortCol = 'city'; 
 let clinicSortAsc = true;
@@ -1448,6 +1443,7 @@ async function showPackageDetails(pkgId) {
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <!-- Kolumna lewa: Lekarze -->
           <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
             <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
               <h4 class="text-base font-black text-brand-navy uppercase tracking-wide">Specjalizacje Lekarskie</h4>
@@ -1458,6 +1454,7 @@ async function showPackageDetails(pkgId) {
             </div>
           </div>
           
+          <!-- Kolumna prawa: Badania pogrupowane -->
           <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
             <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
               <h4 class="text-base font-black text-brand-pink uppercase tracking-wide">Badania i Diagnostyka</h4>
@@ -1546,12 +1543,6 @@ async function loadLibrary(){
   html+=`</tbody></table><div class="text-xs text-slate-400 p-4 text-right">Rekordów: ${data.length}</div>`;
   el.innerHTML=html;
 }
-
-// 🔥 EDYCJA PAKIETÓW (Z ZARZĄDZANIEM LISTAMI I ALMANACHEM) 🔥
-let almanachSpecs = new Set();
-let almanachBads = new Set();
-let editCurrentSpecs = [];
-let editCurrentBads = [];
 
 async function loadAlmanachForEdit() {
   const {data: sData} = await SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').limit(5000);
