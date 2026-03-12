@@ -56,7 +56,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.3.0 PRO</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.3.1 PRO</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -499,6 +499,23 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const safeOr = (val) => val.replace(/[,()"]/g, '').trim();
 const escStr = (s) => s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+// ─── SMART DEDUPLIKACJA (USUWA DUBLE I NORMALIZUJE WIELKOŚĆ LITER) ───
+function formatAndDeduplicate(arr) {
+  const seen = new Set();
+  const result = [];
+  for (let item of arr) {
+    if (!item) continue;
+    item = item.trim();
+    const lower = item.toLowerCase();
+    if (!seen.has(lower)) {
+      seen.add(lower);
+      // Zawsze robimy pierwszą literę wielką (np. "alergolog" -> "Alergolog")
+      result.push(item.charAt(0).toUpperCase() + item.slice(1));
+    }
+  }
+  return result.sort((a,b) => a.localeCompare(b, 'pl'));
+}
 
 // 🔥 ZAAWANSOWANY SILNIK KATEGORYZACJI W LOCIE 🔥
 function categorizeServices(specs, bads) {
@@ -1054,8 +1071,8 @@ async function acInput(val) {
     if(dBad && dBad.length) combined = [...combined, ...dBad.map(x => x.badanie_nazwa)];
     
     if(combined.length) {
-      const unique = [...new Set(combined)];
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}';acHide();runSearch()">${u}</li>`).join('');
+      const unique = formatAndDeduplicate(combined);
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${escStr(u)}';acHide();runSearch()">${u}</li>`).join('');
       list.classList.remove('hidden');
     } else {
       list.classList.add('hidden');
@@ -1235,7 +1252,7 @@ function renderClinicTable() {
       <td class="p-4"><div class="font-bold text-brand-pink group-hover:underline text-base">${p.nazwa_oddzialu || p.siec_bazowa}</div></td>
       <td class="p-4"><div class="font-bold text-slate-700">${p.miejscowosc || ''}</div><div class="text-xs text-slate-500 mt-0.5">${p.adres || ''}</div></td>
       <td class="p-4 text-xs font-semibold text-slate-600">${p.powiat || ''}</td>
-      <td class="p-4 min-w-[300px] md:min-w-[450px]">${tagsInline}</td>
+      <td class="p-4 min-w-[300px] md:min-min-[450px]">${tagsInline}</td>
     </tr>`;
   });
   resultBody.innerHTML = html;
@@ -1318,8 +1335,8 @@ async function showPackageDetails(pkgId) {
     if(!pkgDataRes || !pkgDataRes.length) { mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Błąd pobierania danych.</div>'; return; }
 
     const p = pkgDataRes[0];
-    const specs = specsData ? specsData.map(x => x.specjalizacja_nazwa) : [];
-    const labs = labsData ? labsData.map(x => x.badanie_nazwa) : [];
+    const specs = specsData ? formatAndDeduplicate(specsData.map(x => x.specjalizacja_nazwa)) : [];
+    const labs = labsData ? formatAndDeduplicate(labsData.map(x => x.badanie_nazwa)) : [];
 
     const categorized = categorizeServices(specs, labs);
 
@@ -1435,15 +1452,17 @@ async function loadLibrary(){
 
 // ─── EDYCJA PAKIETÓW (Almanach, Kategorie i Interaktywne Tagi) ───
 async function loadAlmanachForEdit() {
-  const {data: sData} = await SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').limit(5000);
+  const {data: sData} = await SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').limit(10000);
   if(sData) {
-     sData.forEach(d => { if(d.specjalizacja_nazwa) almanachSpecs.add(d.specjalizacja_nazwa.trim()); });
-     document.getElementById('dl-specs').innerHTML = Array.from(almanachSpecs).sort().map(s => `<option value="${s}">`).join('');
+     const uniqueS = formatAndDeduplicate(sData.map(d => d.specjalizacja_nazwa));
+     uniqueS.forEach(s => almanachSpecs.add(s));
+     document.getElementById('dl-specs').innerHTML = uniqueS.map(s => `<option value="${escStr(s)}">`).join('');
   }
-  const {data: bData} = await SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').limit(5000);
+  const {data: bData} = await SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').limit(10000);
   if(bData) {
-     bData.forEach(d => { if(d.badanie_nazwa) almanachBads.add(d.badanie_nazwa.trim()); });
-     document.getElementById('dl-bads').innerHTML = Array.from(almanachBads).sort().map(s => `<option value="${s}">`).join('');
+     const uniqueB = formatAndDeduplicate(bData.map(d => d.badanie_nazwa));
+     uniqueB.forEach(b => almanachBads.add(b));
+     document.getElementById('dl-bads').innerHTML = uniqueB.map(b => `<option value="${escStr(b)}">`).join('');
   }
 }
 
@@ -1465,14 +1484,30 @@ function renderEditLists() {
 }
 
 function addSpecToEdit() {
-  const v = document.getElementById('eAddSpec').value.trim();
-  if(v && !editCurrentSpecs.includes(v)) { editCurrentSpecs.push(v); renderEditLists(); document.getElementById('eAddSpec').value=''; }
+  let v = document.getElementById('eAddSpec').value.trim();
+  if(v) {
+     v = v.charAt(0).toUpperCase() + v.slice(1);
+     if (!editCurrentSpecs.some(x => x.toLowerCase() === v.toLowerCase())) {
+         editCurrentSpecs.push(v);
+         editCurrentSpecs.sort((a,b) => a.localeCompare(b, 'pl'));
+         renderEditLists();
+     }
+     document.getElementById('eAddSpec').value='';
+  }
 }
 function removeEditSpec(val) { editCurrentSpecs = editCurrentSpecs.filter(x => x !== val); renderEditLists(); }
 
 function addBadToEdit() {
-  const v = document.getElementById('eAddBad').value.trim();
-  if(v && !editCurrentBads.includes(v)) { editCurrentBads.push(v); renderEditLists(); document.getElementById('eAddBad').value=''; }
+  let v = document.getElementById('eAddBad').value.trim();
+  if(v) {
+     v = v.charAt(0).toUpperCase() + v.slice(1);
+     if (!editCurrentBads.some(x => x.toLowerCase() === v.toLowerCase())) {
+         editCurrentBads.push(v);
+         editCurrentBads.sort((a,b) => a.localeCompare(b, 'pl'));
+         renderEditLists();
+     }
+     document.getElementById('eAddBad').value='';
+  }
 }
 function removeEditBad(val) { editCurrentBads = editCurrentBads.filter(x => x !== val); renderEditLists(); }
 
@@ -1494,17 +1529,16 @@ async function openEdit(pkgId){
   
   s('ePriceGrup', p.cena_grup_mies||'');
   
-  // Zaciąganie list do edycji
   const [{data: specs}, {data: bads}] = await Promise.all([
      SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').eq('pakiet_id', pkgId),
      SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').eq('pakiet_id', pkgId)
   ]);
   
-  editCurrentSpecs = specs ? specs.map(x => x.specjalizacja_nazwa) : [];
-  editCurrentBads = bads ? bads.map(x => x.badanie_nazwa) : [];
+  editCurrentSpecs = specs ? formatAndDeduplicate(specs.map(x => x.specjalizacja_nazwa)) : [];
+  editCurrentBads = bads ? formatAndDeduplicate(bads.map(x => x.badanie_nazwa)) : [];
   renderEditLists();
   
-  if(almanachSpecs.size === 0) loadAlmanachForEdit(); // Ładowanie Almanachu za pierwszym otwarciem
+  if(almanachSpecs.size === 0) await loadAlmanachForEdit();
   
   t('editStatus', '');
   const panel = document.getElementById('editPanel');
@@ -1519,7 +1553,7 @@ async function saveEdit(){
   const st = document.getElementById('editStatus');
   if(st) { st.textContent='Zapisywanie...'; st.className='text-sm font-bold text-slate-500'; }
 
-  // 1. Zmiana list w bazie (usunięcie starych, wgranie nowych)
+  // 1. Zmiana list w bazie
   await SB_CLIENT.from('pakiety_specjalizacje').delete().eq('pakiet_id', pkgId);
   await SB_CLIENT.from('pakiety_badania').delete().eq('pakiet_id', pkgId);
   
@@ -1530,7 +1564,7 @@ async function saveEdit(){
      await SB_CLIENT.from('pakiety_badania').insert(editCurrentBads.map(x => ({pakiet_id: pkgId, badanie_nazwa: x})));
   }
 
-  // 2. Aktualizacja głównych danych pakietu (w tym nowych zliczonych ilości)
+  // 2. Aktualizacja głównych danych pakietu
   const body={
     liczba_specjalizacji: editCurrentSpecs.length,
     liczba_badan_lab: editCurrentBads.length,
