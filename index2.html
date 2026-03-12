@@ -56,7 +56,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.2.0 PRO</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.2.1 PRO</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -334,6 +334,12 @@
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRefundacja" class="w-4 h-4 accent-brand-navy">Refundacja</label>
       <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eSwoboda" class="w-4 h-4 accent-brand-navy">Swoboda leczenia</label>
     </div>
+    <div class="border-t border-slate-200 pt-5 mb-5">
+      <h3 class="text-xs font-bold text-slate-500 uppercase mb-3">💰 Składka pracownicza (zł)</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div><input type="number" step="0.01" id="ePriceGrup" placeholder="0.00" class="inp font-bold text-brand-pink text-lg"/></div>
+      </div>
+    </div>
     
     <div class="flex gap-3 items-center">
       <button onclick="saveEdit()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition-colors">💾 Zapisz do bazy</button>
@@ -556,6 +562,12 @@ let lastCompData   = [];
 let allCalcPkgs    = [];
 let selectedCalc   = new Set();
 let currentClinicData = []; 
+
+// Stan Edycji List Usług
+let almanachSpecs = new Set();
+let almanachBads = new Set();
+let editCurrentSpecs = [];
+let editCurrentBads = [];
 
 // Stan sortowania placówek
 let clinicSortCol = 'city'; 
@@ -1579,17 +1591,25 @@ function removeEditBad(i) { editCurrentBads.splice(i, 1); renderEditLists(); }
 
 async function openEdit(pkgId){
   const data=await fetchEnhancedPackages(q => q.eq('id', pkgId)); if(!data||!data[0]) return; const p=data[0];
-  document.getElementById('editPkgId').value=pkgId; document.getElementById('editPkgName').textContent=`${p.dostawca_nazwa} — ${p.pakiet_nazwa || p.nazwa}`;
-  const map={ePoz:'czas_oczekiwania_poz',eSpec:'czas_oczekiwania_spec',eMinPrac:'min_pracownicy',eDzieci:'wiek_dzieci_do',eKarencja:'karencja_dni'};
-  Object.entries(map).forEach(([id,key])=>document.getElementById(id).value=isValid(p[key])?p[key]:'');
   
-  document.getElementById('eRtg').value = p.liczba_rtg || 0;
-  document.getElementById('eTk').value = p.liczba_tk || 0;
-  document.getElementById('eMri').value = p.liczba_mri || 0;
+  const s = (id, v) => { const el = document.getElementById(id); if(el) el.value = v; };
+  const c = (id, v) => { const el = document.getElementById(id); if(el) el.checked = v; };
+  const t = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+
+  s('editPkgId', pkgId);
+  t('editPkgName', `${p.dostawca_nazwa} — ${p.pakiet_nazwa || p.nazwa}`);
+  
+  const map={ePoz:'czas_oczekiwania_poz',eSpec:'czas_oczekiwania_spec',eMinPrac:'min_pracownicy',eDzieci:'wiek_dzieci_do',eKarencja:'karencja_dni'};
+  Object.entries(map).forEach(([id,key])=> s(id, isValid(p[key])?p[key]:'') );
+  
+  s('eRtg', p.liczba_rtg || 0);
+  s('eTk', p.liczba_tk || 0);
+  s('eMri', p.liczba_mri || 0);
 
   const bools={eTele:'telemedycyna', eCiaza:'ciaza', eRehab:'rehabilitacja',eStom:'stomatologia',ePsych:'opieka_psychiatryczna',eWizyty:'wizyty_domowe',eSzpital:'leczenie_szpitalne',eHotline:'hotline_24h', eRefundacja:'refundacja', eSwoboda:'swoboda_leczenia'};
-  Object.entries(bools).forEach(([id,key])=>document.getElementById(id).checked=!!p[key]);
-  document.getElementById('ePriceGrup').value=p.cena_grup_mies||'';
+  Object.entries(bools).forEach(([id,key])=> c(id, !!p[key]) );
+  
+  s('ePriceGrup', p.cena_grup_mies||'');
   
   // Zaciąganie list do edycji
   const [{data: specs}, {data: bads}] = await Promise.all([
@@ -1597,21 +1617,24 @@ async function openEdit(pkgId){
      SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').eq('pakiet_id', pkgId)
   ]);
   
-  editCurrentSpecs = specs ? specs.map(s => s.specjalizacja_nazwa) : [];
-  editCurrentBads = bads ? bads.map(b => b.badanie_nazwa) : [];
+  editCurrentSpecs = specs ? specs.map(x => x.specjalizacja_nazwa) : [];
+  editCurrentBads = bads ? bads.map(x => x.badanie_nazwa) : [];
   renderEditLists();
   
   if(almanachSpecs.size === 0) loadAlmanachForEdit(); // Ładowanie Almanachu za pierwszym otwarciem
   
-  document.getElementById('editStatus').textContent=''; document.getElementById('editPanel').classList.remove('hidden'); document.getElementById('editPanel').scrollIntoView({behavior:'smooth'});
+  t('editStatus', '');
+  const panel = document.getElementById('editPanel');
+  if(panel) { panel.classList.remove('hidden'); panel.scrollIntoView({behavior:'smooth'}); }
 }
 
 async function saveEdit(){
   const pkgId=document.getElementById('editPkgId').value;
-  const n=id=>{const v=document.getElementById(id).value;return v===''?null:parseFloat(v)};
+  const n=id=>{const el = document.getElementById(id); return (el && el.value!=='') ? parseFloat(el.value) : null;};
+  const b=id=>{const el = document.getElementById(id); return el ? el.checked : false;};
   
-  document.getElementById('editStatus').textContent='Zapisywanie...';
-  document.getElementById('editStatus').className='text-sm font-bold text-slate-500';
+  const st = document.getElementById('editStatus');
+  if(st) { st.textContent='Zapisywanie...'; st.className='text-sm font-bold text-slate-500'; }
 
   // 1. Zmiana list w bazie (usunięcie starych, wgranie nowych)
   await SB_CLIENT.from('pakiety_specjalizacje').delete().eq('pakiet_id', pkgId);
@@ -1621,7 +1644,7 @@ async function saveEdit(){
      await SB_CLIENT.from('pakiety_specjalizacje').insert(editCurrentSpecs.map(s => ({pakiet_id: pkgId, specjalizacja_nazwa: s})));
   }
   if(editCurrentBads.length > 0) {
-     await SB_CLIENT.from('pakiety_badania').insert(editCurrentBads.map(b => ({pakiet_id: pkgId, badanie_nazwa: b})));
+     await SB_CLIENT.from('pakiety_badania').insert(editCurrentBads.map(x => ({pakiet_id: pkgId, badanie_nazwa: x})));
   }
 
   // 2. Aktualizacja głównych danych pakietu (w tym nowych zliczonych ilości)
@@ -1633,26 +1656,71 @@ async function saveEdit(){
     min_pracownicy:n('eMinPrac'),
     wiek_dzieci_do:n('eDzieci'),
     karencja_dni:n('eKarencja'),
-    telemedycyna:document.getElementById('eTele').checked,
-    ciaza:document.getElementById('eCiaza').checked,
-    rehabilitacja:document.getElementById('eRehab').checked,
-    stomatologia:document.getElementById('eStom').checked,
-    opieka_psychiatryczna:document.getElementById('ePsych').checked,
-    wizyty_domowe:document.getElementById('eWizyty').checked,
-    leczenie_szpitalne:document.getElementById('eSzpital').checked,
-    hotline_24h:document.getElementById('eHotline').checked,
-    refundacja:document.getElementById('eRefundacja').checked,
-    swoboda_leczenia:document.getElementById('eSwoboda').checked,
+    telemedycyna:b('eTele'),
+    ciaza:b('eCiaza'),
+    rehabilitacja:b('eRehab'),
+    stomatologia:b('eStom'),
+    opieka_psychiatryczna:b('ePsych'),
+    wizyty_domowe:b('eWizyty'),
+    leczenie_szpitalne:b('eSzpital'),
+    hotline_24h:b('eHotline'),
+    refundacja:b('eRefundacja'),
+    swoboda_leczenia:b('eSwoboda'),
     cena_grup_mies:n('ePriceGrup'),
   };
   
   const { error } = await SB_CLIENT.from('pakiety').update(body).eq('id', pkgId);
   
-  const st=document.getElementById('editStatus');
-  st.textContent= !error ? '✓ Zapisano do bazy pomyślnie.' : '✗ Błąd zapisu (Brak uprawnień Admina).'; 
-  st.className=`text-sm font-bold ${!error?'text-emerald-600':'text-red-600'}`;
+  if(st) {
+     st.textContent= !error ? '✓ Zapisano do bazy pomyślnie.' : '✗ Błąd zapisu (Brak uprawnień Admina).'; 
+     st.className=`text-sm font-bold ${!error?'text-emerald-600':'text-red-600'}`;
+  }
   
   if(!error) loadLibrary();
+}
+
+function toggleCalc(id, el) {
+  if(selectedCalc.has(id)) { 
+    selectedCalc.delete(id); el.classList.remove('sel'); el.querySelector('.chk').classList.remove('on'); el.querySelector('.chk').textContent=''; 
+  } else { 
+    selectedCalc.add(id); el.classList.add('sel'); el.querySelector('.chk').classList.add('on'); el.querySelector('.chk').textContent='✓'; 
+  }
+  calcUpdate();
+}
+
+function calcUpdate() {
+  const w = parseInt(document.getElementById('calcWorkers').value)||1;
+  const type = document.getElementById('calcType').value;
+  const res = document.getElementById('calcResult');
+  const tb = document.getElementById('calcTable');
+  
+  if(!selectedCalc.size) { res.classList.add('hidden'); return; }
+  
+  const selPkgs = allCalcPkgs.filter(p => selectedCalc.has(p.id));
+  document.getElementById('calcSubtitle').textContent = `Wyliczenie dla ${w} pracowników`;
+  
+  let html = `<table class="w-full text-sm border-collapse min-w-[600px]">
+    <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
+      <tr><th class="p-3 text-left">Dostawca i Pakiet</th><th class="p-3 text-right">Składka jednostkowa</th><th class="p-3 text-right">Łącznie (Miesięcznie)</th><th class="p-3 text-right">Łącznie (Rocznie)</th></tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">`;
+    
+  selPkgs.forEach(p => {
+    const price = parseFloat(p[type]) || 0;
+    const sum = price * w;
+    const year = sum * 12;
+    html += `<tr class="hover:bg-slate-50 transition-colors">
+    <td class="p-4">
+      <div class="font-bold text-brand-navy">${p.dostawca_nazwa}</div>
+      <div class="text-brand-pink text-xs font-semibold">${p.pakiet_nazwa||p.nazwa} <span class="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 font-black">T${p.tier}</span></div>
+    </td>
+    <td class="p-4 text-right font-semibold">${price>0 ? price.toFixed(2)+' zł' : '<span class="text-red-500 text-xs">Brak wyceny</span>'}</td>
+    <td class="p-4 text-right font-black text-brand-navy text-lg">${price>0 ? sum.toFixed(2)+' zł' : '–'}</td>
+    <td class="p-4 text-right font-bold text-slate-500">${price>0 ? year.toFixed(2)+' zł' : '–'}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  tb.innerHTML = html;
+  res.classList.remove('hidden');
 }
 
 async function calcLoadPackages() {
