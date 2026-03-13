@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pl" class="bg-slate-900 antialiased text-slate-300">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEDICALAURA — Baza Danych (RAW)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>tailwind.config={theme:{extend:{colors:{'brand-navy':'#1e294a','brand-pink':'#e11d48'},fontFamily:{sans:['Inter','sans-serif']}}}}</script>
+  <style>
+    .tbl-container { max-height: calc(100vh - 180px); overflow: auto; }
+    table { border-collapse: separate; border-spacing: 0; width: 100%; text-align: left; }
+    th { position: sticky; top: 0; background: #1e293b; color: #cbd5e1; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding: 12px 16px; border-bottom: 1px solid #334155; z-index: 10; white-space: nowrap; }
+    td { padding: 10px 16px; font-size: 12px; border-bottom: 1px solid #334155; color: #f8fafc; white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+    tr:hover td { background: #1e294a; }
+    .inp { background: #1e293b; border: 1px solid #334155; color: white; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; }
+    .inp:focus { border-color: #e11d48; }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+  <!-- Modal Logowania -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+      <div class="text-center mb-6">
+        <div class="text-xl font-black text-white mb-1">MEDICAL<span class="text-brand-pink">AURA</span> ROOT</div>
+        <p class="text-xs text-slate-400">Logowanie Administracyjne (RAW DB)</p>
+      </div>
+      <div class="space-y-4 mb-6">
+        <input type="email" id="loginEmail" class="w-full inp" placeholder="Email administratora" onkeydown="if(event.key==='Enter') doLogin()"/>
+        <input type="password" id="loginPass" class="w-full inp" placeholder="Hasło" onkeydown="if(event.key==='Enter') doLogin()"/>
+      </div>
+      <button onclick="doLogin()" class="w-full bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 rounded-xl shadow-lg transition-colors" id="loginBtn">Zaloguj do Bazy</button>
+      <p id="loginError" class="text-red-400 text-xs text-center font-bold mt-4 hidden"></p>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-slate-950 border-r border-slate-800 flex flex-col hidden" id="sidebar">
+    <div class="p-6 border-b border-slate-800">
+      <div class="text-lg font-black text-white tracking-tight leading-none">MEDICAL<span class="text-brand-pink">AURA</span></div>
+      <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Data Viewer</div>
+    </div>
+    
+    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+      <div class="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2 mt-4 pl-3">Struktura Medyczna</div>
+      <button onclick="loadTable('dostawcy')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors" id="nav-dostawcy">🏢 Dostawcy</button>
+      <button onclick="loadTable('pakiety')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors" id="nav-pakiety">📦 Pakiety</button>
+      <button onclick="loadTable('pakiety_specjalizacje')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors" id="nav-pakiety_specjalizacje">🩺 Specjalizacje (Relacje)</button>
+      <button onclick="loadTable('pakiety_badania')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors" id="nav-pakiety_badania">🔬 Badania (Relacje)</button>
+      <button onclick="loadTable('placowki_medyczne')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors" id="nav-placowki_medyczne">🏥 Placówki (RAW)</button>
+      
+      <div class="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2 mt-6 pl-3">Użytkownicy i System</div>
+      <button onclick="loadTable('profiles')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors" id="nav-profiles">👥 Profile</button>
+      <button onclick="loadTable('historia_wyszukiwan')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors" id="nav-historia_wyszukiwan">📜 Historia Zapytań</button>
+    </nav>
+    
+    <div class="p-4 border-t border-slate-800">
+      <div class="text-xs text-slate-400 mb-2 truncate" id="adminEmail">admin@email.com</div>
+      <button onclick="doLogout()" class="text-xs font-bold text-red-400 hover:text-red-300 transition-colors">Wyloguj</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col hidden bg-slate-900" id="mainContent">
+    <header class="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900/50">
+      <div class="flex items-center gap-4">
+        <h1 class="text-xl font-bold text-white uppercase tracking-wider" id="currentTableName">Wybierz Tabelę</h1>
+        <span id="rowCount" class="bg-brand-navy text-brand-pink text-xs font-black px-2 py-1 rounded-md hidden">0 wierszy</span>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <input type="text" id="localSearch" class="inp w-64 text-xs" placeholder="Szukaj w pobranych wynikach..." onkeyup="filterTableLocally()">
+        <button onclick="refreshData()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2 rounded-lg border border-slate-700 transition-colors">🔄 Odśwież</button>
+      </div>
+    </header>
+
+    <!-- Table Container -->
+    <div class="flex-1 p-6 relative">
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden h-full flex flex-col">
+        <div id="tableWrapper" class="flex-1 tbl-container relative">
+          <div id="tablePlaceholder" class="absolute inset-0 flex items-center justify-center text-slate-500 font-medium">
+            Wybierz tabelę z menu po lewej stronie.
+          </div>
+        </div>
+        
+        <!-- Pagination Footer -->
+        <div class="h-12 border-t border-slate-800 bg-slate-900 flex items-center justify-between px-4" id="paginationBar">
+          <div class="text-xs text-slate-400" id="pageInfo">Strona 1</div>
+          <div class="flex gap-2">
+            <button onclick="prevPage()" id="btnPrev" disabled class="bg-slate-800 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold px-3 py-1.5 rounded transition-colors">Poprzednia (500)</button>
+            <button onclick="nextPage()" id="btnNext" disabled class="bg-slate-800 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold px-3 py-1.5 rounded transition-colors">Następna (500)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script>
+// =========================================================================
+// KONFIGURACJA SUPABASE (Skopiuj z głównej aplikacji)
+// =========================================================================
+const SB_URL = 'WKLEJ_TUTAJ_SWOJ_URL_Z_SUPABASE';
+const SB_KEY = 'WKLEJ_TUTAJ_SWOJ_KLUCZ_ANON_Z_SUPABASE';
+
+let SB_CLIENT = null;
+let currentTable = null;
+let currentPage = 0;
+const PAGE_SIZE = 500;
+let currentData = [];
+
+// Inicjalizacja Autoryzacji
+async function initApp() {
+  if (!SB_URL || !SB_KEY || SB_URL === 'WKLEJ_TUTAJ_SWOJ_URL_Z_SUPABASE') {
+    document.getElementById('loginError').textContent = "Uzupełnij klucze API w kodzie pliku admin_bazy.html!";
+    document.getElementById('loginError').classList.remove('hidden');
+    return;
+  }
+  SB_CLIENT = supabase.createClient(SB_URL, SB_KEY);
+  
+  const { data: { session } } = await SB_CLIENT.auth.getSession();
+  if (session) {
+    checkAdminRole(session.user);
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  
+  err.classList.add('hidden');
+  if (!email || !pass) { err.textContent = "Podaj email i hasło"; err.classList.remove('hidden'); return; }
+  
+  btn.textContent = "Logowanie...";
+  const { data, error } = await SB_CLIENT.auth.signInWithPassword({ email, password: pass });
+  btn.textContent = "Zaloguj do Bazy";
+  
+  if (error) { err.textContent = "Błąd logowania: " + error.message; err.classList.remove('hidden'); }
+  else { checkAdminRole(data.user); }
+}
+
+async function checkAdminRole(user) {
+  const err = document.getElementById('loginError');
+  try {
+    const { data, error } = await SB_CLIENT.from('profiles').select('rola').eq('id', user.id).single();
+    if (error || !data || data.rola !== 'admin') {
+      err.textContent = "BRAK UPRAWNIEŃ: To konto nie ma roli 'admin'.";
+      err.classList.remove('hidden');
+      await SB_CLIENT.auth.signOut();
+      return;
+    }
+    // Zalogowano z sukcesem jako Admin
+    document.getElementById('loginModal').classList.add('hidden');
+    document.getElementById('sidebar').classList.remove('hidden');
+    document.getElementById('mainContent').classList.remove('hidden');
+    document.getElementById('mainContent').classList.add('flex');
+    document.getElementById('adminEmail').textContent = user.email;
+  } catch (e) {
+    err.textContent = "Błąd weryfikacji roli.";
+    err.classList.remove('hidden');
+  }
+}
+
+async function doLogout() {
+  await SB_CLIENT.auth.signOut();
+  window.location.reload();
+}
+
+// =========================================================================
+// LOGIKA BAZY DANYCH (DATA VIEWER)
+// =========================================================================
+
+function loadTable(tableName) {
+  currentTable = tableName;
+  currentPage = 0;
+  
+  // Update UI
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('bg-slate-800', 'text-brand-pink'));
+  document.getElementById('nav-' + tableName).classList.add('bg-slate-800', 'text-brand-pink');
+  document.getElementById('currentTableName').textContent = tableName;
+  document.getElementById('localSearch').value = '';
+  
+  fetchData();
+}
+
+async function refreshData() {
+  if (!currentTable) return;
+  fetchData();
+}
+
+async function fetchData() {
+  const wrap = document.getElementById('tableWrapper');
+  wrap.innerHTML = `<div class="absolute inset-0 flex flex-col gap-3 items-center justify-center text-slate-400"><div class="loader"></div>Pobieranie z bazy...</div>`;
+  
+  const rangeStart = currentPage * PAGE_SIZE;
+  const rangeEnd = rangeStart + PAGE_SIZE - 1;
+
+  // Odpytujemy Supabase, sortujemy po najnowszych (jeśli to możliwe, by łatwiej wyłapywać np. nowe placówki)
+  // Ze względu na generyczność, jeśli tabela nie ma 'created_at' to sortowanie może zgłosić błąd,
+  // dlatego dla bezpieczeństwa w generycznym viewerze pobieramy po prostu dane z limitu.
+  
+  const { data, error, count } = await SB_CLIENT
+    .from(currentTable)
+    .select('*', { count: 'exact' })
+    .range(rangeStart, rangeEnd);
+
+  if (error) {
+    wrap.innerHTML = `<div class="p-8 text-red-500 font-mono text-sm">BŁĄD ZAPYTANIA SQL:<br><br>${error.message}</div>`;
+    return;
+  }
+
+  currentData = data || [];
+  
+  document.getElementById('rowCount').textContent = `${count} wierszy ogółem`;
+  document.getElementById('rowCount').classList.remove('hidden');
+  
+  updatePagination(count);
+  renderTable(currentData);
+}
+
+function renderTable(dataArray) {
+  const wrap = document.getElementById('tableWrapper');
+  if (dataArray.length === 0) {
+    wrap.innerHTML = `<div class="absolute inset-0 flex items-center justify-center text-slate-500">Tabela jest pusta.</div>`;
+    return;
+  }
+
+  // Generowanie dynamicznych kolumn na podstawie pierwszego obiektu
+  const columns = Object.keys(dataArray[0]);
+
+  let html = `<table><thead><tr>`;
+  // LP (liczba porządkowa w ramach strony)
+  html += `<th class="w-12 text-center text-slate-600">#</th>`;
+  
+  columns.forEach(col => {
+    html += `<th>${col}</th>`;
+  });
+  html += `</tr></thead><tbody id="rawTableBody">`;
+
+  dataArray.forEach((row, index) => {
+    html += `<tr>`;
+    html += `<td class="text-center text-slate-600">${(currentPage * PAGE_SIZE) + index + 1}</td>`;
+    columns.forEach(col => {
+      let val = row[col];
+      // Formatowanie specyficznych typów (np. obiekty/tablice JSON, null, boolean)
+      if (val === null) val = `<span class="text-slate-600 italic">null</span>`;
+      else if (typeof val === 'boolean') val = val ? `<span class="text-emerald-400 font-bold">true</span>` : `<span class="text-red-400 font-bold">false</span>`;
+      else if (typeof val === 'object') val = `<span class="text-amber-300 font-mono text-[10px]">${JSON.stringify(val)}</span>`;
+      else val = String(val).replace(/</g, '&lt;').replace(/>/g, '&gt;'); // zabezpieczenie XSS
+      
+      html += `<td title="${String(row[col]).replace(/"/g, '&quot;')}">${val}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+}
+
+// Lokalne filtrowanie (działa na załadowanej paczce 500 rekordów)
+function filterTableLocally() {
+  const q = document.getElementById('localSearch').value.toLowerCase();
+  const rows = document.getElementById('rawTableBody')?.querySelectorAll('tr');
+  if (!rows) return;
+  
+  rows.forEach(tr => {
+    const text = tr.textContent.toLowerCase();
+    tr.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+
+// Obsługa stron
+function updatePagination(totalCount) {
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  const info = document.getElementById('pageInfo');
+  
+  btnPrev.disabled = currentPage === 0;
+  btnNext.disabled = (currentPage + 1) * PAGE_SIZE >= totalCount;
+  
+  const start = (currentPage * PAGE_SIZE) + 1;
+  const end = Math.min((currentPage + 1) * PAGE_SIZE, totalCount);
+  
+  if (totalCount === 0) info.textContent = "Brak danych";
+  else info.textContent = `Wyświetlam: ${start} - ${end} z ${totalCount}`;
+}
+
+function prevPage() { if (currentPage > 0) { currentPage--; fetchData(); } }
+function nextPage() { currentPage++; fetchData(); }
+
+window.onload = initApp;
+</script>
+</body>
+</html>
