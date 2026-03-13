@@ -56,7 +56,7 @@
   <div class="max-w-[1500px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <div class="text-2xl font-black tracking-tight">MEDICAL<span class="text-brand-pink">AURA</span></div>
-      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.3.2 PRO</span>
+      <span class="bg-brand-pink text-white text-[10px] px-2 py-1 rounded-md tracking-widest font-bold shadow-sm">V 1.1.4 PRO</span>
     </div>
     <nav class="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto custom-scroll whitespace-nowrap">
       <button onclick="switchTab('compare',this)" id="btn-compare" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-lg bg-white text-brand-navy shadow-sm">🔍 Porównaj</button>
@@ -87,6 +87,7 @@
 
   <!-- GŁÓWNY PANEL WYBORU -->
   <div class="bg-white border border-slate-200 rounded-3xl shadow-sm mb-5 overflow-hidden flex flex-col md:flex-row min-h-[450px]">
+    <!-- LEWA: lista dostawców w układzie GRID -->
     <div class="w-full md:w-1/2 bg-slate-50 border-r border-slate-200 flex flex-col">
       <div class="p-5 border-b border-slate-200 bg-slate-100 flex justify-between items-center">
         <div>
@@ -101,6 +102,7 @@
       </div>
     </div>
 
+    <!-- PRAWA: pakiety wybranego dostawcy -->
     <div class="w-full md:w-1/2 bg-white flex flex-col relative">
       <div class="p-5 border-b border-slate-100 flex justify-between items-center">
         <div>
@@ -125,17 +127,20 @@
     </div>
   </div>
 
+  <!-- ZAZNACZONE -->
   <div id="selectedBar" class="hidden border border-slate-200 bg-white rounded-2xl p-4 mb-6 shadow-sm">
     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pakiety gotowe do porównania:</p>
     <div id="selectedChips" class="flex flex-wrap gap-2"></div>
   </div>
 
+  <!-- GENERUJ -->
   <div class="flex items-center gap-4 mb-6">
     <button onclick="runComparison()" class="bg-brand-pink hover:bg-rose-700 text-white font-black py-4 px-10 rounded-xl shadow-lg text-lg transition-transform active:scale-95 flex items-center justify-center gap-3 w-full md:w-auto">
       <span>▶</span> Generuj Zestawienie Ofert
     </button>
   </div>
 
+  <!-- WYNIKI -->
   <div id="comparisonResult" class="hidden bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xl mb-5">
     <div class="bg-brand-navy p-5 flex justify-between items-center">
       <h2 class="text-base font-bold text-white">Zestawienie dla Klienta</h2>
@@ -147,6 +152,7 @@
     <div class="tbl overflow-x-auto" id="compTableWrap"></div>
   </div>
 
+  <!-- SKŁADKI + EKSPORT -->
   <div id="priceSection" class="hidden bg-white border-2 border-brand-navy rounded-3xl p-8 shadow-xl mb-8">
     <h2 class="text-lg font-bold text-brand-navy mb-1">💰 Wprowadź składki do zestawienia PDF</h2>
     <p class="text-xs text-slate-400 mb-6">Zaktualizuj składki dla tego porównania, aby odblokować eksport do PDF i CSV.</p>
@@ -161,7 +167,7 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════ SMART KONSULTANT -->
+<!-- ══════════════════════════════ SMART KONSULTANT (ZAKRESY) -->
 <div id="tab-search" class="tab-panel">
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6 bg-gradient-to-br from-white to-pink-50/30 relative overflow-hidden">
     <div class="absolute top-0 right-0 w-32 h-32 bg-brand-pink rounded-bl-full opacity-5 pointer-events-none"></div>
@@ -194,7 +200,7 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════ WYSZUKAJ PLACÓWKI -->
+<!-- ══════════════════════════════ WYSZUKAJ (Placówki) -->
 <div id="tab-clinics" class="tab-panel">
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mb-6">
     <h2 class="text-xl font-bold text-brand-navy mb-2">🏥 Wyszukiwarka Placówek</h2>
@@ -269,75 +275,46 @@
       <div class="flex items-center gap-3 text-slate-400 justify-center py-10"><div class="loader"></div>Ładowanie...</div>
     </div>
   </div>
-
-  <!-- ════════ EDYCJA (NOWY WIDOK Z KATEGORIAMI) ════════ -->
-  <div id="editPanel" class="hidden bg-white border-2 border-brand-navy rounded-3xl overflow-hidden shadow-2xl mt-6">
-    <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-brand-navy text-white relative">
-      <div>
-        <h2 class="text-lg font-bold">✏️ Edycja Panelowa: <span id="editPkgName" class="text-brand-pink font-black ml-2"></span></h2>
-      </div>
-      <button onclick="document.getElementById('editPanel').classList.add('hidden')" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-xl transition-colors shrink-0">&times;</button>
+  
+  <!-- ZOPTYMALIZOWANA EDYCJA (Usunięte zbędne kolumny karencji itp.) -->
+  <div id="editPanel" class="hidden bg-white border-2 border-brand-navy rounded-3xl p-8 shadow-xl mt-6">
+    <div class="flex justify-between items-center mb-5">
+      <h2 class="text-lg font-bold text-brand-navy">✏️ Edycja: <span id="editPkgName" class="text-brand-pink"></span></h2>
+      <button onclick="document.getElementById('editPanel').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 text-xl">✕</button>
     </div>
     
-    <div class="p-6 md:p-8 bg-slate-50">
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <div><label class="lbl">Oczek. POZ (dni)</label><input type="number" id="ePoz" class="inp"/></div>
-        <div><label class="lbl">Oczek. spec. (dni)</label><input type="number" id="eSpec" class="inp"/></div>
-        <div><label class="lbl">Min. pracownicy</label><input type="number" id="eMinPrac" class="inp"/></div>
-        <div><label class="lbl">Dzieci do (lat)</label><input type="number" id="eDzieci" class="inp"/></div>
-        <div><label class="lbl">Karencja (dni)</label><input type="number" id="eKarencja" class="inp"/></div>
-      </div>
-
-      <!-- ALMANACH DODAWANIE -->
-      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-8">
-        <h4 class="text-sm font-black text-brand-navy uppercase tracking-wide mb-4 border-b border-slate-100 pb-2">➕ Zarządzanie listami z Almanachu (Fuzzy Search)</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="flex gap-2">
-            <input type="text" id="eAddSpec" list="dl-specs" class="inp flex-grow border-brand-navy/30" placeholder="Wybierz Specjalizację ze słownika...">
-            <button onclick="addSpecToEdit()" class="bg-brand-navy text-white px-5 rounded-xl font-bold text-xs shadow-sm active:scale-95">Dodaj</button>
-          </div>
-          <div class="flex gap-2">
-            <input type="text" id="eAddBad" list="dl-bads" class="inp flex-grow border-brand-pink/30" placeholder="Wybierz Badanie/Zabieg ze słownika...">
-            <button onclick="addBadToEdit()" class="bg-brand-pink text-white px-5 rounded-xl font-bold text-xs shadow-sm active:scale-95">Dodaj</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Datalists for Almanach Autocomplete -->
-      <datalist id="dl-specs"></datalist>
-      <datalist id="dl-bads"></datalist>
-      
-      <!-- INTERAKTYWNE KATEGORIE -->
-      <div id="eCategorizedLists" class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-8"></div>
-      
-      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-8">
-        <h4 class="text-sm font-black text-brand-navy uppercase tracking-wide mb-4 border-b border-slate-100 pb-2">Usługi Dodatkowe i Standard Pakietu</h4>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eTele" class="w-4 h-4 accent-brand-navy">Telemedycyna</label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eCiaza" class="w-4 h-4 accent-brand-navy">Prowadzenie Ciąży</label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRehab" class="w-4 h-4 accent-brand-navy">Rehabilitacja</label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eStom" class="w-4 h-4 accent-brand-navy">Stomatologia</label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="ePsych" class="w-4 h-4 accent-brand-navy">Psychiatria</label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eWizyty" class="w-4 h-4 accent-brand-navy">Wizyty domowe</label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eSzpital" class="w-4 h-4 accent-brand-navy">Szpital 1-dniowy</label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eHotline" class="w-4 h-4 accent-brand-navy">Hotline 24h</label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRefundacja" class="w-4 h-4 accent-brand-navy">Refundacja</label>
-          <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eSwoboda" class="w-4 h-4 accent-brand-navy">Swoboda leczenia</label>
-        </div>
-      </div>
-
-      <div class="border-t border-slate-200 pt-5 flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cena (Składka pracownicza)</h3>
-          <input type="number" step="0.01" id="ePriceGrup" placeholder="0.00" class="inp font-bold text-brand-pink text-lg w-48"/>
-        </div>
-        <div class="flex items-center gap-4">
-          <span id="editStatus" class="text-sm font-semibold"></span>
-          <button onclick="saveEdit()" class="bg-brand-pink hover:bg-rose-700 text-white font-bold py-3 px-10 rounded-xl shadow-lg transition-transform active:scale-95 text-lg">💾 Zapisz Panel do Bazy</button>
-        </div>
-      </div>
-      <input type="hidden" id="editPkgId"/>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5">
+      <div><label class="lbl">Specjalizacje</label><input type="number" id="eSpecjalizacje" class="inp"/></div>
+      <div><label class="lbl">Badania lab.</label><input type="number" id="eBadania" class="inp"/></div>
+      <div><label class="lbl text-slate-400">RTG (Zliczane z bazy)</label><input type="text" id="eRtg" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
+      <div><label class="lbl text-slate-400">Tomografia (TK)</label><input type="text" id="eTk" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
+      <div><label class="lbl text-slate-400">Rezonans (MRI)</label><input type="text" id="eMri" class="inp bg-slate-200 text-slate-500 font-bold" readonly title="Wartość zliczana automatycznie"/></div>
     </div>
+    
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5 p-4 bg-slate-50 rounded-xl border border-slate-200">
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eTele" class="w-4 h-4 accent-brand-navy">Telemedycyna</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eCiaza" class="w-4 h-4 accent-brand-navy">Prowadzenie Ciąży</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRehab" class="w-4 h-4 accent-brand-navy">Rehabilitacja</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eStom" class="w-4 h-4 accent-brand-navy">Stomatologia</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="ePsych" class="w-4 h-4 accent-brand-navy">Psychiatria</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eWizyty" class="w-4 h-4 accent-brand-navy">Wizyty domowe</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eSzpital" class="w-4 h-4 accent-brand-navy">Szpital 1-dniowy</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eHotline" class="w-4 h-4 accent-brand-navy">Hotline 24h</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eRefundacja" class="w-4 h-4 accent-brand-navy">Refundacja</label>
+      <label class="flex items-center gap-2 cursor-pointer text-sm font-semibold select-none"><input type="checkbox" id="eSwoboda" class="w-4 h-4 accent-brand-navy">Swoboda leczenia</label>
+    </div>
+    
+    <div class="border-t border-slate-200 pt-5 mb-5">
+      <h3 class="text-xs font-bold text-slate-500 uppercase mb-3">💰 Składka pracownicza (zł)</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div><input type="number" step="0.01" id="ePriceGrup" placeholder="0.00" class="inp font-bold text-brand-pink text-lg"/></div>
+      </div>
+    </div>
+    <div class="flex gap-3 items-center">
+      <button onclick="saveEdit()" class="bg-brand-pink text-white font-bold py-3 px-8 rounded-xl shadow-md">💾 Zapisz do bazy</button>
+      <span id="editStatus" class="text-sm font-semibold"></span>
+    </div>
+    <input type="hidden" id="editPkgId"/>
   </div>
 </div>
 
@@ -366,6 +343,8 @@
 <!-- ══════════════════════════════ MOJE KONTO -->
 <div id="tab-account" class="tab-panel">
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+    <!-- Profil -->
     <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
       <h2 class="text-base font-bold text-brand-navy mb-5">👤 Mój Profil</h2>
       <div class="space-y-4 mb-5">
@@ -378,7 +357,9 @@
       <p id="accStatus" class="mt-3 text-sm font-semibold"></p>
     </div>
 
+    <!-- Logo + Plan -->
     <div class="space-y-6">
+      <!-- Logo -->
       <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
         <h2 class="text-base font-bold text-brand-navy mb-4">🖼 Logo do PDF</h2>
         <div id="accLogoPreview" class="mb-4 hidden"><img id="accLogoImg" src="" class="max-h-16 rounded-lg border border-slate-200 p-2" alt="Logo"/></div>
@@ -387,6 +368,7 @@
         <p id="logoStatus" class="mt-3 text-sm font-semibold"></p>
       </div>
 
+      <!-- Plan -->
       <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
         <h2 class="text-base font-bold text-brand-navy mb-4">📋 Plan subskrypcji</h2>
         <div id="accPlanBox" class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
@@ -400,6 +382,7 @@
     </div>
   </div>
 
+  <!-- Historia wyszukiwań -->
   <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm mt-8">
     <div class="flex justify-between items-center mb-5">
       <h2 class="text-base font-bold text-brand-navy">📋 Historia wyszukiwań</h2>
@@ -460,6 +443,7 @@
   <span id="userBarRole" class="bg-white/20 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider"></span>
 </div>
 
+<!-- Modal dla pojedynczej placówki -->
 <div id="clinicDetailsModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm z-[60]">
   <div class="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl relative">
     <button onclick="document.getElementById('clinicDetailsModal').classList.add('hidden')" class="absolute top-5 right-5 text-3xl text-slate-400 hover:text-slate-700 leading-none">&times;</button>
@@ -477,13 +461,21 @@
   </div>
 </div>
 
-<!-- Modal Szczegółów Pakietu (WIDOK DLA KLIENTA) -->
+<!-- Modal Szczegółów Pakietu -->
 <div id="pkgDetailsModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden items-center justify-center p-4 backdrop-blur-sm z-[55]">
   <div class="bg-white rounded-3xl w-full max-w-[1200px] max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
-    <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-brand-navy text-white relative">
-      <div>
-        <h3 id="pdmTitle" class="font-bold text-xl md:text-3xl tracking-tight flex items-center">Ładowanie...</h3>
-        <p id="pdmSub" class="text-brand-pink font-bold text-sm uppercase tracking-widest mt-1"></p>
+    <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-start bg-brand-navy text-white relative">
+      <div class="w-full">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 id="pdmTitle" class="font-bold text-xl md:text-3xl tracking-tight flex items-center">Ładowanie...</h3>
+            <p id="pdmSub" class="text-brand-pink font-bold text-sm uppercase tracking-widest mt-1"></p>
+          </div>
+          <div class="bg-white/10 px-6 py-3 rounded-2xl border border-white/20 text-right shrink-0">
+            <div class="text-[10px] uppercase tracking-wider text-slate-300 font-bold mb-0.5">Składka pracownicza</div>
+            <div id="pdmPrice" class="text-3xl font-black text-white">-- zł<span class="text-sm font-normal"> / mies.</span></div>
+          </div>
+        </div>
       </div>
       <button onclick="document.getElementById('pkgDetailsModal').classList.add('hidden')" class="w-10 h-10 ml-4 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-2xl transition-colors shrink-0">&times;</button>
     </div>
@@ -493,88 +485,45 @@
 
 <script>
 // ─── KONFIGURACJA BAZY (TWARDE KLUCZE ZAMIAST LOCALSTORAGE) ───
+// Tu wklej swoje publiczne dane z Supabase (Project URL i anon key). 
+// W architekturze Supabase ten klucz MUSI być publiczny na stronie. Bezpieczeństwa pilnują RLS.
 const SB_URL = 'https://kukvgsjrmrqtzhkszzum.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY';
 
+// ─── BEZPIECZNE KODOWANIE ZNAKÓW ───────
 const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Funkcja chroniąca funkcje OR() biblioteki Supabase JS przed wstrzykiwaniem przecinków i nawiasów
 const safeOr = (val) => val.replace(/[,()"]/g, '').trim();
-const escStr = (s) => s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-// ─── SMART DEDUPLIKACJA (USUWA DUBLE I NORMALIZUJE WIELKOŚĆ LITER) ───
-function formatAndDeduplicate(arr) {
-  const seen = new Set();
-  const result = [];
-  for (let item of arr) {
-    if (!item) continue;
-    item = item.trim();
-    const lower = item.toLowerCase();
-    if (!seen.has(lower)) {
-      seen.add(lower);
-      // Zawsze robimy pierwszą literę wielką (np. "alergolog" -> "Alergolog")
-      result.push(item.charAt(0).toUpperCase() + item.slice(1));
+// 🔥 SŁOWNIK MEDYCZNY (SMART KONSULTANT) 🔥
+const getMedicalSynonyms = (val) => {
+  const qLower = val.toLowerCase().trim();
+  const dictionary = [
+    { triggers: ['serc', 'zawał', 'kardiolog', 'ciśnien', 'kłuci', 'ekg'], terms: ['kardiolog', 'ekg', 'echo', 'holter', 'próba wysiłkowa', 'lipidogram', 'troponina', 'potas', 'sód', 'ck-mb'] },
+    { triggers: ['głow', 'migren', 'mózg', 'neurolog', 'zawrot'], terms: ['neurolog', 'eeg', 'tomografia głowy', 'rezonans głowy', 'tk głowy', 'mri głowy', 'doppler tętnic'] },
+    { triggers: ['brzuch', 'żołądk', 'żołądek', 'jelit', 'zgag', 'trawien', 'wzdęci'], terms: ['gastrolog', 'jamy brzusznej', 'gastroskopia', 'kolonoskopia', 'helicobacter', 'krew utajona', 'lipaza', 'amylaza'] },
+    { triggers: ['wątrob'], terms: ['hepatolog', 'alat', 'aspat', 'alt', 'ast', 'ggtp', 'bilirubina', 'hcv', 'hbs'] },
+    { triggers: ['tarczyc', 'hashimoto'], terms: ['endokrynolog', 'usg tarczycy', 'tsh', 'ft3', 'ft4', 'anty-tpo', 'anty-tg', 'biopsja tarczycy'] },
+    { triggers: ['cukier', 'cukrzyc', 'insulin'], terms: ['diabetolog', 'glukoza', 'krzywa cukrowa', 'ogtt', 'hemoglobina glikowana', 'insulina', 'peptyd'] },
+    { triggers: ['nerk', 'mocz', 'pęcherz'], terms: ['nefrolog', 'urolog', 'badanie ogólne moczu', 'posiew moczu', 'urokultura', 'kreatynina', 'mocznik', 'kwas moczowy', 'układu moczowego'] },
+    { triggers: ['płuc', 'oddech', 'dusznoś', 'kasz'], terms: ['pulmonolog', 'rtg klatki', 'spirometria'] },
+    { triggers: ['kobiet', 'ciąż', 'miesiączk', 'antykoncepc'], terms: ['ginekolog', 'cytologia', 'piersi', 'mammografia', 'transwaginalne', 'ciąży', 'prolaktyna', 'progesteron', 'estradiol'] },
+    { triggers: ['mężczyzn', 'prostat'], terms: ['urolog', 'psa', 'prostaty', 'testosteron'] },
+    { triggers: ['skór', 'włos', 'paznokc', 'pieprzyk', 'znam', 'trądzik'], terms: ['dermatolog', 'dermatoskopia', 'znamienia'] },
+    { triggers: ['oko', 'ocz', 'wzrok', 'widzen'], terms: ['okulist', 'dna oka', 'pole widzenia', 'ciśnienie wewnątrzgałkowe', 'oct'] },
+    { triggers: ['uch', 'uszy', 'słuch', 'gardł', 'nos', 'zatok', 'chrap'], terms: ['laryngolog', 'audiogram', 'audiolog', 'wymaz z gardła', 'wymaz z nosa', 'zatok'] },
+    { triggers: ['kośc', 'staw', 'kręgosłup', 'kolan', 'plec', 'reumat', 'zwyrodn'], terms: ['ortopeda', 'reumatolog', 'rtg kręgosłupa', 'stawu', 'kwas moczowy', 'ob', 'czynnik reumatoidalny', 'crp'] },
+    { triggers: ['krew', 'anemi', 'żelaz', 'osłabien', 'zmęczen'], terms: ['hematolog', 'morfologia', 'żelazo', 'ferrytyna', 'witamina b12', 'kwas foliowy', 'ob', 'crp', 'd3'] },
+    { triggers: ['alergi', 'uczul', 'wysypk'], terms: ['alergolog', 'ige', 'panel alergologiczny', 'testy skórne', 'odczulanie'] }
+  ];
+  let matchedTerms = [qLower]; 
+  dictionary.forEach(entry => {
+    if (entry.triggers.some(trigger => qLower.includes(trigger))) {
+       matchedTerms = [...matchedTerms, ...entry.terms];
     }
-  }
-  return result.sort((a,b) => a.localeCompare(b, 'pl'));
-}
-
-// 🔥 ZAAWANSOWANY SILNIK KATEGORYZACJI W LOCIE 🔥
-function categorizeServices(specs, bads) {
-  let cats = {
-    spec: { title: 'Specjalizacje Dorosłe', items: [], type: 'spec' },
-    specDziec: { title: 'Specjalizacje Dziecięce', items: [], type: 'spec' },
-    usg: { title: 'USG (Ultrasonografia)', items: [], type: 'bad' },
-    rtg: { title: 'RTG (Rentgen)', items: [], type: 'bad' },
-    ekg: { title: 'EKG / Próby wysiłkowe / Holter', items: [], type: 'bad' },
-    tk: { title: 'TK (Tomografia Komputerowa)', items: [], type: 'bad' },
-    mr: { title: 'MR (Rezonans Magnetyczny)', items: [], type: 'bad' },
-    szczep: { title: 'Szczepienia', items: [], type: 'bad' },
-    zabiegi: { title: 'Zabiegi pielęgniarskie', items: [], type: 'bad' },
-    lab: { title: 'Badania Laboratoryjne i Inne', items: [], type: 'bad' }
-  };
-
-  specs.forEach(s => {
-    const name = s.toUpperCase();
-    if (/\b(DZIECI|PEDIATR|NEONATOLOG)\b/.test(name)) cats.specDziec.items.push(s);
-    else cats.spec.items.push(s);
   });
-
-  bads.forEach(b => {
-    const name = b.toUpperCase();
-    if (/\b(USG|ULTRASONOGRAF|ULTRASONOGRAFIA)\b/.test(name)) cats.usg.items.push(b);
-    else if (/\b(RTG|RENTGEN)\b/.test(name)) cats.rtg.items.push(b);
-    else if (/\b(EKG|ELEKTROKARDIOGRAM|HOLTER|WYSIŁKOWA)\b/.test(name)) cats.ekg.items.push(b);
-    else if (/\b(TK|TOMOGRAF|TOMOGRAFIA)\b/.test(name)) cats.tk.items.push(b);
-    else if (/\b(MR|MRI|REZONANS)\b/.test(name)) cats.mr.items.push(b);
-    else if (/\b(SZCZEPIENIE|SZCZEPIENIA|SZCZEPIONKA)\b/.test(name)) cats.szczep.items.push(b);
-    else if (/\b(PIELĘGNIAR|INIEKCJA|ZASTRZYK|POBRANIE|ZABIEG PIEL)\b/.test(name)) cats.zabiegi.items.push(b);
-    else cats.lab.items.push(b);
-  });
-
-  return cats;
-}
-
-// Renderowanie kategorii w Modalach dla klienta
-const renderCatView = (cat) => {
-  if (!cat.items.length) return '';
-  return `
-  <div class="mb-5 break-inside-avoid bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-      <h5 class="text-[10px] font-black ${cat.type==='spec'?'text-brand-navy':'text-brand-pink'} uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">${cat.title} <span class="ml-1 opacity-50">(${cat.items.length})</span></h5>
-      <ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:${cat.type==='spec'?'text-brand-navy':'text-brand-pink'}">
-          ${cat.items.map(s => `<li>${s}</li>`).join('')}
-      </ul>
-  </div>`;
-};
-
-// Renderowanie w edytorze z "X" do usuwania
-const renderCatEdit = (cat) => {
-  if (!cat.items.length) return '';
-  return `
-  <div class="mb-5 break-inside-avoid bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-      <h5 class="text-[10px] font-black ${cat.type==='spec'?'text-brand-navy':'text-brand-pink'} uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">${cat.title} <span class="ml-1 opacity-50">(${cat.items.length})</span></h5>
-      <div class="flex flex-wrap gap-2 mt-2">
-          ${cat.items.map(s => `<span class="bg-slate-50 border ${cat.type==='spec'?'border-brand-navy/20 text-brand-navy':'border-brand-pink/20 text-brand-pink'} text-[11px] font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-sm leading-none group">${s} <button onclick="${cat.type==='spec'?'removeEditSpec':'removeEditBad'}('${escStr(s)}')" class="text-red-500 hover:bg-red-100 rounded-full w-4 h-4 flex items-center justify-center ml-1 transition-colors opacity-60 group-hover:opacity-100">✕</button></span>`).join('')}
-      </div>
-  </div>`;
+  return [...new Set(matchedTerms)];
 };
 
 // ─── STATE ──────────────────────────────────────────────
@@ -590,12 +539,7 @@ let allCalcPkgs    = [];
 let selectedCalc   = new Set();
 let currentClinicData = []; 
 
-// Stan Edycji List Usług
-let almanachSpecs = new Set();
-let almanachBads = new Set();
-let editCurrentSpecs = [];
-let editCurrentBads = [];
-
+// Stan sortowania placówek
 let clinicSortCol = 'city'; 
 let clinicSortAsc = true;
 
@@ -615,12 +559,14 @@ function switchTab(id,btn){
   if(id==='admin') loadAdminUsers();
 }
 
+// ─── SUPABASE AUTH ───────────────────────────────────────
 async function initAuth() {
   if (!SB_URL || !SB_KEY || SB_URL==='WKLEJ_TUTAJ_SWOJ_URL_Z_SUPABASE') {
-     showLoginModal('Programisto! Wklej poprawny URL i klucz bazy danych w pliku źródłowym (linia 384).');
+     showLoginModal('Programisto! Wklej poprawny URL i klucz bazy danych w pliku źródłowym (linia 401).');
      return;
   }
   SB_CLIENT = supabase.createClient(SB_URL, SB_KEY);
+  
   const { data:{session} } = await SB_CLIENT.auth.getSession();
   if (!session) { showLoginModal(); return; }
   
@@ -635,25 +581,27 @@ async function loadUserRole() {
   try {
     const { data } = await SB_CLIENT.from('profiles').select('rola,full_name').eq('id',currentUser.id).single();
     currentRole = data?.rola || 'viewer';
-    document.getElementById('userBarName').textContent = data?.full_name || currentUser.email;
+    const name  = data?.full_name || currentUser.email;
+    document.getElementById('userBarName').textContent = name;
     document.getElementById('userBarRole').textContent = currentRole;
   } catch(e) { currentRole = 'viewer'; }
   
   document.getElementById('userBar').classList.remove('hidden');
   document.getElementById('btn-logout').classList.remove('hidden');
   document.getElementById('btn-account').classList.remove('hidden');
+  
   if (currentRole === 'admin') document.getElementById('btn-admin').classList.remove('hidden');
   else document.getElementById('btn-admin').classList.add('hidden');
 }
 
 function showLoginModal(msg) {
-  document.getElementById('loginModal').classList.remove('hidden'); 
-  document.getElementById('loginModal').classList.add('flex');
-  if (msg) { document.getElementById('loginError').textContent=msg; document.getElementById('loginError').classList.remove('hidden'); }
+  const m = document.getElementById('loginModal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+  if (msg) { const e=document.getElementById('loginError'); e.textContent=msg; e.classList.remove('hidden'); }
 }
 function hideLoginModal() {
-  document.getElementById('loginModal').classList.add('hidden'); 
-  document.getElementById('loginModal').classList.remove('flex');
+  const m = document.getElementById('loginModal');
+  m.classList.add('hidden'); m.classList.remove('flex');
 }
 
 async function doLogin() {
@@ -662,21 +610,26 @@ async function doLogin() {
   const err   = document.getElementById('loginError');
   const btn   = document.getElementById('loginBtnTxt');
   err.classList.add('hidden');
+  
   if (!email||!pass) { err.textContent='Podaj email i hasło.'; err.classList.remove('hidden'); return; }
+  
   btn.textContent = 'Logowanie...';
   const { data, error } = await SB_CLIENT.auth.signInWithPassword({email,password:pass});
   btn.textContent = 'Zaloguj się';
+  
   if (error) { err.textContent='Błędny email lub hasło.'; err.classList.remove('hidden'); }
   else { currentUser=data.user; await loadUserRole(); hideLoginModal(); await init(); }
 }
 
 async function doMagicLink() {
   const email = document.getElementById('loginEmail').value.trim();
-  if (!email) { document.getElementById('loginError').textContent='Wpisz email powyżej.'; document.getElementById('loginError').classList.remove('hidden'); return; }
+  const msg   = document.getElementById('magicMsg');
+  const err   = document.getElementById('loginError');
+  if (!email) { err.textContent='Wpisz email powyżej.'; err.classList.remove('hidden'); return; }
   if (SB_CLIENT) {
     await SB_CLIENT.auth.signInWithOtp({email});
-    document.getElementById('magicMsg').textContent = '✅ Link wysłany na '+email;
-    document.getElementById('magicMsg').classList.remove('hidden');
+    msg.textContent = '✅ Link wysłany na '+email;
+    msg.classList.remove('hidden');
   }
 }
 
@@ -687,6 +640,7 @@ async function doLogout() {
   showLoginModal();
 }
 
+// ─── INIT & STATUS BAZY ─────────────────────────────────
 async function init(){
   await checkDbStatus();
   await loadProvidersFromDB();
@@ -699,6 +653,8 @@ async function checkDbStatus(){
     txt.textContent='Połączono'; dot.className='w-2.5 h-2.5 rounded-full bg-emerald-500';
     const { data: p } = await SB_CLIENT.from('pakiety').select('id').eq('aktywna', true);
     document.getElementById('statusPackages').textContent=p?p.length:'–';
+    
+    // Optymalne pobieranie licznika placówek bez pobierania danych (head: true)
     const { count: cClinics } = await SB_CLIENT.from('placowki_medyczne').select('*', { count: 'exact', head: true });
     document.getElementById('statusClinics').textContent = cClinics !== null ? cClinics : '–';
   } else {
@@ -741,52 +697,38 @@ function populateAllSelects(){
   }
 }
 
+// ─── INTELIGENTNE ZLICZANIE (Nowa Architektura) ───
+// Przyjmuje natywną funkcję modyfikującą zapytanie (np. q => q.in('id', pids))
 async function fetchEnhancedPackages(queryBuilder) {
   let query = SB_CLIENT.from('pakiety_pelne').select('*');
   query = queryBuilder(query);
+  
   const { data } = await query;
   if (!data || !data.length) return data;
+  
   const ids = data.map(d => d.id);
   if (ids.length > 0) {
-    const { data: raw } = await SB_CLIENT.from('pakiety').select('id,liczba_specjalizacji,liczba_badan_lab,czas_oczekiwania_poz,czas_oczekiwania_spec,karencja_dni,min_pracownicy,wiek_dzieci_do,telemedycyna,ciaza,rehabilitacja,stomatologia,opieka_psychiatryczna,wizyty_domowe,leczenie_szpitalne,hotline_24h,refundacja,swoboda_leczenia').in('id', ids);
+    const { data: raw } = await SB_CLIENT.from('pakiety').select('id,liczba_specjalizacji,liczba_badan_lab,telemedycyna,ciaza,rehabilitacja,stomatologia,opieka_psychiatryczna,wizyty_domowe,leczenie_szpitalne,hotline_24h,refundacja,swoboda_leczenia').in('id', ids);
+    
     const { data: labsData } = await SB_CLIENT.from('pakiety_badania').select('pakiet_id,badanie_nazwa').in('pakiet_id', ids);
     const { data: specData } = await SB_CLIENT.from('pakiety_specjalizacje').select('pakiet_id,specjalizacja_nazwa').in('pakiet_id', ids);
     
     const labC={}, rtgC={}, tkC={}, mriC={}, specC={};
     
     if (labsData) {
-      const uniqueLabs = {};
       labsData.forEach(r => {
         const pid = r.pakiet_id;
-        if(!uniqueLabs[pid]) uniqueLabs[pid] = new Set();
-        const rawName = (r.badanie_nazwa || '').trim();
-        if (!rawName) return;
-        const lowerName = rawName.toLowerCase();
-
-        if (!uniqueLabs[pid].has(lowerName)) {
-          uniqueLabs[pid].add(lowerName);
-          labC[pid] = (labC[pid] || 0) + 1;
-          const upperName = rawName.toUpperCase();
-          if (/\b(RTG|RENTGEN)\b/.test(upperName)) rtgC[pid] = (rtgC[pid] || 0) + 1;
-          if (/\b(TK|TOMOGRAF|TOMOGRAFIA)\b/.test(upperName)) tkC[pid] = (tkC[pid] || 0) + 1;
-          if (/\b(MR|MRI|REZONANS)\b/.test(upperName)) mriC[pid] = (mriC[pid] || 0) + 1;
-        }
+        const name = (r.badanie_nazwa || '').toUpperCase();
+        labC[pid] = (labC[pid] || 0) + 1;
+        if (/\b(RTG|RENTGEN)\b/.test(name)) rtgC[pid] = (rtgC[pid] || 0) + 1;
+        if (/\b(TK|TOMOGRAF|TOMOGRAFIA)\b/.test(name)) tkC[pid] = (tkC[pid] || 0) + 1;
+        if (/\b(MR|MRI|REZONANS)\b/.test(name)) mriC[pid] = (mriC[pid] || 0) + 1;
       });
     }
 
     if (specData) {
-      const uniqueSpecs = {};
       specData.forEach(r => {
-        const pid = r.pakiet_id;
-        if(!uniqueSpecs[pid]) uniqueSpecs[pid] = new Set();
-        const rawName = (r.specjalizacja_nazwa || '').trim();
-        if (!rawName) return;
-        const lowerName = rawName.toLowerCase();
-
-        if (!uniqueSpecs[pid].has(lowerName)) {
-          uniqueSpecs[pid].add(lowerName);
-          specC[pid] = (specC[pid] || 0) + 1;
-        }
+        specC[r.pakiet_id] = (specC[r.pakiet_id] || 0) + 1;
       });
     }
 
@@ -794,25 +736,28 @@ async function fetchEnhancedPackages(queryBuilder) {
       data.forEach(d => {
         const r = raw.find(x => x.id === d.id);
         if (r) {
-          ['czas_oczekiwania_poz','czas_oczekiwania_spec','karencja_dni','min_pracownicy','wiek_dzieci_do',
-           'telemedycyna','ciaza','rehabilitacja','stomatologia','opieka_psychiatryczna','wizyty_domowe',
+          ['telemedycyna','ciaza','rehabilitacja','stomatologia','opieka_psychiatryczna','wizyty_domowe',
            'leczenie_szpitalne','hotline_24h','refundacja','swoboda_leczenia'].forEach(k => {
             if(r[k] !== null && r[k] !== undefined) d[k] = r[k];
           });
           d.liczba_specjalizacji = specC[d.id] !== undefined ? specC[d.id] : r.liczba_specjalizacji; 
           d.liczba_badan_lab = labC[d.id] !== undefined ? labC[d.id] : r.liczba_badan_lab;
         }
-        d.liczba_rtg = rtgC[d.id] || 0; d.liczba_tk  = tkC[d.id] || 0; d.liczba_mri = mriC[d.id] || 0;
+        d.liczba_rtg = rtgC[d.id] || 0;
+        d.liczba_tk  = tkC[d.id] || 0;
+        d.liczba_mri = mriC[d.id] || 0;
       });
     }
   }
   return data;
 }
 
+// ─── LEWY PANEL DOSTAWCÓW ───────────────────────────────
 function buildProvList(){
   const el=document.getElementById('provList'); el.innerHTML='';
   if(!allProviders.length){el.innerHTML='<p class="text-xs text-slate-400">Brak w bazie</p>';return;}
   el.className = 'grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2 p-1';
+
   allProviders.forEach(p=>{
     const row=document.createElement('div');
     row.className='prov-box flex flex-row items-center justify-start p-3 border-2 border-slate-100 rounded-xl bg-white relative cursor-pointer min-h-[45px] gap-2';
@@ -905,6 +850,7 @@ function updateSelectedBar(){
 function removePkg(pkgId){ const p=selectedPkgs[pkgId]; if(p){const pid=p.dostawca_id;delete selectedPkgs[pkgId];updateProvCnt(pid);} renderPkgGrid(); updateSelCount(); updateSelectedBar(); }
 function clearAll(){ const pids=new Set(Object.values(selectedPkgs).map(p=>p.dostawca_id)); selectedPkgs={}; pids.forEach(pid=>updateProvCnt(pid)); renderPkgGrid(); updateSelCount(); updateSelectedBar(); document.getElementById('comparisonResult').classList.add('hidden'); document.getElementById('priceSection').classList.add('hidden'); }
 
+// ─── PORÓWNANIE ─────────────────────────────────────────
 const isValid = v => v !== null && v !== undefined && v !== '' && v !== 0 && String(v).toLowerCase() !== 'null' && String(v).toLowerCase() !== 'nan';
 const fNum = v => isValid(v) ? `<strong class="text-lg">${v}</strong>` : '<span class="text-slate-300">–</span>';
 
@@ -936,6 +882,7 @@ const ROWS=[
 async function runComparison(){
   const ids=Object.keys(selectedPkgs);
   if(ids.length<2){showNotif('compare','Wybierz minimum 2 pakiety z paneli powyżej.','border-amber-500 bg-amber-50 text-amber-700');return;}
+  
   const data=await fetchEnhancedPackages(q => q.in('id', ids));
   if(!data||!data.length){showNotif('compare','Błąd bazy danych.','border-red-500 bg-red-50 text-red-700');return;}
 
@@ -945,6 +892,7 @@ async function runComparison(){
     if(aS && !bS) return 1; if(!aS && bS) return -1;
     return (a.tier||0) - (b.tier||0);
   });
+
   lastCompData=data; renderCompTable(lastCompData); renderPriceSection(lastCompData);
   saveSearchHistory('porownanie', {pakiety: ids.length}, data.length);
 }
@@ -993,6 +941,7 @@ function renderCompTable(sorted){
   document.getElementById('comparisonResult').classList.remove('hidden'); document.getElementById('comparisonResult').scrollIntoView({behavior:'smooth'});
 }
 
+// ─── SEKCJA SKŁADEK I EKSPORT ───────────────────────────
 function renderPriceSection(sorted){
   const grid=document.getElementById('priceInputGrid'); grid.innerHTML='';
   sorted.forEach(p=>{
@@ -1046,10 +995,12 @@ function exportPDF(){
   
   ROWS.forEach(row=>{
     if(row.sep){body+=`<tr class="sep"><td colspan="${sorted.length+1}">${row.sep}</td></tr>`;return;}
+    
     const vals=sorted.map(p=>{
       if(row.key === 'cena_grup_mies'){const v=document.getElementById(fmap(row.key,p))?.value;return isValid(v)?parseFloat(v):null;}
       return p[row.key];
     });
+    
     let bestIdx=-1,worstIdx=-1;
     if(row.num){
       const nums=vals.filter(v=>isValid(v)).map(v=>parseFloat(v)).filter(v=>!isNaN(v));
@@ -1075,7 +1026,7 @@ function exportPDF(){
   const w=window.open('','_blank'); w.document.write(body); w.document.close(); setTimeout(()=>{w.focus();w.print();},600);
 }
 
-// ─── SMART KONSULTANT ────────────────────
+// ─── SMART KONSULTANT (Wyszukiwarka Usług) ────────────────────
 let acTimer;
 async function acInput(val) {
   clearTimeout(acTimer);
@@ -1096,8 +1047,8 @@ async function acInput(val) {
     if(dBad && dBad.length) combined = [...combined, ...dBad.map(x => x.badanie_nazwa)];
     
     if(combined.length) {
-      const unique = formatAndDeduplicate(combined);
-      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${escStr(u)}';acHide();runSearch()">${u}</li>`).join('');
+      const unique = [...new Set(combined)];
+      list.innerHTML = unique.map(u => `<li class="ac-item" onmousedown="document.getElementById('searchQuery').value='${u.replace(/'/g,"\\'").replace(/"/g, "&quot;")}';acHide();runSearch()">${u}</li>`).join('');
       list.classList.remove('hidden');
     } else {
       list.classList.add('hidden');
@@ -1113,8 +1064,10 @@ async function runSearch() {
   const res = document.getElementById('searchResult');
   const body = document.getElementById('searchResultBody');
   if(!q) return;
+  
   hint.textContent = 'Trwa inteligentne skanowanie bazy usług medycznych...'; 
   res.classList.add('hidden');
+  
   const terms = getMedicalSynonyms(q);
   const specOr = terms.map(t => `specjalizacja_nazwa.ilike.%${safeOr(t)}%`).join(',');
   const badOr = terms.map(t => `badanie_nazwa.ilike.%${safeOr(t)}%`).join(',');
@@ -1127,6 +1080,7 @@ async function runSearch() {
   let pids = [];
   if(dSpec && dSpec.length) pids = [...pids, ...dSpec.map(x => x.pakiet_id)];
   if(dBad && dBad.length) pids = [...pids, ...dBad.map(x => x.pakiet_id)];
+  
   pids = [...new Set(pids)];
 
   if(!pids.length) { hint.textContent = 'Brak wyników. Spróbuj uogólnić zapytanie.'; return; }
@@ -1140,7 +1094,9 @@ async function runSearch() {
   directPkgs.forEach(p => {
     const norm = getNorm(p.dostawca_nazwa);
     const t = p.tier || 999;
-    if(minTierMap[norm] === undefined || t < minTierMap[norm]) { minTierMap[norm] = t; }
+    if(minTierMap[norm] === undefined || t < minTierMap[norm]) {
+       minTierMap[norm] = t;
+    }
   });
 
   const targetIds = [];
@@ -1159,8 +1115,10 @@ async function runSearch() {
   }
 
   saveSearchHistory('wyszukiwanie', {query: q}, finalPkgs.length);
+  
   hint.textContent = `✅ Znaleziono ${finalPkgs.length} pakietów. Warianty o równej lub wyższej cenie automatycznie dziedziczą tę usługę.`;
   document.getElementById('searchResultTitle').textContent = `Pakiety dla: ${q.toUpperCase()}`;
+  
   finalPkgs.sort((a,b)=>getNorm(a.dostawca_nazwa).localeCompare(getNorm(b.dostawca_nazwa)) || (a.tier||0)-(b.tier||0));
   
   const grouped = {};
@@ -1192,7 +1150,7 @@ async function runSearch() {
 }
 
 
-// ─── WYSZUKIWARKA PLACÓWEK ───
+// ─── WYSZUKIWARKA PLACÓWEK Z AUTOCOMPLETE, SORTOWANIEM I OCHRONĄ ───
 let acCityTimer;
 async function acCity(q) {
   clearTimeout(acCityTimer);
@@ -1236,20 +1194,27 @@ async function acClinic(q) {
 }
 
 function sortClinics(col) {
-  if (clinicSortCol === col) { clinicSortAsc = !clinicSortAsc; } 
-  else { clinicSortCol = col; clinicSortAsc = true; }
+  if (clinicSortCol === col) {
+    clinicSortAsc = !clinicSortAsc;
+  } else {
+    clinicSortCol = col;
+    clinicSortAsc = true;
+  }
   renderClinicTable();
 }
 
 function renderClinicTable() {
   const resultBody = document.getElementById('clinResultBody');
-  if (!currentClinicData || currentClinicData.length === 0) { resultBody.innerHTML = ''; return; }
+  if (!currentClinicData || currentClinicData.length === 0) {
+     resultBody.innerHTML = ''; return;
+  }
 
   const sorted = [...currentClinicData].sort((a, b) => {
     let valA = '', valB = '';
     if (clinicSortCol === 'name') { valA = a.nazwa_oddzialu || a.siec_bazowa || ''; valB = b.nazwa_oddzialu || b.siec_bazowa || ''; }
     if (clinicSortCol === 'city') { valA = a.miejscowosc || ''; valB = b.miejscowosc || ''; }
     if (clinicSortCol === 'powiat') { valA = a.powiat || ''; valB = b.powiat || ''; }
+    
     valA = valA.toLowerCase(); valB = valB.toLowerCase();
     if(valA < valB) return clinicSortAsc ? -1 : 1;
     if(valA > valB) return clinicSortAsc ? 1 : -1;
@@ -1267,19 +1232,28 @@ function renderClinicTable() {
     if (p.dostawcy_tagi) {
       const pTags = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
       if (pTags.length > 0) {
-        tagsInline = pTags.map(t => `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-xs font-bold px-2.5 py-1.5 rounded-lg mr-1.5 mb-1.5 shadow-sm">${t.trim()}</span>`).join('');
+        tagsInline = pTags.map(t =>
+          `<span class="inline-block bg-slate-100 border border-slate-200 text-brand-navy text-xs font-bold px-2.5 py-1.5 rounded-lg mr-1.5 mb-1.5 shadow-sm">${t.trim()}</span>`
+        ).join('');
       }
     }
     if (!tagsInline) tagsInline = `<span class="text-xs text-slate-400 italic">Brak partnerów</span>`;
+
     const originalIndex = currentClinicData.indexOf(p);
 
     html += `<tr class="hover:bg-slate-50 transition-colors cursor-pointer group" onclick="openClinicModal(${originalIndex})">
-      <td class="p-4"><div class="font-bold text-brand-pink group-hover:underline text-base">${p.nazwa_oddzialu || p.siec_bazowa}</div></td>
-      <td class="p-4"><div class="font-bold text-slate-700">${p.miejscowosc || ''}</div><div class="text-xs text-slate-500 mt-0.5">${p.adres || ''}</div></td>
+      <td class="p-4">
+        <div class="font-bold text-brand-pink group-hover:underline text-base">${p.nazwa_oddzialu || p.siec_bazowa}</div>
+      </td>
+      <td class="p-4">
+        <div class="font-bold text-slate-700">${p.miejscowosc || ''}</div>
+        <div class="text-xs text-slate-500 mt-0.5">${p.adres || ''}</div>
+      </td>
       <td class="p-4 text-xs font-semibold text-slate-600">${p.powiat || ''}</td>
-      <td class="p-4 min-w-[300px] md:min-min-[450px]">${tagsInline}</td>
+      <td class="p-4 min-w-[300px] md:min-w-[450px]">${tagsInline}</td>
     </tr>`;
   });
+
   resultBody.innerHTML = html;
 }
 
@@ -1290,13 +1264,20 @@ async function searchClinics() {
   const provSelect = document.getElementById('clinProv');
   const provName   = provSelect.options[provSelect.selectedIndex].text;
   const provVal    = provSelect.value;
+  
   const hint       = document.getElementById('clinHint');
   const resultDiv  = document.getElementById('clinResult');
   const countEl   = document.getElementById('clinCount');
 
-  hint.textContent = 'Szukam placówek...'; hint.className = 'text-xs text-brand-navy font-bold mt-2'; resultDiv.classList.add('hidden');
+  hint.textContent = 'Szukam placówek...';
+  hint.className   = 'text-xs text-brand-navy font-bold mt-2';
+  resultDiv.classList.add('hidden');
 
-  if (!city && !powiat && !name) { hint.textContent = 'Wpisz co najmniej miejscowość, powiat lub nazwę placówki.'; hint.className = 'text-xs text-slate-500 font-bold mt-2'; return; }
+  if (!city && !powiat && !name) {
+    hint.textContent = 'Wpisz co najmniej miejscowość, powiat lub nazwę placówki.';
+    hint.className   = 'text-xs text-slate-500 font-bold mt-2';
+    return;
+  }
 
   let query = SB_CLIENT.from('placowki_medyczne').select('*').limit(1000);
   if (city)   query = query.ilike('miejscowosc', `%${city}%`);
@@ -1304,8 +1285,18 @@ async function searchClinics() {
   if (name)   query = query.or(`nazwa_oddzialu.ilike.%${safeOr(name)}%,siec_bazowa.ilike.%${safeOr(name)}%`);
 
   const { data, error } = await query;
-  if (error || data === null) { hint.textContent = '❌ Błąd pobierania danych z bazy.'; hint.className = 'text-xs text-red-600 font-bold mt-2'; return; }
-  if (!Array.isArray(data) || data.length === 0) { hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów.'; hint.className = 'text-xs text-slate-500 font-bold mt-2'; return; }
+
+  if (error || data === null) {
+    hint.textContent = '❌ Błąd pobierania danych z bazy. Spróbuj zmienić parametry wyszukiwania.';
+    hint.className   = 'text-xs text-red-600 font-bold mt-2';
+    return;
+  }
+  
+  if (!Array.isArray(data) || data.length === 0) {
+    hint.textContent = 'Nie znaleziono placówek dla podanych kryteriów.';
+    hint.className   = 'text-xs text-slate-500 font-bold mt-2';
+    return;
+  }
 
   let filteredData = data;
   if (provVal && provName !== '— Wszyscy Partnerzy —') {
@@ -1315,43 +1306,67 @@ async function searchClinics() {
       let tags = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"]/g, '').split(',');
       return tags.some(t => t.trim().toUpperCase() === searchProv);
     });
-    if (!filteredData.length) { hint.textContent = 'Znaleziono placówki, ale żadna nie jest powiązana z wybraną siecią.'; hint.className = 'text-xs text-slate-500 font-bold mt-2'; return; }
+    
+    if (!filteredData.length) {
+      hint.textContent = 'Znaleziono placówki w tej lokalizacji, ale żadna nie jest powiązana z wybraną siecią.';
+      hint.className   = 'text-xs text-slate-500 font-bold mt-2';
+      return;
+    }
   }
 
   currentClinicData = filteredData;
   saveSearchHistory('placowki', {city, powiat, name, provName}, filteredData.length);
-  hint.textContent = ''; countEl.textContent = filteredData.length + ' znalezionych';
-  clinicSortCol = 'city'; clinicSortAsc = true;
+  hint.textContent  = '';
+  countEl.textContent = filteredData.length + ' znalezionych';
+
+  // Domyślne sortowanie po mieście po każdym nowym wyszukiwaniu
+  clinicSortCol = 'city';
+  clinicSortAsc = true;
   renderClinicTable();
+
   resultDiv.classList.remove('hidden');
 }
 
 function openClinicModal(idx) {
   const p = currentClinicData[idx];
   if(!p) return;
+  
   document.getElementById('cdmName').textContent = p.nazwa_oddzialu || p.siec_bazowa;
   document.getElementById('cdmAddress').innerHTML = `${p.adres}<br/>${p.miejscowosc} ${p.powiat ? '('+p.powiat+')' : ''}, woj. ${p.wojewodztwo}`;
   document.getElementById('cdmContact').textContent = `📞 Telefon: ${p.telefon || 'Brak w bazie'}`;
   document.getElementById('cdmHours').textContent = `🕒 Otwarte: ${p.godziny_otwarcia || 'Brak danych'}`;
-  let tagsArr = p.dostawcy_tagi ? (Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',')) : [];
-  document.getElementById('cdmTags').innerHTML = tagsArr.length > 0 ? tagsArr.map(t => `<span class="bg-brand-navy text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm">${t.trim()}</span>`).join('') : '<span class="text-sm text-slate-400 italic">Brak przypisanych ubezpieczycieli</span>';
+  
+  let tagsArr = [];
+  if(p.dostawcy_tagi) {
+    tagsArr = Array.isArray(p.dostawcy_tagi) ? p.dostawcy_tagi : String(p.dostawcy_tagi).replace(/[{}"']/g, '').split(',');
+  }
+
+  let tagsHtml = '';
+  if(tagsArr.length > 0){
+    tagsHtml = tagsArr.map(t => `<span class="bg-brand-navy text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm">${t.trim()}</span>`).join('');
+  } else {
+    tagsHtml = '<span class="text-sm text-slate-400 italic">Brak przypisanych ubezpieczycieli</span>';
+  }
+  document.getElementById('cdmTags').innerHTML = tagsHtml;
+  
   document.getElementById('clinicDetailsModal').classList.remove('hidden');
   document.getElementById('clinicDetailsModal').classList.add('flex');
 }
 
-// ─── MODAL SZCZEGÓŁÓW PAKIETU Z KATEGORIAMI WIDOKU ───
+// ─── MODAL SZCZEGÓŁÓW PAKIETU Z WIDOKIEM LEKARZY I BADAŃ ───
 async function showPackageDetails(pkgId) {
   const modal = document.getElementById('pkgDetailsModal');
   const mBody = document.getElementById('pdmBody');
   const mTitle = document.getElementById('pdmTitle');
   const mSub = document.getElementById('pdmSub');
+  const mPrice = document.getElementById('pdmPrice');
   
   modal.classList.remove('hidden'); modal.classList.add('flex');
-  mTitle.textContent = 'Pobieranie danych...'; mSub.textContent = '';
+  mTitle.textContent = 'Pobieranie danych...'; mSub.textContent = ''; mPrice.innerHTML = '-- zł';
   mBody.innerHTML = '<div class="flex items-center justify-center py-20 text-slate-400"><div class="loader mr-3"></div> Ładowanie...</div>';
 
   try {
-    const [pkgDataRes, {data: specsData}, {data: labsData}] = await Promise.all([
+    const [pkgDataRes, {data: specs}, {data: labs}] = await Promise.all([
       fetchEnhancedPackages(q => q.eq('id', pkgId)),
       SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').eq('pakiet_id', pkgId).order('specjalizacja_nazwa'),
       SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').eq('pakiet_id', pkgId).order('badanie_nazwa')
@@ -1360,13 +1375,10 @@ async function showPackageDetails(pkgId) {
     if(!pkgDataRes || !pkgDataRes.length) { mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Błąd pobierania danych.</div>'; return; }
 
     const p = pkgDataRes[0];
-    const specs = specsData ? formatAndDeduplicate(specsData.map(x => x.specjalizacja_nazwa)) : [];
-    const labs = labsData ? formatAndDeduplicate(labsData.map(x => x.badanie_nazwa)) : [];
-
-    const categorized = categorizeServices(specs, labs);
 
     mTitle.innerHTML = `${p.pakiet_nazwa || p.nazwa} <span class="bg-brand-navy text-white text-xs font-bold px-2 py-0.5 rounded ml-3 align-middle">T${p.tier}</span>`;
     mSub.textContent = p.dostawca_nazwa;
+    mPrice.innerHTML = (p.cena_grup_mies !== null && p.cena_grup_mies !== undefined) ? `${parseFloat(p.cena_grup_mies).toFixed(2)} zł<span class="text-sm font-normal text-slate-300"> / mies.</span>` : '<span class="text-sm">Brak wyceny</span>';
 
     const val = v => (v !== null && v !== undefined && v !== '' && v > 0) ? `<span class="text-2xl font-black text-brand-navy">${v}</span>` : '<span class="text-xs text-red-500 font-bold mt-1 block">Brak wpisu</span>';
     const boolIco = v => v ? '✅' : '❌';
@@ -1374,10 +1386,10 @@ async function showPackageDetails(pkgId) {
     let html = `
       <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Specjalizacje</div><div>${val(specs.length > 0 ? specs.length : p.liczba_specjalizacji)}</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Specjalizacje</div><div>${val(p.liczba_specjalizacji)}</div>
         </div>
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Badania Lab.</div><div>${val(labs.length > 0 ? labs.length : p.liczba_badan_lab)}</div>
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Badania Lab.</div><div>${val(p.liczba_badan_lab)}</div>
         </div>
         <div class="bg-amber-50 p-5 rounded-2xl border border-amber-200 shadow-sm text-center">
           <div class="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">RTG (Limity)</div><div>${val(p.liczba_rtg)}</div>
@@ -1390,17 +1402,26 @@ async function showPackageDetails(pkgId) {
         </div>
       </div>
       
-      <div class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-8">
-         ${renderCatView(categorized.spec)}
-         ${renderCatView(categorized.specDziec)}
-         ${renderCatView(categorized.usg)}
-         ${renderCatView(categorized.rtg)}
-         ${renderCatView(categorized.ekg)}
-         ${renderCatView(categorized.tk)}
-         ${renderCatView(categorized.mr)}
-         ${renderCatView(categorized.szczep)}
-         ${renderCatView(categorized.zabiegi)}
-         ${renderCatView(categorized.lab)}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+              <h4 class="text-base font-black text-brand-navy uppercase tracking-wide">Specjalizacje Lekarskie</h4>
+              <span class="bg-brand-navy text-white text-xs font-bold px-3 py-1 rounded-full">${specs?.length||0} wpisów</span>
+            </div>
+            <div class="list-columns" style="columns: 1;">
+              ${specs && specs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-navy">${specs.map(s => `<li class="break-inside-avoid">${s.specjalizacja_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
+            </div>
+          </div>
+          
+          <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+              <h4 class="text-base font-black text-brand-pink uppercase tracking-wide">Badania i Zabiegi</h4>
+              <span class="bg-brand-pink text-white text-xs font-bold px-3 py-1 rounded-full">${labs?.length||0} wpisów</span>
+            </div>
+            <div class="list-columns" style="columns: 1;">
+              ${labs && labs.length > 0 ? `<ul class="list-disc list-inside text-sm text-slate-700 space-y-1.5 marker:text-brand-pink">${labs.map(s => `<li class="break-inside-avoid">${s.badanie_nazwa}</li>`).join('')}</ul>` : `<p class="text-slate-400 text-sm italic">Brak wpisów.</p>`}
+            </div>
+          </div>
       </div>
 
       <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-8">
@@ -1423,7 +1444,7 @@ async function showPackageDetails(pkgId) {
   } catch (error) { mBody.innerHTML = '<div class="p-10 text-center text-red-500 font-bold">Błąd połączenia z bazą danych.</div>'; }
 }
 
-// ─── BIBLIOTEKA ─────────────────────────────────────────
+// ─── BIBLIOTEKA I KALKULATOR ─────────────────────────────────────────
 async function loadLibrary(){
   const el=document.getElementById('libraryTable'); el.innerHTML='<div class="flex justify-center py-10"><div class="loader"></div></div>';
   document.getElementById('editPanel').classList.add('hidden');
@@ -1475,194 +1496,49 @@ async function loadLibrary(){
   el.innerHTML=html;
 }
 
-// ─── EDYCJA PAKIETÓW (Almanach, Kategorie i Interaktywne Tagi) ───
-async function loadAlmanachForEdit() {
-  const {data: sData} = await SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').limit(10000);
-  if(sData) {
-     const uniqueS = formatAndDeduplicate(sData.map(d => d.specjalizacja_nazwa));
-     uniqueS.forEach(s => almanachSpecs.add(s));
-     document.getElementById('dl-specs').innerHTML = uniqueS.map(s => `<option value="${escStr(s)}">`).join('');
-  }
-  const {data: bData} = await SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').limit(10000);
-  if(bData) {
-     const uniqueB = formatAndDeduplicate(bData.map(d => d.badanie_nazwa));
-     uniqueB.forEach(b => almanachBads.add(b));
-     document.getElementById('dl-bads').innerHTML = uniqueB.map(b => `<option value="${escStr(b)}">`).join('');
-  }
-}
-
-function renderEditLists() {
-  const categorized = categorizeServices(editCurrentSpecs, editCurrentBads);
-  let html = '';
-  html += renderCatEdit(categorized.spec);
-  html += renderCatEdit(categorized.specDziec);
-  html += renderCatEdit(categorized.usg);
-  html += renderCatEdit(categorized.rtg);
-  html += renderCatEdit(categorized.ekg);
-  html += renderCatEdit(categorized.tk);
-  html += renderCatEdit(categorized.mr);
-  html += renderCatEdit(categorized.szczep);
-  html += renderCatEdit(categorized.zabiegi);
-  html += renderCatEdit(categorized.lab);
-  
-  document.getElementById('eCategorizedLists').innerHTML = html;
-}
-
-function addSpecToEdit() {
-  let v = document.getElementById('eAddSpec').value.trim();
-  if(v) {
-     v = v.charAt(0).toUpperCase() + v.slice(1);
-     if (!editCurrentSpecs.some(x => x.toLowerCase() === v.toLowerCase())) {
-         editCurrentSpecs.push(v);
-         editCurrentSpecs.sort((a,b) => a.localeCompare(b, 'pl'));
-         renderEditLists();
-     }
-     document.getElementById('eAddSpec').value='';
-  }
-}
-function removeEditSpec(val) { editCurrentSpecs = editCurrentSpecs.filter(x => x !== val); renderEditLists(); }
-
-function addBadToEdit() {
-  let v = document.getElementById('eAddBad').value.trim();
-  if(v) {
-     v = v.charAt(0).toUpperCase() + v.slice(1);
-     if (!editCurrentBads.some(x => x.toLowerCase() === v.toLowerCase())) {
-         editCurrentBads.push(v);
-         editCurrentBads.sort((a,b) => a.localeCompare(b, 'pl'));
-         renderEditLists();
-     }
-     document.getElementById('eAddBad').value='';
-  }
-}
-function removeEditBad(val) { editCurrentBads = editCurrentBads.filter(x => x !== val); renderEditLists(); }
-
 async function openEdit(pkgId){
   const data=await fetchEnhancedPackages(q => q.eq('id', pkgId)); if(!data||!data[0]) return; const p=data[0];
+  document.getElementById('editPkgId').value=pkgId; document.getElementById('editPkgName').textContent=`${p.dostawca_nazwa} — ${p.pakiet_nazwa || p.nazwa}`;
   
-  const s = (id, v) => { const el = document.getElementById(id); if(el) el.value = v; };
-  const c = (id, v) => { const el = document.getElementById(id); if(el) el.checked = v; };
-  const t = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  const map={eSpecjalizacje:'liczba_specjalizacji',eBadania:'liczba_badan_lab'};
+  Object.entries(map).forEach(([id,key])=>document.getElementById(id).value=isValid(p[key])?p[key]:'');
+  
+  document.getElementById('eRtg').value = p.liczba_rtg || 0;
+  document.getElementById('eTk').value = p.liczba_tk || 0;
+  document.getElementById('eMri').value = p.liczba_mri || 0;
 
-  s('editPkgId', pkgId);
-  t('editPkgName', `${p.dostawca_nazwa} — ${p.pakiet_nazwa || p.nazwa}`);
-  
-  const map={ePoz:'czas_oczekiwania_poz',eSpec:'czas_oczekiwania_spec',eMinPrac:'min_pracownicy',eDzieci:'wiek_dzieci_do',eKarencja:'karencja_dni'};
-  Object.entries(map).forEach(([id,key])=> s(id, isValid(p[key])?p[key]:'') );
-  
   const bools={eTele:'telemedycyna', eCiaza:'ciaza', eRehab:'rehabilitacja',eStom:'stomatologia',ePsych:'opieka_psychiatryczna',eWizyty:'wizyty_domowe',eSzpital:'leczenie_szpitalne',eHotline:'hotline_24h', eRefundacja:'refundacja', eSwoboda:'swoboda_leczenia'};
-  Object.entries(bools).forEach(([id,key])=> c(id, !!p[key]) );
+  Object.entries(bools).forEach(([id,key])=>document.getElementById(id).checked=!!p[key]);
   
-  s('ePriceGrup', p.cena_grup_mies||'');
-  
-  const [{data: specs}, {data: bads}] = await Promise.all([
-     SB_CLIENT.from('pakiety_specjalizacje').select('specjalizacja_nazwa').eq('pakiet_id', pkgId),
-     SB_CLIENT.from('pakiety_badania').select('badanie_nazwa').eq('pakiet_id', pkgId)
-  ]);
-  
-  editCurrentSpecs = specs ? formatAndDeduplicate(specs.map(x => x.specjalizacja_nazwa)) : [];
-  editCurrentBads = bads ? formatAndDeduplicate(bads.map(x => x.badanie_nazwa)) : [];
-  renderEditLists();
-  
-  if(almanachSpecs.size === 0) await loadAlmanachForEdit();
-  
-  t('editStatus', '');
-  const panel = document.getElementById('editPanel');
-  if(panel) { panel.classList.remove('hidden'); panel.scrollIntoView({behavior:'smooth'}); }
+  document.getElementById('ePriceGrup').value=p.cena_grup_mies||'';
+  document.getElementById('editStatus').textContent=''; document.getElementById('editPanel').classList.remove('hidden'); document.getElementById('editPanel').scrollIntoView({behavior:'smooth'});
 }
 
 async function saveEdit(){
   const pkgId=document.getElementById('editPkgId').value;
-  const n=id=>{const el = document.getElementById(id); return (el && el.value!=='') ? parseFloat(el.value) : null;};
-  const b=id=>{const el = document.getElementById(id); return el ? el.checked : false;};
+  const n=id=>{const v=document.getElementById(id).value;return v===''?null:parseFloat(v)};
   
-  const st = document.getElementById('editStatus');
-  if(st) { st.textContent='Zapisywanie...'; st.className='text-sm font-bold text-slate-500'; }
-
-  // 1. Zmiana list w bazie
-  await SB_CLIENT.from('pakiety_specjalizacje').delete().eq('pakiet_id', pkgId);
-  await SB_CLIENT.from('pakiety_badania').delete().eq('pakiet_id', pkgId);
-  
-  if(editCurrentSpecs.length > 0) {
-     await SB_CLIENT.from('pakiety_specjalizacje').insert(editCurrentSpecs.map(s => ({pakiet_id: pkgId, specjalizacja_nazwa: s})));
-  }
-  if(editCurrentBads.length > 0) {
-     await SB_CLIENT.from('pakiety_badania').insert(editCurrentBads.map(x => ({pakiet_id: pkgId, badanie_nazwa: x})));
-  }
-
-  // 2. Aktualizacja głównych danych pakietu
   const body={
-    liczba_specjalizacji: editCurrentSpecs.length,
-    liczba_badan_lab: editCurrentBads.length,
-    czas_oczekiwania_poz:n('ePoz'),
-    czas_oczekiwania_spec:n('eSpec'),
-    min_pracownicy:n('eMinPrac'),
-    wiek_dzieci_do:n('eDzieci'),
-    karencja_dni:n('eKarencja'),
-    telemedycyna:b('eTele'),
-    ciaza:b('eCiaza'),
-    rehabilitacja:b('eRehab'),
-    stomatologia:b('eStom'),
-    opieka_psychiatryczna:b('ePsych'),
-    wizyty_domowe:b('eWizyty'),
-    leczenie_szpitalne:b('eSzpital'),
-    hotline_24h:b('eHotline'),
-    refundacja:b('eRefundacja'),
-    swoboda_leczenia:b('eSwoboda'),
+    liczba_specjalizacji:n('eSpecjalizacje'),
+    liczba_badan_lab:n('eBadania'),
+    telemedycyna:document.getElementById('eTele').checked,
+    ciaza:document.getElementById('eCiaza').checked,
+    rehabilitacja:document.getElementById('eRehab').checked,
+    stomatologia:document.getElementById('eStom').checked,
+    opieka_psychiatryczna:document.getElementById('ePsych').checked,
+    wizyty_domowe:document.getElementById('eWizyty').checked,
+    leczenie_szpitalne:document.getElementById('eSzpital').checked,
+    hotline_24h:document.getElementById('eHotline').checked,
+    refundacja:document.getElementById('eRefundacja').checked,
+    swoboda_leczenia:document.getElementById('eSwoboda').checked,
     cena_grup_mies:n('ePriceGrup'),
   };
   
   const { error } = await SB_CLIENT.from('pakiety').update(body).eq('id', pkgId);
-  
-  if(st) {
-     st.textContent= !error ? '✓ Zapisano do bazy pomyślnie.' : '✗ Błąd zapisu (Brak uprawnień Admina).'; 
-     st.className=`text-sm font-bold ${!error?'text-emerald-600':'text-red-600'}`;
-  }
-  
+  const st=document.getElementById('editStatus');
+  st.textContent= !error ? '✓ Zapisano do bazy.' : '✗ Błąd zapisu (Brak uprawnień Admina).'; 
+  st.className=`text-sm font-bold ${!error?'text-emerald-600':'text-red-600'}`;
   if(!error) loadLibrary();
-}
-
-function toggleCalc(id, el) {
-  if(selectedCalc.has(id)) { 
-    selectedCalc.delete(id); el.classList.remove('sel'); el.querySelector('.chk').classList.remove('on'); el.querySelector('.chk').textContent=''; 
-  } else { 
-    selectedCalc.add(id); el.classList.add('sel'); el.querySelector('.chk').classList.add('on'); el.querySelector('.chk').textContent='✓'; 
-  }
-  calcUpdate();
-}
-
-function calcUpdate() {
-  const w = parseInt(document.getElementById('calcWorkers').value)||1;
-  const type = document.getElementById('calcType').value;
-  const res = document.getElementById('calcResult');
-  const tb = document.getElementById('calcTable');
-  
-  if(!selectedCalc.size) { res.classList.add('hidden'); return; }
-  
-  const selPkgs = allCalcPkgs.filter(p => selectedCalc.has(p.id));
-  document.getElementById('calcSubtitle').textContent = `Wyliczenie dla ${w} pracowników`;
-  
-  let html = `<table class="w-full text-sm border-collapse min-w-[600px]">
-    <thead class="bg-slate-100 text-slate-500 text-xs uppercase">
-      <tr><th class="p-3 text-left">Dostawca i Pakiet</th><th class="p-3 text-right">Składka jednostkowa</th><th class="p-3 text-right">Łącznie (Miesięcznie)</th><th class="p-3 text-right">Łącznie (Rocznie)</th></tr>
-    </thead>
-    <tbody class="divide-y divide-slate-100">`;
-    
-  selPkgs.forEach(p => {
-    const price = parseFloat(p[type]) || 0;
-    const sum = price * w;
-    const year = sum * 12;
-    html += `<tr class="hover:bg-slate-50 transition-colors">
-    <td class="p-4">
-      <div class="font-bold text-brand-navy">${p.dostawca_nazwa}</div>
-      <div class="text-brand-pink text-xs font-semibold">${p.pakiet_nazwa||p.nazwa} <span class="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 font-black">T${p.tier}</span></div>
-    </td>
-    <td class="p-4 text-right font-semibold">${price>0 ? price.toFixed(2)+' zł' : '<span class="text-red-500 text-xs">Brak wyceny</span>'}</td>
-    <td class="p-4 text-right font-black text-brand-navy text-lg">${price>0 ? sum.toFixed(2)+' zł' : '–'}</td>
-    <td class="p-4 text-right font-bold text-slate-500">${price>0 ? year.toFixed(2)+' zł' : '–'}</td></tr>`;
-  });
-  html += `</tbody></table>`;
-  tb.innerHTML = html;
-  res.classList.remove('hidden');
 }
 
 async function calcLoadPackages() {
