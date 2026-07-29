@@ -43,29 +43,33 @@ npm run cf:deploy      # wdrożenie
 
 W panelu Cloudflare: **Workers & Pages → Create → Workers → Connect to Git**.
 
-Najprościej wypełnić samo pole deploy:
+Domyślne ustawienia wystarczą — nie trzeba wypełniać pola „Build command":
 
 | Ustawienie | Wartość |
 |---|---|
 | Build command | *(puste)* |
-| Deploy command | `npm run cf:release` |
+| Deploy command | `npx wrangler deploy` |
 | Root directory | `/` |
 
-`cf:release` buduje i wdraża w jednym kroku, więc nie da się pominąć builda.
+Worker buduje się w kroku `postinstall` (`scripts/postinstall.mjs`), który
+uruchamia się wyłącznie w CI. Lokalne `npm install` pozostaje szybkie.
 
-Wariant z rozdzielonymi krokami też działa — wtedy **oba** pola muszą być
-wypełnione:
+**Dlaczego przez postinstall, a nie przez pole „Build command":**
+`wrangler deploy` wykrywa OpenNext i natychmiast przekazuje sterowanie do
+`opennextjs-cloudflare deploy`, który sam **nie buduje** — oczekuje gotowego
+katalogu `.open-next/`. Przy pustym polu build kończy się to błędem
+`Could not find compiled Open Next config`. Hook `build` w `wrangler.jsonc`
+tego nie ratuje (sprawdzone — wykonuje się za późno), a instalacja
+zależności to jedyny krok potoku wykonywany zawsze.
+
+Kto woli jawne kroki, może zamiast tego ustawić w panelu:
 
 | Ustawienie | Wartość |
 |---|---|
-| Build command | `npm run cf:build` |
-| Deploy command | `npx wrangler deploy` |
+| Deploy command | `npm run cf:release` |
 
-> ⚠️ Puste pole „Build command" przy deploy `npx wrangler deploy` kończy się
-> błędem `Could not find compiled Open Next config, did you run the build
-> command?`. Wrangler wykrywa OpenNext i deleguje do
-> `opennextjs-cloudflare deploy`, ale ten **nie buduje** — oczekuje gotowego
-> katalogu `.open-next/`.
+`cf:release` buduje i wdraża w jednej komendzie. Skrypt `postinstall`
+wykryje wtedy gotowy katalog `.open-next` i nie zbuduje projektu po raz drugi.
 
 Projekt typu **Pages** utworzony wcześniej dla tego repozytorium trzeba
 usunąć — nie da się go przestawić na Workers.
