@@ -41,14 +41,31 @@ npm run cf:deploy      # wdrożenie
 
 ### Z repozytorium (Workers Builds)
 
-W panelu Cloudflare: **Workers & Pages → Create → Workers → Connect to Git**,
-a następnie:
+W panelu Cloudflare: **Workers & Pages → Create → Workers → Connect to Git**.
+
+Najprościej wypełnić samo pole deploy:
+
+| Ustawienie | Wartość |
+|---|---|
+| Build command | *(puste)* |
+| Deploy command | `npm run cf:release` |
+| Root directory | `/` |
+
+`cf:release` buduje i wdraża w jednym kroku, więc nie da się pominąć builda.
+
+Wariant z rozdzielonymi krokami też działa — wtedy **oba** pola muszą być
+wypełnione:
 
 | Ustawienie | Wartość |
 |---|---|
 | Build command | `npm run cf:build` |
 | Deploy command | `npx wrangler deploy` |
-| Root directory | `/` |
+
+> ⚠️ Puste pole „Build command" przy deploy `npx wrangler deploy` kończy się
+> błędem `Could not find compiled Open Next config, did you run the build
+> command?`. Wrangler wykrywa OpenNext i deleguje do
+> `opennextjs-cloudflare deploy`, ale ten **nie buduje** — oczekuje gotowego
+> katalogu `.open-next/`.
 
 Projekt typu **Pages** utworzony wcześniej dla tego repozytorium trzeba
 usunąć — nie da się go przestawić na Workers.
