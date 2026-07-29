@@ -38,22 +38,13 @@ export async function createClient() {
   );
 }
 
-/**
- * Klient omijający RLS. Wyłącznie do operacji administracyjnych
- * po stronie serwera (np. zarządzanie użytkownikami przez admina).
+/*
+ * Celowo NIE ma tu klienta z kluczem service_role.
  *
- * Każde wywołanie MUSI być poprzedzone sprawdzeniem uprawnień —
- * ten klient nie egzekwuje żadnych polityk.
+ * Operacje administracyjne idą przez funkcje bazodanowe
+ * (med_lista_uzytkownikow, med_ustaw_dostep), które same sprawdzają
+ * med.is_admin(). Uprawnienia egzekwuje baza, nie aplikacja.
+ *
+ * Gdyby taki klient tu istniał — nawet nieużywany — wystarczyłby jeden
+ * import, żeby ominąć RLS. Nie trzymamy go w zasięgu ręki.
  */
-export function createAdminClient() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) {
-    throw new Error(
-      "Brak SUPABASE_SERVICE_ROLE_KEY. Ustaw sekret: npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY",
-    );
-  }
-
-  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
-    cookies: { getAll: () => [], setAll: () => {} },
-  });
-}
