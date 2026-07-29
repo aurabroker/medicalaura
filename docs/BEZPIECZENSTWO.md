@@ -145,44 +145,71 @@ w przeglądarce. Panel administracyjny przechodzi na Server Actions —
 | `0004_hardening_funkcje.sql` | `search_path` w funkcjach MEDICALAURY + lista ustawień panelu |
 | `ROLLBACK.sql` | powrót do stanu sprzed utwardzenia |
 
-**Żadna nie została uruchomiona.** Wymagają przeglądu i decyzji o oknie
-serwisowym.
+**Status: WSZYSTKIE ZASTOSOWANE NA PRODUKCJI 2026-07-29**, w kolejności
+0001 → 0004 → 0003 → 0002 (bezpieczne przed łamiącą).
 
-### Skutek uboczny do zaakceptowania
+### Skutek uboczny — zrealizowany
 
-Migracja 0002 jest **zmianą łamiącą**: po niej `index.html`, `index2.html`
-i `admin/index.html` przestaną czytać dane bez zalogowania. To celowe —
-tak zamyka się wyciek cennika. Uruchamiać razem z przełączeniem na Next.js
-albo w świadomie przyjętym oknie przestoju.
+Migracja 0002 była **zmianą łamiącą** i została uruchomiona świadomie:
+`index.html`, `index2.html` i `admin/index.html` nie czytają już danych
+bez zalogowania. Tak zamknięto wyciek cennika. Do czasu uruchomienia
+aplikacji Next.js pliki te pozostają niefunkcjonalne — to stan oczekiwany,
+nie awaria.
 
-### Kolejność
+---
 
-1. `0001` — bezpieczna, nic nie psuje (dodaje nowe obiekty).
-2. `0004` — bezpieczna, zachowanie funkcji bez zmian.
-3. `0003` — bezpieczna, sam rejestr.
-4. `0002` — **zmiana łamiąca**, wymaga okna serwisowego.
+## 5a. Wyniki weryfikacji po wdrożeniu
 
-Po każdej: `select * from med.audit_log order by ts desc limit 20;`
-oraz ponowne uruchomienie advisorów.
+| Test | Wynik |
+|---|---|
+| `anon` czyta `pakiety` | `permission denied` — odcięcie na poziomie GRANT, przed RLS |
+| Aktywny admin | 41 pakietów, 3 216 + 1 482 + 1 015 wierszy rdzenia, 10 417 placówek |
+| **Nieaktywny** broker | 0 wszędzie — deny-by-default działa |
+| **Aktywny** broker: `DELETE` na placówkach | **0 usuniętych wierszy**, `ma_odczyt = true`, `ma_zapis = false` |
+| `med.members` po migracji | 1 × admin aktywny, 10 × broker nieaktywny |
+
+Advisors — porównanie przed/po:
+
+| Ostrzeżenie | Przed | Po |
+|---|---:|---:|
+| `rls_enabled_no_policy` | 42 | **29** |
+| — w tym tabele MEDICALAURY | 13 | **0** |
+| `function_search_path_mutable` | 16 | 15 |
+| poziom ERROR | 0 | 0 |
+
+Pozostałe 29 ostrzeżeń dotyczy tabel innych projektów (`cms.*`, `ads_*`,
+`life_*`, `ezb_*`, `crm_settings`) — poza zakresem zgodnie z decyzją D4.
 
 ---
 
 ## 6. Decyzje oczekujące na Ciebie
 
-| # | Pytanie | Przyjęte założenie |
+| # | Decyzja | Status |
 |---|---|---|
-| **D5** | Kto może założyć konto? | Wyłącznie zaproszenie od admina; `aktywny = false` domyślnie |
-| **D6** | Czy porównywarka ma być widoczna bez logowania? | Nie — wszystko za logowaniem (zamyka wyciek cennika) |
-| **D7** | Jak przetwarzamy oferty bazowe (PDF/XLSX)? | Do ustalenia; **brak plików uniemożliwia projekt schematu porównania** |
-
-Założenia D5 i D6 są zaszyte w migracjach 0001 i 0002. Zmiana któregokolwiek
-wymaga korekty polityk **przed** uruchomieniem.
+| **D5** | Konta wyłącznie na zaproszenie; `aktywny = false` domyślnie | ✅ zatwierdzone, wdrożone w 0001 |
+| **D6** | Wszystko za logowaniem — brak odczytu bez konta | ✅ zatwierdzone, wdrożone w 0002 |
+| **D7** | Sposób przetwarzania ofert bazowych (PDF/XLSX) | ⏳ etap 2 |
 
 ---
 
-## 7. Czego wciąż brakuje
+## 7. Następne kroki
 
-- **Oferty bazowe do zmapowania** — bez nich nie zaprojektuję docelowego
-  modelu porównania ani mapowania na `pakiety_*`.
-- Rozstrzygnięcia D5–D7.
-- Okna serwisowego dla migracji 0002.
+**Do wyklikania w panelu Supabase** (nie da się zrobić z SQL):
+
+1. Authentication → Providers → Email: włączyć **ochronę przed wyciekłymi
+   hasłami** (advisor nadal zgłasza jako wyłączoną), minimalna długość 12.
+2. Authentication → Multi-Factor: TOTP, wymuszone dla `med.members.rola = 'admin'`.
+3. Authentication → Sign In: **wyłączyć rejestrację e-mail** (decyzja D5).
+4. Storage: zawęzić polityki SELECT na bucketach `logos`, `article-images`,
+   `apk-pdfs` — obecnie pozwalają listować zawartość.
+
+**Aktywacja użytkowników.** 10 kont czeka nieaktywnych. Nadanie dostępu:
+
+```sql
+update med.members set aktywny = true, plan = 'pro'
+ where user_id = '<uuid>';
+```
+
+**Etap 2 (aplikacja).** Next.js na Cloudflare Workers, `@supabase/ssr`,
+`service_role` wyłącznie jako sekret Workers, wycofanie `admin/index.html`.
+Model porównania projektujemy po otrzymaniu ofert bazowych.

@@ -51,6 +51,12 @@ comment on column med.members.aktywny is
 
 alter table med.members enable row level security;
 
+-- Nowa tabela w schemacie niestandardowym nie dziedziczy domyślnych grantów
+-- Supabase (te dotyczą wyłącznie schematu public). Bez tego GRANT-u polityka
+-- members_read_own byłaby martwa — użytkownik nie odczytałby własnego planu.
+revoke all on med.members from anon;
+grant select on med.members to authenticated;
+
 
 -- ─── Funkcje pomocnicze ─────────────────────────────────────────────────────
 -- search_path = '' + nazwy w pełni kwalifikowane = odporność na przejęcie
