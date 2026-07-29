@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Porownywarka } from "@/components/Porownywarka";
-import type { CzlonekMed, Dostawca, PakietZDostawca } from "@/lib/types";
+import type { Dostawca, PakietZDostawca } from "@/lib/types";
 
 export const metadata = { title: "Porównaj pakiety — MEDICALAURA" };
 
@@ -23,7 +23,6 @@ export default async function StronaPorownania() {
     { data: dostawcy, error: bladDostawcow },
     { data: pakiety, error: bladPakietow },
     { data: liczniki },
-    { data: dostep },
   ] = await Promise.all([
     supabase
       .from("dostawcy")
@@ -40,7 +39,6 @@ export default async function StronaPorownania() {
       .from("pakiety_liczniki")
       .select("pakiet_id, rtg, tk, mri, usg")
       .returns<Liczniki[]>(),
-    supabase.from("moj_dostep").select("rola").single<Pick<CzlonekMed, "rola">>(),
   ]);
 
   if (bladDostawcow || bladPakietow) {
@@ -80,10 +78,6 @@ export default async function StronaPorownania() {
   );
 
   return (
-    <Porownywarka
-      dostawcy={dostawcy ?? []}
-      pakiety={pakietyZDostawca}
-      jestAdmin={dostep?.rola === "admin"}
-    />
+    <Porownywarka dostawcy={dostawcy ?? []} pakiety={pakietyZDostawca} />
   );
 }

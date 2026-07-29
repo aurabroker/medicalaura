@@ -4,15 +4,14 @@ import { useMemo, useState } from "react";
 import type { Dostawca, NadpisaneSkladki, PakietZDostawca } from "@/lib/types";
 import { TabelaPorownania } from "./TabelaPorownania";
 import { SekcjaSkladek } from "./SekcjaSkladek";
+import { PorownanieZakresu } from "./PorownanieZakresu";
 
 export function Porownywarka({
   dostawcy,
   pakiety,
-  jestAdmin,
 }: {
   dostawcy: Dostawca[];
   pakiety: PakietZDostawca[];
-  jestAdmin: boolean;
 }) {
   const [dostawcaId, setDostawcaId] = useState<number | null>(null);
   const [zaznaczone, setZaznaczone] = useState<number[]>([]);
@@ -48,23 +47,9 @@ export function Porownywarka({
   );
 
   function przelacz(id: number) {
-    setZaznaczone((b) => {
-      if (b.includes(id)) return b.filter((x) => x !== id);
-
-      // Zasiewamy pole składki ceną katalogową, żeby od tej chwili to pole
-      // było jedynym źródłem kwoty w zestawieniu i w PDF.
-      setSkladki((s) => {
-        if (id in s) return s;
-        const p = pakiety.find((x) => x.id === id);
-        const katalogowa =
-          p?.cena_grup_mies === null || p?.cena_grup_mies === undefined
-            ? null
-            : Number(p.cena_grup_mies);
-        return { ...s, [id]: katalogowa };
-      });
-
-      return [...b, id];
-    });
+    setZaznaczone((b) =>
+      b.includes(id) ? b.filter((x) => x !== id) : [...b, id],
+    );
   }
 
   function wyczysc() {
@@ -246,15 +231,15 @@ export function Porownywarka({
         </p>
       ) : (
         <>
+          <TabelaPorownania pakiety={doPorownania} skladki={skladki} />
+          <PorownanieZakresu pakiety={doPorownania} />
           <SekcjaSkladek
             pakiety={doPorownania}
             skladki={skladki}
-            jestAdmin={jestAdmin}
             onZmiana={(id, cena) =>
               setSkladki((s) => ({ ...s, [id]: cena }))
             }
           />
-          <TabelaPorownania pakiety={doPorownania} skladki={skladki} />
         </>
       )}
     </div>
