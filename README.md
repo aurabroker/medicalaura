@@ -23,17 +23,50 @@ wyłącznie do generowania PDF.
 
 ## Wdrożenie na Cloudflare
 
+> ⚠️ **To jest projekt Workers, nie Pages.**
+> Cloudflare Pages z adapterem `@cloudflare/next-on-pages` **nie zadziała** —
+> ten adapter jest w trybie utrzymaniowym i wymaga runtime `edge` na każdej
+> trasie. Objaw pomyłki: w logu builda pojawia się
+> `Did you mean to use wrangler.toml to configure Pages?`
+> oraz konflikt zależności `@cloudflare/workers-types`.
+
+### Z linii poleceń
+
 ```bash
+npx wrangler login
 npm run cf:build       # build przez @opennextjs/cloudflare
 npm run cf:preview     # podgląd lokalny w środowisku Workers
 npm run cf:deploy      # wdrożenie
 ```
 
-Sekrety ustawiamy poza repozytorium:
+### Z repozytorium (Workers Builds)
+
+W panelu Cloudflare: **Workers & Pages → Create → Workers → Connect to Git**,
+a następnie:
+
+| Ustawienie | Wartość |
+|---|---|
+| Build command | `npm run cf:build` |
+| Deploy command | `npx wrangler deploy` |
+| Root directory | `/` |
+
+Projekt typu **Pages** utworzony wcześniej dla tego repozytorium trzeba
+usunąć — nie da się go przestawić na Workers.
+
+### Sekrety
+
+Nie trzymamy ich w repozytorium:
 
 ```bash
 npx wrangler secret put PDFSHIFT_API_KEY
 ```
+
+### Znane ostrzeżenia przy budowaniu
+
+`npm audit` zgłasza podatności w `sharp`, `postcss` i `brace-expansion`.
+Wszystkie pochodzą z zależności **build-time** (optymalizacja obrazów,
+bundler) i nie trafiają do kodu Workera. Ich naprawa wymaga
+`npm audit fix --force`, co łamie Next.js i OpenNext — dlatego zostają.
 
 ---
 
