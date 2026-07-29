@@ -1,10 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import type { PakietZDostawca } from "@/lib/types";
-import { SEKCJE, najlepszaNajgorsza, sformatuj } from "@/lib/compare/wiersze";
+import type { NadpisaneSkladki, PakietZDostawca } from "@/lib/types";
+import {
+  SEKCJE,
+  czyPokazac,
+  najlepszaNajgorsza,
+  sformatuj,
+} from "@/lib/compare/wiersze";
+import { wartosc } from "./SekcjaSkladek";
 
-export function TabelaPorownania({ pakiety }: { pakiety: PakietZDostawca[] }) {
+export function TabelaPorownania({
+  pakiety,
+  skladki,
+}: {
+  pakiety: PakietZDostawca[];
+  skladki: NadpisaneSkladki;
+}) {
   const [generujePdf, setGenerujePdf] = useState(false);
   const [bladPdf, setBladPdf] = useState<string | null>(null);
 
@@ -15,7 +27,16 @@ export function TabelaPorownania({ pakiety }: { pakiety: PakietZDostawca[] }) {
       const odp = await fetch("/api/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idPakietow: pakiety.map((p) => p.id) }),
+        // Wysyłamy wpisane składki — PDF ma pokazać kwoty z ofert,
+        // a nie ceny katalogowe. Reszta danych pobierana jest w bazie.
+        body: JSON.stringify({
+          idPakietow: pakiety.map((p) => p.id),
+          skladki: pakiety
+            .map((p) => ({ pakietId: p.id, cena: wartosc(p, skladki) }))
+            .filter((x): x is { pakietId: number; cena: number } =>
+              x.cena !== null,
+            ),
+        }),
       });
 
       if (!odp.ok) {
@@ -100,6 +121,7 @@ export function TabelaPorownania({ pakiety }: { pakiety: PakietZDostawca[] }) {
                 key={sekcja.tytul}
                 sekcja={sekcja}
                 pakiety={pakiety}
+                skladki={skladki}
               />
             ))}
           </tbody>
@@ -112,10 +134,28 @@ export function TabelaPorownania({ pakiety }: { pakiety: PakietZDostawca[] }) {
 function FragmentSekcji({
   sekcja,
   pakiety,
+  skladki,
 }: {
   sekcja: (typeof SEKCJE)[number];
   pakiety: PakietZDostawca[];
+  skladki: NadpisaneSkladki;
 }) {
+  // Składka pracownicza to kwota z oferty wpisana przez brokera;
+  // katalogowa wartość służy tylko jako zapasowa.
+  const widoczne = sekcja.wiersze
+    .map((wiersz) => ({
+      wiersz,
+      wartosci: pakiety.map((p) =>
+        wiersz.klucz === "cena_grup_mies"
+          ? wartosc(p, skladki)
+          : p[wiersz.klucz],
+      ),
+    }))
+    .filter(({ wiersz, wartosci }) => czyPokazac(wiersz, wartosci));
+
+  // Nagłówek sekcji bez wierszy byłby pustą etykietą.
+  if (!widoczne.length) return null;
+
   return (
     <>
       <tr>
@@ -128,8 +168,7 @@ function FragmentSekcji({
         </th>
       </tr>
 
-      {sekcja.wiersze.map((wiersz) => {
-        const wartosci = pakiety.map((p) => p[wiersz.klucz]);
+      {widoczne.map(({ wiersz, wartosci }) => {
         const { najlepszy, najgorszy } = najlepszaNajgorsza(wiersz, wartosci);
 
         return (

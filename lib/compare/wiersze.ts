@@ -17,6 +17,8 @@ export type Wiersz = {
   typ: TypWiersza;
   /** true = niższa wartość jest korzystniejsza (dotyczy składki). */
   nizszaLepsza?: boolean;
+  /** Wiersz pokazywany nawet wtedy, gdy wszystkie wartości są puste. */
+  zawszeWidoczny?: boolean;
 };
 
 export type Sekcja = {
@@ -71,7 +73,10 @@ export const SEKCJE: Sekcja[] = [
   {
     tytul: "Składka",
     wiersze: [
-      { klucz: "cena_grup_mies", etykieta: "Składka pracownicza", typ: "cena", nizszaLepsza: true },
+      // Zawsze widoczny: to jedyne miejsce, gdzie pojawia się kwota z oferty
+      // wpisana przez brokera. Ukrycie go przy pustych polach odcięłoby
+      // dostęp do najważniejszej pozycji zestawienia.
+      { klucz: "cena_grup_mies", etykieta: "Składka pracownicza", typ: "cena", nizszaLepsza: true, zawszeWidoczny: true },
       { klucz: "cena_ind_mies", etykieta: "Składka indywidualna", typ: "cena", nizszaLepsza: true },
       { klucz: "cena_rodzina_mies", etykieta: "Składka rodzinna", typ: "cena", nizszaLepsza: true },
     ],
@@ -110,6 +115,19 @@ export function najlepszaNajgorsza(
     najlepszy: liczby.indexOf(lepsza),
     najgorszy: liczby.indexOf(gorsza),
   };
+}
+
+/**
+ * Czy wiersz ma sens w zestawieniu.
+ *
+ * Katalog bywa niekompletny — np. żaden z 41 pakietów nie ma dziś wypełnionej
+ * składki indywidualnej ani rodzinnej. Wiersz złożony z samych kresek nic nie
+ * wnosi, a rozprasza przy dokumencie dla klienta. Wartość `false` w wierszu
+ * typu tak/nie jest informacją, nie brakiem, więc nie ukrywa wiersza.
+ */
+export function czyPokazac(wiersz: Wiersz, wartosci: unknown[]): boolean {
+  if (wiersz.zawszeWidoczny) return true;
+  return wartosci.some((v) => v !== null && v !== undefined && v !== "");
 }
 
 /** Zamienia wartość na tekst gotowy do wyświetlenia. */

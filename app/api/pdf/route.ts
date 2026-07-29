@@ -1,11 +1,28 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { SEKCJE, najlepszaNajgorsza, sformatuj } from "@/lib/compare/wiersze";
+import {
+  SEKCJE,
+  czyPokazac,
+  najlepszaNajgorsza,
+  sformatuj,
+} from "@/lib/compare/wiersze";
 import type { PakietZDostawca } from "@/lib/types";
 
 const zadanie = z.object({
   idPakietow: z.array(z.number().int().positive()).min(2).max(8),
+  // Kwoty z ofert wpisane przez brokera. To jedyne dane, które przyjmujemy
+  // od klienta — z natury nie ma ich w bazie. Reszta zestawienia pochodzi
+  // z bazy, po samych identyfikatorach.
+  skladki: z
+    .array(
+      z.object({
+        pakietId: z.number().int().positive(),
+        cena: z.number().nonnegative().max(1_000_000),
+      }),
+    )
+    .max(8)
+    .optional(),
 });
 
 export async function POST(request: Request) {
@@ -72,7 +89,9 @@ export async function POST(request: Request) {
       Authorization: `Basic ${btoa(`api:${klucz}`)}`,
     },
     body: JSON.stringify({
-      source: zbudujHtml(pakiety),
+      source: zbudujHtml(pakiety, new Map(
+        (cialo.data.skladki ?? []).map((s) => [s.pakietId, s.cena]),
+      )),
       landscape: pakiety.length > 3,
       format: "A4",
       margin: "12mm",
@@ -105,7 +124,10 @@ function esc(v: unknown): string {
     .replace(/"/g, "&quot;");
 }
 
-function zbudujHtml(pakiety: PakietZDostawca[]): string {
+function zbudujHtml(
+  pakiety: PakietZDostawca[],
+  skladki: Map<number, number>,
+): string {
   const naglowki = pakiety
     .map(
       (p) =>
@@ -114,13 +136,26 @@ function zbudujHtml(pakiety: PakietZDostawca[]): string {
     .join("");
 
   const tresc = SEKCJE.map((sekcja) => {
+    const widoczne = sekcja.wiersze
+      .map((wiersz) => ({
+        wiersz,
+        wartosci: pakiety.map((p) =>
+          wiersz.klucz === "cena_grup_mies"
+            ? (skladki.get(p.id) ??
+              (p.cena_grup_mies === null ? null : Number(p.cena_grup_mies)))
+            : p[wiersz.klucz],
+        ),
+      }))
+      .filter(({ wiersz, wartosci }) => czyPokazac(wiersz, wartosci));
+
+    if (!widoczne.length) return "";
+
     const naglowekSekcji = `<tr class="sep"><td colspan="${
       pakiety.length + 1
     }">${esc(sekcja.tytul)}</td></tr>`;
 
-    const wiersze = sekcja.wiersze
-      .map((wiersz) => {
-        const wartosci = pakiety.map((p) => p[wiersz.klucz]);
+    const wiersze = widoczne
+      .map(({ wiersz, wartosci }) => {
         const { najlepszy, najgorszy } = najlepszaNajgorsza(wiersz, wartosci);
 
         const komorki = wartosci
